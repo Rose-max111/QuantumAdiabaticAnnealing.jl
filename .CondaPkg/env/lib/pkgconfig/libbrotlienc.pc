@@ -1,0 +1,12 @@
+prefix=/Users/rose/.julia/dev/logic_cooling/.CondaPkg/env
+exec_prefix=/Users/rose/.julia/dev/logic_cooling/.CondaPkg/env
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libbrotlienc
+URL: https://github.com/google/brotli
+Description: Brotli encoder library
+Version: 1.1.0
+Libs: -L${libdir} -lbrotlienc
+Requires.private: libbrotlicommon >= 1.1.0
+Cflags: -I${includedir}

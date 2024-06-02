@@ -1,0 +1,36 @@
+{
+    "arch": "arm64",
+    "build": "4_cp310",
+    "build_number": 4,
+    "build_string": "4_cp310",
+    "channel": "https://conda.anaconda.org/conda-forge/osx-arm64",
+    "constrains": [
+        "python 3.10.* *_cpython"
+    ],
+    "depends": [],
+    "extracted_package_dir": "/Users/rose/.julia/scratchspaces/0b3b1443-0f03-428d-bdfb-f27f9c1191ea/root/pkgs/python_abi-3.10-4_cp310",
+    "files": [],
+    "fn": "python_abi-3.10-4_cp310.conda",
+    "license": "BSD-3-Clause",
+    "license_family": "BSD",
+    "link": {
+        "source": "/Users/rose/.julia/scratchspaces/0b3b1443-0f03-428d-bdfb-f27f9c1191ea/root/pkgs/python_abi-3.10-4_cp310",
+        "type": 1
+    },
+    "md5": "1a3d9c6bb5f0b1b22d9e9296c127e8c7",
+    "name": "python_abi",
+    "package_tarball_full_path": "/Users/rose/.julia/scratchspaces/0b3b1443-0f03-428d-bdfb-f27f9c1191ea/root/pkgs/python_abi-3.10-4_cp310.tar.bz2",
+    "paths_data": {
+        "paths": [],
+        "paths_version": 1
+    },
+    "platform": "osx",
+    "requested_spec": "",
+    "sha256": "f69bac2f28082a275ef67313968b2c366d8236c3a6869b9cdf5cdb97a5821812",
+    "size": 6490,
+    "subdir": "osx-arm64",
+    "timestamp": 1695147522999,
+    "track_features": "",
+    "url": "https://conda.anaconda.org/conda-forge/osx-arm64/python_abi-3.10-4_cp310.conda",
+    "version": "3.10"
+}
