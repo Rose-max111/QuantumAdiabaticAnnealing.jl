@@ -1,6 +1,6 @@
 using logic_cooling
 using Test
 
-@testset "logic_cooling.jl" begin
-    # Write your tests here.
+@testset "generate graphs" begin
+    include("generate_graph.jl")
 end
