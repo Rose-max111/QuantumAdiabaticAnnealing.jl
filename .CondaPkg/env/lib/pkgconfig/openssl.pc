@@ -1,7 +1,0 @@
-libdir=/Users/rose/.julia/dev/logic_cooling/.CondaPkg/env/lib
-includedir=/Users/rose/.julia/dev/logic_cooling/.CondaPkg/env/include
-
-Name: OpenSSL
-Description: Secure Sockets Layer and cryptography libraries and tools
-Version: 3.3.0
-Requires: libssl libcrypto
