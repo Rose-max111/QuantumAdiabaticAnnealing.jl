@@ -22,7 +22,7 @@ end
 hamiltonian = rydberg_h(atoms, Ω = Ω, Δ = Δ)
 subspace = blockade_subspace(atoms, radius)
 
-eigvals, times = generate_energy_plot(hamiltonian, T_max, 0.01, 3, subspace)
+eigvals, times = generate_energy_plot(hamiltonian, T_max, 0.1, 3, subspace)
 
 PlotTime = [t for t in times]
 fig = Figure(resolution = (1500, 800))
