@@ -1,4 +1,5 @@
-using logic_cooling
+using logic_cooling: generate_some_graph, calculate_energy, generate_energy_plot
+using Bloqade, CairoMakie
 
 new_graph_nodes, new_graph_weights = generate_some_graph()
 
