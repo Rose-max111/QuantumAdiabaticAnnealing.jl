@@ -1,4 +1,4 @@
-using logic_cooling
+using QuantumAdiabaticAnnealing
 using Test
 
 @testset "generate graphs" begin

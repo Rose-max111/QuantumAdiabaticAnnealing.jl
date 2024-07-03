@@ -1,4 +1,4 @@
-module QuantumAdabaticAnnealing
+module QuantumAdiabaticAnnealing
 
 using Bloqade
 using UnitDiskMapping
@@ -7,5 +7,6 @@ using KrylovKit
 using CairoMakie
 
 include("generate_graph.jl")
+include("energy_calculate.jl")
 
 end

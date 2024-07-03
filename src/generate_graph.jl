@@ -10,11 +10,11 @@ function countbits(u::Int)
     return c
 end
 
-function Distance(u, v)
+function distance(u::Tuple, v::Tuple)
     return sqrt((u[1] - v[1])^2 + (u[2] - v[2])^2)
 end
 
-function generate_factoring_new_graph(x1, x2)
+function generate_factoring_new_graph(x1::Int, x2::Int)
     mres = UnitDiskMapping.map_factoring(x1, x2)
     vaild = ones(length(mres.grid_graph.nodes))
     radius = mres.grid_graph.radius
@@ -43,7 +43,7 @@ function generate_factoring_new_graph(x1, x2)
     # remove all nodes that are too close to output_pins_ones
     for i in 1:length(mres.grid_graph.nodes)
         for pin_one in output_pins_ones
-            if Distance(mres.grid_graph.nodes[i].loc, mres.grid_graph.nodes[pin_one].loc) < radius
+            if distance(mres.grid_graph.nodes[i].loc, mres.grid_graph.nodes[pin_one].loc) < radius
                 vaild[i] = 0
             end
         end
@@ -54,11 +54,6 @@ function generate_factoring_new_graph(x1, x2)
     new_graph_weights = [mres.grid_graph.nodes[t].weight for t in 1:length(vaild) if vaild[t] == 1.0]
     return new_graph_nodes, new_graph_weights, radius
 end
-
-
-
-# new_graph_nodes, new_graph_weights, radius = generate_factoring_new_graph(1, 1)
-# atoms = AtomList(new_graph_nodes)
 
 function generate_some_graph()
 
@@ -115,39 +110,7 @@ function generate_some_graph()
     vaild[[6, 2, 4, 7, 9, 13]] .= 0
     # vaild[end] = 0
 
-
-
     new_graph = [tuple(float(origin_graph[i][1]), float(origin_graph[i][2])) for i in 1:length(vaild) if vaild[i] == 1.0]
     new_weight = [weights[i] for i in 1:length(vaild) if vaild[i] == 1.0]
     return new_graph, new_weight
-end
-
-function calculate_energy(state, Δ, T_max, nodes)
-    energy = 0.0
-    for i in 1:length(state)
-        for j in (i+1):length(state)
-            if state[i] == state[j] && state[i] == 1
-                energy += 2*π*862690 / Distance(nodes[i], nodes[j])^6
-            end
-        end
-    end
-
-    for i in 1:length(state)
-        if state[i] == 1
-            energy -= Δ[i](T_max)
-        end
-    end
-    return energy
-end
-
-function generate_energy_plot(hamiltonian, T_max, T_step, howmany, subspace)
-    clocks = 0.0:T_step:T_max
-    val = []
-    for t in clocks
-        h = hamiltonian |> attime(t)
-        mat_h = mat(h)
-        eigvals, eigvecs, info = eigsolve(mat_h, howmany, :SR)
-        append!(val, [eigvals])
-    end
-    return val, clocks
 end
