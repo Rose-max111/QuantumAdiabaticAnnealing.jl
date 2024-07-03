@@ -10,9 +10,6 @@ function countbits(u::Int)
     return c
 end
 
-function distance(u::Tuple, v::Tuple)
-    return sqrt((u[1] - v[1])^2 + (u[2] - v[2])^2)
-end
 
 function generate_factoring_new_graph(x1::Int, x2::Int)
     mres = UnitDiskMapping.map_factoring(x1, x2)

@@ -1,4 +1,4 @@
-using QuantumAdiabaticAnnealing: generate_some_graph, state_energy_calculation, pluse_energy_plot
+using QuantumAdiabaticAnnealing: generate_some_graph, state_energy_calculation, pulse_energy_plot
 using Bloqade, CairoMakie
 
 new_graph_nodes, new_graph_weights = generate_some_graph()
@@ -28,7 +28,10 @@ end
 hamiltonian = rydberg_h(atoms, Ω = Ω, Δ = Δ)
 subspace = blockade_subspace(atoms, radius)
 
-eigvals, times = pluse_energy_plot(hamiltonian, T_max, 0.1, 3)
+# eigvals, times = pulse_energy_plot(hamiltonian, T_max, 0.1, 3)
+
+eigvals, times = pulse_energy_plot(Δ, Ω, new_graph_nodes, T_max, 0.1)
+
 
 delta_over_omega = [Δ[1](t) / Ω(t) for t in times]
 fig = Figure(resolution = (1500, 800))

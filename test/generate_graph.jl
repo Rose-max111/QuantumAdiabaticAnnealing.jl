@@ -5,7 +5,3 @@ using QuantumAdiabaticAnnealing, Test
     @test QuantumAdiabaticAnnealing.countbits(4) == 3
 end
 
-@testset "distance" begin
-    @test QuantumAdiabaticAnnealing.distance((0,0), (3,4)) ≈ 5.0
-    @test QuantumAdiabaticAnnealing.distance((-1,-2), (3,1)) ≈ 5.0
-end
