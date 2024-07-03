@@ -1,4 +1,4 @@
-module logic_cooling
+module QuantumAdabaticAnnealing
 
 using Bloqade
 using UnitDiskMapping
