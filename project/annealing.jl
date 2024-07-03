@@ -10,7 +10,7 @@ radius = 4.8
 detuning_max = 400
 detuning_min = - detuning_max
 
-# T_max = 10.0
+T_max = 10.0
 # empty_time = 2.0
 # Δ = map(1:length(new_graph_nodes)) do idx
 #     piecewise_linear(clocks = [0.0, empty_time, T_max - empty_time, T_max], values = [detuning_min * new_graph_weights[idx], detuning_min * new_graph_weights[idx], detuning_max * new_graph_weights[idx], detuning_max * new_graph_weights[idx]])
@@ -35,7 +35,7 @@ fig = Figure(resolution = (1500, 800))
 ax = Axis(fig[1, 1], title = "Energy Line", xlabel = "Time", ylabel = "log(Energy minus ground state energy)")
 
 lines!(ax, delta_over_omega, [(val[1]) for val in eigvals], color = :blue, linewidth = 2, label = "ground state")
-lines!(ax, delta_over_omega, [(val[2]) for val in eigvals], color = :green, linewidth = 2, label = "first excitation")
+lines!(ax, delta_over_omega, [(val[3]) for val in eigvals], color = :green, linewidth = 2, label = "first excitation")
 # lines!(ax, PlotTime, [log(val[4] - val[1]) for val in eigvals], color = :brown, linewidth = 2, label = "third excitation")
 # lines!(ax, PlotTime, [log(val[5] - val[1]) for val in eigvals], color = :red, linewidth = 2, label = "fourth excitation")
 # axislegend(ax; position = :lb, labelsize = 15)

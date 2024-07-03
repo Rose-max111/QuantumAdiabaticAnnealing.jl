@@ -27,3 +27,19 @@ function pluse_energy_plot(hamiltonian, T_max, T_step, howmany)
     end
     return val, clocks
 end
+
+"""
+    H / ħ = ∑ 1 / 2 * Ω_j * (|0⟩⟨1|_j + |1⟩⟨0|_j) - ∑ Δ_j * (|0⟩⟨0|_j) + ∑ 2π * 862690 / (x_j - x_k)^6 * (|0⟩⟨0|_j * |0⟩⟨0|_k)
+"""
+function get_low_energy_state(Δ, Ω, nodes)
+    N = length(nodes)
+    sites = siteind("S=1/2", N)
+    os = OpSum()
+    for j=1:N
+        os += 0.5 * Ω[j] * sigmaz(sites[j])
+        os -= Δ[j] * sigmax(sites[j])
+        for k=(j+1):N
+            os += 2*π*862690 / distance(nodes[j], nodes[k])^6 * sigmaz(sites[j]) * sigmaz(sites[k])
+        end
+    end
+end
