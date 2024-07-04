@@ -111,3 +111,23 @@ function generate_some_graph()
     new_weight = [weights[i] for i in 1:length(vaild) if vaild[i] == 1.0]
     return new_graph, new_weight
 end
+
+
+function generate_random_lattice(lattice_length::Int, lattice_constant::Float64, percentage::Float64)
+    num_of_nodes = Int(floor(lattice_length * lattice_length * percentage))
+    num_of_total_lattice = Int(lattice_length * lattice_length)
+    list_of_nodes = randperm(num_of_total_lattice)[1:num_of_nodes] 
+    # num_of_nodes = 20
+    # list_of_nodes = [i for i in 1:20]
+
+    nodes = Vector{Tuple{Float64, Float64}}()
+    weights = ones(num_of_nodes)
+    for i in 1:lattice_length
+        for j in 1:lattice_length
+            if ((i-1) * lattice_length + j) in list_of_nodes
+                push!(nodes, ((i-1) * lattice_constant, (j-1)*lattice_constant))
+            end
+        end
+    end
+    return nodes, weights
+end

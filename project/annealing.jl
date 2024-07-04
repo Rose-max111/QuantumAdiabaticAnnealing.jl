@@ -1,36 +1,27 @@
 using QuantumAdiabaticAnnealing: generate_some_graph, state_energy_calculation, pulse_energy_plot, Hamiltonian_energy_plot
+using QuantumAdiabaticAnnealing: generate_random_lattice
 using Bloqade, CairoMakie
 
-new_graph_nodes, new_graph_weights = generate_some_graph()
+# new_graph_nodes, new_graph_weights = generate_some_graph()
+new_graph_nodes, new_graph_weights = generate_random_lattice(6, 4.5, 0.8)
 
 atoms = AtomList(new_graph_nodes)
 
-radius = 4.8
-
-detuning_max = 400
-detuning_min = - detuning_max
-
-T_max = 10.0
-# empty_time = 2.0
-# Δ = map(1:length(new_graph_nodes)) do idx
-#     piecewise_linear(clocks = [0.0, empty_time, T_max - empty_time, T_max], values = [detuning_min * new_graph_weights[idx], detuning_min * new_graph_weights[idx], detuning_max * new_graph_weights[idx], detuning_max * new_graph_weights[idx]])
-# end
-
-# Ω_max = 2π * 4
-# Ω = piecewise_linear(clocks = [0.0, empty_time, T_max - empty_time, T_max], values = [0, Ω_max, Ω_max, 0])
-
+T_max = 10
+detuning_min = 3 * 2π
+detuning_max = 12 * 2π
 Δ = map(1:length(new_graph_nodes)) do idx
-    piecewise_linear(clocks = [0, T_max], values = [0.05 * new_graph_weights[idx], detuning_max * new_graph_weights[idx]])
+    piecewise_linear(clocks = [0, T_max], values = [detuning_min * new_graph_weights[idx], detuning_max * new_graph_weights[idx]])
 end
 
-Ω = piecewise_linear(clocks = [0, T_max], values = [1, 1])
+Ω = piecewise_linear(clocks = [0, T_max], values = [4 * 2π, 4 * 2π])
 
-hamiltonian = rydberg_h(atoms, Ω = Ω, Δ = Δ)
-subspace = blockade_subspace(atoms, radius)
+# hamiltonian = rydberg_h(atoms, Ω = Ω, Δ = Δ)
+# subspace = blockade_subspace(atoms, radius)
 
-eigvals, times = Hamiltonian_energy_plot(hamiltonian, T_max, 0.1, 3)
+# eigvals, times = Hamiltonian_energy_plot(hamiltonian, T_max, 0.1, 3)
 
-DMRGeigvals, times = pulse_energy_plot(Δ, Ω, new_graph_nodes, T_max, 0.1)
+DMRGeigvals, times = pulse_energy_plot(Δ, Ω, new_graph_nodes, T_max, 0.01)
 
 
 delta_over_omega = [Δ[1](t) / Ω(t) for t in times]
