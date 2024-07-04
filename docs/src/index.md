@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = logic_cooling
+CurrentModule = QuantumAdiabaticAnnealing
 ```
 
 # logic_cooling
 
-Documentation for [logic_cooling](https://github.com/Rose_max111/logic_cooling.jl).
+Documentation for [QuantumAdiabaticAnnealing](https://github.com/Rose_max111/QuantumAdiabaticAnnealing.jl).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [logic_cooling]
+Modules = [QuantumAdiabaticAnnealing]
 ```

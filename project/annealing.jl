@@ -37,10 +37,10 @@ delta_over_omega = [Δ[1](t) / Ω(t) for t in times]
 fig = Figure(resolution = (1500, 800))
 ax = Axis(fig[1, 1], title = "Energy Line", xlabel = "Δ  /  Ω", ylabel = "log(Energy minus ground state energy)")
 
-# lines!(ax, delta_over_omega, [(val[1]) for val in eigvals], color = :blue, linewidth = 2, label = "first excitation vs ground state")
+lines!(ax, delta_over_omega, [log(val[3] - val[1]) for val in eigvals], color = :blue, linewidth = 2, label = "second excitation vs ground state")
 # lines!(ax, delta_over_omega, [(val[3]) for val in eigvals], color = :green, linewidth = 2, label = "second excitation vs ground state")
-lines!(ax, delta_over_omega, [(val[1]) for val in DMRGeigvals], color = :brown, linewidth = 2, label = "DMRG FE vs GS")
-lines!(ax, delta_over_omega, [(val[3]) for val in DMRGeigvals], color = :red, linewidth = 2, label = "DMRG SE vs GS")
+# lines!(ax, delta_over_omega, [(val[1]) for val in DMRGeigvals], color = :brown, linewidth = 2, label = "DMRG FE vs GS")
+# lines!(ax, delta_over_omega, [(val[3]) for val in DMRGeigvals], color = :red, linewidth = 2, label = "DMRG SE vs GS")
 axislegend(ax; position = :lb, labelsize = 15)
 
 
