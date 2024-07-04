@@ -63,7 +63,7 @@ function get_low_energy_state(Δ, Ω, nodes; given_psi = [nothing, nothing, noth
     end
     H = MPO(os, sites)
 
-    weight = 8000
+    weight = 2000
     nsweeps = 40
     maxdim = [10,20,20,40,40,80,80,100,200,400]
     cutoff = [1E-10]
