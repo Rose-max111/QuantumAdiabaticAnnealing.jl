@@ -14,20 +14,20 @@ end
     # Δ = rand(50:200, length(new_graph_nodes))
     # Ω = rand(1:10, length(new_graph_nodes))
 
-    Δ = [396.0005,792.001,396.0005,792.001,792.001,792.001,792.001,396.0005,396.0005,792.001,792.001,792.001,792.001,396.0005,396.0005,792.001,396.0005]
+    Δ = [224.02199999999996,448.0439999999999,224.02199999999996,448.0439999999999,448.0439999999999,448.0439999999999,448.0439999999999,224.02199999999996,224.02199999999996,448.0439999999999,448.0439999999999,448.0439999999999,448.0439999999999,224.02199999999996,224.02199999999996,448.0439999999999,224.02199999999996]
     Ω = ones(length(new_graph_nodes))
 
-    dmrg_energy0, dmrg_energy1, dmrg_energy2 = get_low_energy_state(Δ, Ω, new_graph_nodes)
+    dmrg_energy,psi= get_low_energy_state(Δ, Ω, new_graph_nodes)
 
     H0 = rydberg_h(AtomList(new_graph_nodes), Ω = Ω, Δ = Δ)
     @show H0
     mat_H0 = mat(H0)
     eigvals, eigvecs, infos = eigsolve(mat_H0, 3, :SR)
 
-    @show dmrg_energy0, eigvals[1]
-    @show dmrg_energy1, eigvals[2]
-    @show dmrg_energy2, eigvals[3]
-    @test abs(dmrg_energy0 - eigvals[1]) / abs(dmrg_energy0) < 1e-4
-    @test abs(dmrg_energy1 - eigvals[2]) / abs(dmrg_energy1) < 1e-3
-    @test abs(dmrg_energy2 - eigvals[3]) / abs(dmrg_energy2) < 1e-2
+    @show dmrg_energy[1], eigvals[1]
+    @show dmrg_energy[2], eigvals[2]
+    @show dmrg_energy[3], eigvals[3]
+    @test abs(dmrg_energy[1] - eigvals[1]) / abs(dmrg_energy[1]) < 1e-4
+    @test abs(dmrg_energy[2] - eigvals[2]) / abs(dmrg_energy[2]) < 1e-3
+    @test abs(dmrg_energy[3] - eigvals[3]) / abs(dmrg_energy[3]) < 1e-2
 end   

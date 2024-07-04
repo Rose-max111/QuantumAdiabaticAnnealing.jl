@@ -35,10 +35,12 @@ end
 function pulse_energy_plot(Δ_T, Ω_T, nodes, T_max, T_step)
     clocks = 0.0:T_step:T_max
     val = []
+    last_psi = [nothing, nothing, nothing]
     for t in clocks
         Δ = [Δ_T[i](t) for i in 1:length(nodes)]
         Ω = fill(Ω_T(t), length(nodes))
-        eigvals = get_low_energy_state(Δ, Ω, nodes)
+        eigvals, new_psi = get_low_energy_state(Δ, Ω, nodes;)
+        eigvals = sort(eigvals)
         append!(val, [eigvals])
     end
     return val, clocks
@@ -47,7 +49,7 @@ end
 """
     H / ħ = ∑ 1 / 2 * Ω_j * (|0⟩⟨1|_j + |1⟩⟨0|_j) - ∑ Δ_j * (|0⟩⟨0|_j) + ∑ 2π * 862690 / (x_j - x_k)^6 * (|0⟩⟨0|_j * |0⟩⟨0|_k)
 """
-function get_low_energy_state(Δ, Ω, nodes)
+function get_low_energy_state(Δ, Ω, nodes; given_psi = [nothing, nothing, nothing])
     N = length(nodes)
     sites = siteinds("S=1/2", N)
     
@@ -61,27 +63,28 @@ function get_low_energy_state(Δ, Ω, nodes)
     end
     H = MPO(os, sites)
 
-    h = 10.0
-    weight = 1000
-    nsweeps = 60
+    weight = 8000
+    nsweeps = 40
     maxdim = [10,20,20,40,40,80,80,100,200,400]
     cutoff = [1E-10]
     noise = [1E-8, 1E-8, 1E-8, 1E-9, 1E-9, 1E-10, 1E-10, 1E-11, 1E-11, 0.0]
 
-    #
-    # Compute the ground state psi0
-    #
+    psi_pre = Vector{MPS}()
+    energy = []
+    howmany = 6
 
-    psi0_init = random_mps(sites;linkdims = 4)
-    energy0, psi0 = dmrg(H, psi0_init; nsweeps, maxdim, cutoff, noise)
+    psi_init = random_mps(sites;linkdims = 4)
+    energy0, psi0 = dmrg(H, psi_init; nsweeps, maxdim, cutoff, noise)
+    append!(energy, energy0)
+    append!(psi_pre, [psi0])
 
-    psi1_init = random_mps(sites;linkdims = 4)
-    energy1, psi1 = dmrg(H, [psi0], psi1_init; nsweeps, maxdim, cutoff, noise, weight)
+    for T in 2:howmany
+        psi_init = random_mps(sites;linkdims = 4)
+        energy0, psi0 = dmrg(H, psi_pre, psi_init; nsweeps, maxdim, cutoff, noise, weight)
+        append!(energy, energy0)
+        append!(psi_pre, [psi0])
+    end
 
-    psi2_init = random_mps(sites;linkdims = 4)
-    energy2, psi2 = dmrg(H, [psi0, psi1], psi2_init; nsweeps, maxdim, cutoff, noise, weight)
-
-    real_energy1 = inner(psi1', H, psi1)
-    real_energy2 = inner(psi2', H, psi2)
-    return [energy0, real_energy1, real_energy2]
+    sort!(energy)
+    return energy, psi_pre
 end
