@@ -2,7 +2,7 @@
 CurrentModule = QuantumAdiabaticAnnealing
 ```
 
-# logic_cooling
+# QuantumAdiabaticAnnealing
 
 Documentation for [QuantumAdiabaticAnnealing](https://github.com/Rose_max111/QuantumAdiabaticAnnealing.jl).
 

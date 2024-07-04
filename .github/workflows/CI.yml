@@ -68,6 +68,6 @@ jobs:
         shell: julia --project=docs --color=yes {0}
         run: |
           using Documenter: DocMeta, doctest
-          using logic_cooling
-          DocMeta.setdocmeta!(logic_cooling, :DocTestSetup, :(using logic_cooling); recursive=true)
-          doctest(logic_cooling)
+          using QuantumAdiabaticAnnealing
+          DocMeta.setdocmeta!(QuantumAdiabaticAnnealing, :DocTestSetup, :(using QuantumAdiabaticAnnealing); recursive=true)
+          doctest(QuantumAdiabaticAnnealing)
