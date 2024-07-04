@@ -1,4 +1,4 @@
-using QuantumAdiabaticAnnealing: generate_some_graph, state_energy_calculation, pulse_energy_plot
+using QuantumAdiabaticAnnealing: generate_some_graph, state_energy_calculation, pulse_energy_plot, Hamiltonian_energy_plot
 using Bloqade, CairoMakie
 
 new_graph_nodes, new_graph_weights = generate_some_graph()
@@ -28,14 +28,14 @@ end
 hamiltonian = rydberg_h(atoms, Ω = Ω, Δ = Δ)
 subspace = blockade_subspace(atoms, radius)
 
-# eigvals, times = pulse_energy_plot(hamiltonian, T_max, 0.1, 3)
+eigvals, times = Hamiltonian_energy_plot(hamiltonian, T_max, 0.1, 3)
 
-eigvals, times = pulse_energy_plot(Δ, Ω, new_graph_nodes, T_max, 0.1)
+# eigvals, times = pulse_energy_plot(Δ, Ω, new_graph_nodes, T_max, 0.1)
 
 
 delta_over_omega = [Δ[1](t) / Ω(t) for t in times]
 fig = Figure(resolution = (1500, 800))
-ax = Axis(fig[1, 1], title = "Energy Line", xlabel = "Time", ylabel = "log(Energy minus ground state energy)")
+ax = Axis(fig[1, 1], title = "Energy Line", xlabel = "Δ  /  Ω", ylabel = "log(Energy minus ground state energy)")
 
 lines!(ax, delta_over_omega, [(val[1]) for val in eigvals], color = :blue, linewidth = 2, label = "ground state")
 lines!(ax, delta_over_omega, [(val[3]) for val in eigvals], color = :green, linewidth = 2, label = "first excitation")

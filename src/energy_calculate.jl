@@ -53,8 +53,7 @@ function get_low_energy_state(Δ, Ω, nodes)
     
     os = OpSum()
     for j=1:N
-        os += Ω[j], "S+", j
-        os += Ω[j], "S-", j
+        os += Ω[j], "Sx", j
         os += -Δ[j], "Proj0", j
         for k in (j+1):N
             os += 2π * 862690 / (distance(nodes[j], nodes[k])^6), "Proj0", j, "Proj0", k
@@ -64,10 +63,10 @@ function get_low_energy_state(Δ, Ω, nodes)
 
     h = 10.0
     weight = 1000
-    nsweeps = 40
-    maxdim = [10,10,10,20,20,40,80,100,200,200]
-    cutoff = [1E-8]
-    noise = [1E-6]
+    nsweeps = 60
+    maxdim = [10,20,20,40,40,80,80,100,200,400]
+    cutoff = [1E-10]
+    noise = [1E-8, 1E-8, 1E-8, 1E-9, 1E-9, 1E-10, 1E-10, 1E-11, 1E-11, 0.0]
 
     #
     # Compute the ground state psi0
@@ -79,7 +78,7 @@ function get_low_energy_state(Δ, Ω, nodes)
     psi1_init = random_mps(sites;linkdims = 4)
     energy1, psi1 = dmrg(H, [psi0], psi1_init; nsweeps, maxdim, cutoff, noise, weight)
 
-    psi2_init = random_mps(sites;linkdims = 8)
+    psi2_init = random_mps(sites;linkdims = 4)
     energy2, psi2 = dmrg(H, [psi0, psi1], psi2_init; nsweeps, maxdim, cutoff, noise, weight)
 
     real_energy1 = inner(psi1', H, psi1)
