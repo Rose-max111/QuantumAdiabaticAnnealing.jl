@@ -18,6 +18,7 @@ end
     Ω = ones(length(new_graph_nodes))
 
     dmrg_energy,psi= get_low_energy_state(Δ, Ω, new_graph_nodes)
+    @show dmrg_energy
 
     H0 = rydberg_h(AtomList(new_graph_nodes), Ω = Ω, Δ = Δ)
     @show H0

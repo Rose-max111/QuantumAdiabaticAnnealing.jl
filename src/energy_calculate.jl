@@ -28,6 +28,7 @@ function Hamiltonian_energy_plot(hamiltonian, T_max, T_step, howmany)
         mat_h = mat(h)
         eigvals, eigvecs, info = eigsolve(mat_h, howmany, :SR)
         append!(val, [eigvals])
+        @show t
     end
     return val, clocks
 end
@@ -41,7 +42,8 @@ function pulse_energy_plot(Δ_T, Ω_T, nodes, T_max, T_step)
         Ω = fill(Ω_T(t), length(nodes))
         eigvals, new_psi = get_low_energy_state(Δ, Ω, nodes;)
         eigvals = sort(eigvals)
-        append!(val, [eigvals])
+        push!(val, eigvals)
+        @show t, eigvals
     end
     return val, clocks
 end
@@ -64,23 +66,23 @@ function get_low_energy_state(Δ, Ω, nodes; given_psi = [nothing, nothing, noth
     H = MPO(os, sites)
 
     weight = 2000
-    nsweeps = 40
-    maxdim = [10,20,20,40,40,80,80,100,200,400]
+    nsweeps = 30
+    maxdim = [10,20,40,80,100,200,400]
     cutoff = [1E-10]
-    noise = [1E-8, 1E-8, 1E-8, 1E-9, 1E-9, 1E-10, 1E-10, 1E-11, 1E-11, 0.0]
+    noise = [1E-8, 1E-8, 1E-8, 1E-9, 1E-10, 1E-11, 0.0]
 
     psi_pre = Vector{MPS}()
     energy = []
-    howmany = 6
+    howmany = 3
 
-    psi_init = random_mps(sites;linkdims = 4)
-    energy0, psi0 = dmrg(H, psi_init; nsweeps, maxdim, cutoff, noise)
+    psi_init = random_mps(sites;linkdims = 2)
+    energy0, psi0 = dmrg(H, psi_init; nsweeps, maxdim, cutoff, noise, outputlevel = 0)
     append!(energy, energy0)
     append!(psi_pre, [psi0])
 
     for T in 2:howmany
-        psi_init = random_mps(sites;linkdims = 4)
-        energy0, psi0 = dmrg(H, psi_pre, psi_init; nsweeps, maxdim, cutoff, noise, weight)
+        psi_init = random_mps(sites;linkdims = 2)
+        energy0, psi0 = dmrg(H, psi_pre, psi_init; nsweeps, maxdim, cutoff, noise, weight, outputlevel = 0)
         append!(energy, energy0)
         append!(psi_pre, [psi0])
     end
