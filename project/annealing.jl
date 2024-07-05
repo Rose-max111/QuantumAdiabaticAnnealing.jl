@@ -24,7 +24,7 @@ eigvals, times = Hamiltonian_energy_plot(hamiltonian, T_max, 0.01, 3)
 DMRGeigvals, times = pulse_energy_plot(Δ, Ω, new_graph_nodes, T_max, 0.01)
 
 
-delta_over_2pi = [Δ[1](t) / 2π for t in times]
+tdelta_over_2pi = [Δ[1](t) / 2π for t in times]
 fig = Figure(resolution = (1500, 800))
 ax = Axis(fig[1, 1], title = "Energy Line", xlabel = "Δ  /  2π", ylabel = "Energy gap δ / 2π")
 
