@@ -51,24 +51,6 @@ end
 """
     H / ħ = ∑ 1 / 2 * Ω_j * (|0⟩⟨1|_j + |1⟩⟨0|_j) - ∑ Δ_j * (|0⟩⟨0|_j) + ∑ 2π * 862690 / (x_j - x_k)^6 * (|0⟩⟨0|_j * |0⟩⟨0|_k)
 """
-function pulse_energy_plot(Δ_T, Ω_T, nodes, T_max, T_step)
-    clocks = 0.0:T_step:T_max
-    val = []
-    last_psi = [nothing, nothing, nothing]
-    for t in clocks
-        Δ = [Δ_T[i](t) for i in 1:length(nodes)]
-        Ω = fill(Ω_T(t), length(nodes))
-        eigvals, new_psi = get_low_energy_state(Δ, Ω, nodes;)
-        eigvals = sort(eigvals)
-        push!(val, eigvals)
-        @show t, eigvals
-    end
-    return val, clocks
-end
-
-"""
-    H / ħ = ∑ 1 / 2 * Ω_j * (|0⟩⟨1|_j + |1⟩⟨0|_j) - ∑ Δ_j * (|0⟩⟨0|_j) + ∑ 2π * 862690 / (x_j - x_k)^6 * (|0⟩⟨0|_j * |0⟩⟨0|_k)
-"""
 function get_low_energy_state(Δ, Ω, nodes; given_psi = [nothing, nothing, nothing], outputlevel = 0)
     N = length(nodes)
     sites = siteinds("S=1/2", N)
