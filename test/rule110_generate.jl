@@ -1,8 +1,9 @@
 using QuantumAdiabaticAnnealing, Test
-using QuantumAdiabaticAnnealing:rule110_generate, transversal_graph
+using QuantumAdiabaticAnnealing:rule110_generate, transversal_graph, rule110_transverse_generate
 using GenericTensorNetworks
 using LinearAlgebra
 using Graphs
+using LuxorGraphPlot.Luxor, LuxorGraphPlot
 
 @testset "rule110_generate" begin
     graph, weights, locations, P, Q, R, Target = rule110_generate()
@@ -133,7 +134,8 @@ end
             (19,20),
             (15,21),
             (20,21),
-            (21,22)])
+            (21,22),
+            (22,23)])
     G = SimpleGraph(el)
     for i in 1:length(locations)
         for j in i+1:length(locations)
@@ -145,4 +147,38 @@ end
             end
         end
     end
+end
+
+# @testset "rule110_transverse_generate" begin
+#     locations, weights, input_id, output_id = rule110_transverse_generate(3,2)
+#     G = SimpleGraph(length(weights))
+#     radius_square = 4.2
+#     for i in 1:length(locations)
+#         for j in i+1:length(locations)
+#             if (locations[i][1] - locations[j][1])^2 + (locations[i][2]-locations[j][2])^2 <= radius_square
+#                 add_edge!(G, i, j)
+#             end
+#         end
+#     end
+    
+#     target_output = [0, 1, 1, 1, 0, 1, 1, 0]
+#     for input_mask in 0:7
+        
+# end
+
+function show_transversal_graph(n, m)
+    locations, weights, input_id, output_id = rule110_transverse_generate(n,m)
+    G = SimpleGraph(length(weights))
+    radius_square = 4.2
+    for i in 1:length(locations)
+        for j in i+1:length(locations)
+            if (locations[i][1] - locations[j][1])^2 + (locations[i][2]-locations[j][2])^2 <= radius_square
+                add_edge!(G, i, j)
+            end
+        end
+    end
+
+    colorspace = ["Blue", "Red", "Green", "Black"]
+
+    show_graph(G, locs = locations; format = :svg, vertex_colors = colorspace[weights])
 end
