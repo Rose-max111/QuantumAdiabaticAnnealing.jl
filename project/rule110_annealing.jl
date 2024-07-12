@@ -8,20 +8,20 @@ locations = map(t -> (Float64(t[1]), Float64(t[2])), locations)
 
 atoms = Bloqade.AtomList(locations)
 
-for i in inputs_id
-    weights[i] = -50
-end
-for i in input_layer_id
-    weights[i[1]] = weights[i[2]] = -50
-end
-
-# for i in outputs_id
+# for i in inputs_id
 #     weights[i] = -50
 # end
+# for i in input_layer_id
+#     weights[i[1]] = weights[i[2]] = -50
+# end
+
+for i in outputs_id
+    weights[i] = -50
+end
 
 T_max = 4
 T_pure = 0.8
-Δ_min= 0.2 * 2π
+Δ_min= 0.1 * 2π
 Δ_max = 5 * 2π
 # Δ = map(1:length(locations)) do idx
 #     piecewise_linear(clocks = [0, T_pure, T_max - T_pure, T_max], values = [Δ_min * weights[idx], Δ_min * weights[idx], Δ_max * weights[idx], Δ_max * weights[idx]])
@@ -38,7 +38,7 @@ end
 
 hamiltonian = rydberg_h(atoms, Ω = Ω, Δ = Δ)
 space = blockade_subspace(atoms, 2.05)
-eigvals, times = Hamiltonian_energy_plot(hamiltonian, T_max, 0.02, 3; subspace = space)
+eigvals, times = Hamiltonian_energy_plot(hamiltonian, T_max, 0.02, 4; subspace = space, outputwhich = 3)
 
 delta_over_omega = [Ω(t) / Δ[1](t) for t in times]
 fig = Figure(resolution = (1500, 800))

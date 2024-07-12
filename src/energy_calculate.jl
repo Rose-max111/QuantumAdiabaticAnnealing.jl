@@ -35,7 +35,7 @@ function Hamiltonian_energy_plot(hamiltonian, T_max, T_step, howmany; subspace =
         if outputwhich == nothing
             @info t, eigvals[1], eigvals[2], eigvals[2] - eigvals[1], info.converged, info.numiter
         else
-            @info t, eigvals[2] - eigvals[1], eigvals[3] - eigvals[2], eigvals[4] - eigvals[3], info.converged
+            @info t, eigvals[2] - eigvals[1], eigvals[3] - eigvals[2], eigvals[4] - eigvals[3], info.converged, info.numiter
         end
 
     end
