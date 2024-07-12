@@ -6,7 +6,7 @@ using BloqadeLattices, CairoMakie
 locations, weights, inputs_id, outputs_id, input_layer_id = rule110_transverse_generate(1, 1)
 locations = map(t -> (Float64(t[1]), Float64(t[2])), locations)
 
-atoms = Bloqade.AtomList(locations)
+atoms = BloqadeLattices.AtomList(locations)
 
 # for i in inputs_id
 #     weights[i] = -50
