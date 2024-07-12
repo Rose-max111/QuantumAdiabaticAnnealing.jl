@@ -1,7 +1,7 @@
 using QuantumAdiabaticAnnealing: rule110_transverse_generate
 using QuantumAdiabaticAnnealing: Hamiltonian_energy_plot
 using BloqadeExpr
-using Bloqade, CairoMakie
+using BloqadeLattices, CairoMakie
 
 locations, weights, inputs_id, outputs_id, input_layer_id = rule110_transverse_generate(1, 1)
 locations = map(t -> (Float64(t[1]), Float64(t[2])), locations)

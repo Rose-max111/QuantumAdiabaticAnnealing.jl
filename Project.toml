@@ -4,8 +4,8 @@ authors = ["Rose-max111 <luyimingboy@163.com> and contributors"]
 version = "1.0.0-DEV"
 
 [deps]
-Bloqade = "bd27d05e-4ce1-5e79-84dd-c5d7d508bbe1"
 BloqadeExpr = "bd27d05e-4ce1-5e79-84dd-c5d7d508abe2"
+BloqadeLattices = "bd27d05e-4ce1-5e79-84dd-c5d7d508bbe4"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 GenericTensorNetworks = "3521c873-ad32-4bb4-b63d-f4f178f42b49"
