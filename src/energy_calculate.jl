@@ -30,7 +30,7 @@ function Hamiltonian_energy_plot(hamiltonian, T_max, T_step, howmany; subspace =
         else
             mat_h = mat(h, subspace)
         end
-        eigvals, eigvecs, info = eigsolve(mat_h, howmany, :SR; tol = 1e-3, maxiter = 5000)
+        eigvals, eigvecs, info = eigsolve(mat_h, howmany, :SR; tol = 1e-4, maxiter = 5000)
         append!(val, [eigvals])
         if outputwhich == nothing
             @info t, eigvals[1], eigvals[2], eigvals[2] - eigvals[1], info.converged, info.numiter
