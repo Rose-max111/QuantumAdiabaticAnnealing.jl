@@ -1,6 +1,5 @@
 module QuantumAdiabaticAnnealing
 
-using Bloqade
 using UnitDiskMapping
 using Graphs
 using KrylovKit
