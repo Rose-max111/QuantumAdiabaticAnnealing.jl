@@ -86,6 +86,7 @@ function transversal_graph()
             1]
     P = 2
     O = 23
+    # L input = 13, R input = 5
     return locations, weights, P, O
 end
 
@@ -96,16 +97,25 @@ function rule110_transverse_generate(ninput::Int, Time::Int)
     
     input_id = []
     output_id = []
+    input_layer_id = Vector{Vector{Int}}()
 
     padding_position = [0,0]
     input_additional_weight = 0
     last_graph_size = 0
     for row in 1:Time
+        inputL = 0
+        inputR = 0
         for column in 1:ninput
             this_graph_loc = map(x -> (x[1] + padding_position[1], x[2] + padding_position[2]), basic_loc)
             this_graph_weight = copy(basic_weight)
             if row == 1
                 push!(input_id, length(locations) + 2)
+            end
+            if column == 1
+                inputL = length(locations) + 13
+            end
+            if column == ninput
+                inputR = length(locations) + 5
             end
             # deal with the border between this row and last row
             this_graph_weight[2] += input_additional_weight
@@ -131,9 +141,10 @@ function rule110_transverse_generate(ninput::Int, Time::Int)
             end
             padding_position[1] += 10
         end
+        push!(input_layer_id, [inputL, inputR])
         padding_position[1] = -row
         padding_position[2] += 10
         input_additional_weight = 1
     end
-    return locations, weights, input_id, output_id
+    return locations, weights, input_id, output_id, input_layer_id
 end

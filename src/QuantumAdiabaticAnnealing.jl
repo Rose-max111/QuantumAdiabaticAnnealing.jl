@@ -15,7 +15,7 @@ export state_energy_calculation, Hamiltonian_energy_plot, pulse_energy_plot
 export get_low_energy_state_gpu
 export generate_random_lattice
 export rule54_generate
-export rule110_generate, transversal_graph
+export rule110_generate, transversal_graph, rule110_transverse_generate
 
 include("generate_graph.jl")
 include("energy_calculate.jl")

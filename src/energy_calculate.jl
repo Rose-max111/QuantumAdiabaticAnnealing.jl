@@ -20,15 +20,24 @@ function state_energy_calculation(state, Δ, T_set, nodes)
     return energy
 end
 
-function Hamiltonian_energy_plot(hamiltonian, T_max, T_step, howmany)
+function Hamiltonian_energy_plot(hamiltonian, T_max, T_step, howmany; subspace = nothing, outputwhich = nothing)
     clocks = 0.0:T_step:T_max
     val = []
     for t in clocks
         h = hamiltonian |> attime(t)
-        mat_h = mat(h)
+        if subspace == nothing
+            mat_h = mat(h)
+        else
+            mat_h = mat(h, subspace)
+        end
         eigvals, eigvecs, info = eigsolve(mat_h, howmany, :SR)
         append!(val, [eigvals])
-        @show t
+        if outputwhich == nothing
+            @info t, eigvals[1], eigvals[2], eigvals[2] - eigvals[1]
+        else
+            @info t, eigvals[2] - eigvals[1], eigvals[3] - eigvals[2], eigvals[4] - eigvals[3]
+        end
+
     end
     return val, clocks
 end
