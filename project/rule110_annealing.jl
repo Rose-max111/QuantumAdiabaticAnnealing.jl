@@ -21,8 +21,8 @@ end
 
 T_max = 4
 T_pure = 0.8
-Δ_min= 0.1 * 2π
-Δ_max = 13 * 2π
+Δ_min= 0.2 * 2π
+Δ_max = 5 * 2π
 # Δ = map(1:length(locations)) do idx
 #     piecewise_linear(clocks = [0, T_pure, T_max - T_pure, T_max], values = [Δ_min * weights[idx], Δ_min * weights[idx], Δ_max * weights[idx], Δ_max * weights[idx]])
 # end
@@ -38,15 +38,15 @@ end
 
 hamiltonian = rydberg_h(atoms, Ω = Ω, Δ = Δ)
 space = blockade_subspace(atoms, 2.05)
-eigvals, times = Hamiltonian_energy_plot(hamiltonian, T_max, 0.01, 4; subspace = space, outputwhich = 4)
+eigvals, times = Hamiltonian_energy_plot(hamiltonian, T_max, 0.02, 3; subspace = space)
 
-delta_over_omega = [Δ[1](t) / Ω(t) for t in times]
+delta_over_omega = [Ω(t) / Δ[1](t) for t in times]
 fig = Figure(resolution = (1500, 800))
-ax = Axis(fig[1, 1], title = "Energy Line", xlabel = "Δ  /  Ω", ylabel = "Energy gap δ")
+ax = Axis(fig[1, 1], title = "Energy Line", xlabel = "Ω  /  Δ", ylabel = "Energy gap δ")
 
 lines!(ax, delta_over_omega, [(val[2] - val[1]) for val in eigvals], color = :blue, linewidth = 2, label = "ED FE vs GS")
-lines!(ax, delta_over_omega, [(val[3] - val[1]) for val in eigvals], color = :red, linewidth = 2, label = "ED SE vs GS")
-lines!(ax, delta_over_omega, [(val[4] - val[1]) for val in eigvals], color = :brown, linewidth = 2, label = "ED TE vs GS")
+# lines!(ax, delta_over_omega, [(val[3] - val[1]) for val in eigvals], color = :red, linewidth = 2, label = "ED SE vs GS")
+# lines!(ax, delta_over_omega, [(val[4] - val[1]) for val in eigvals], color = :brown, linewidth = 2, label = "ED TE vs GS")
 axislegend(ax; position = :lb, labelsize = 15)
 
 
