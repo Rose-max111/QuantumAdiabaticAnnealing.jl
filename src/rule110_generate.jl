@@ -119,6 +119,7 @@ function rule110_transverse_generate(ninput::Int, Time::Int)
             end
             # deal with the border between this row and last row
             this_graph_weight[2] += input_additional_weight
+
             # deal with the border between this column and last column
             if column != 1
                 this_graph_weight[1] += 1
@@ -126,6 +127,19 @@ function rule110_transverse_generate(ninput::Int, Time::Int)
                 weights[end - last_graph_size + 5] += 1
                 weights[end - last_graph_size + 10] += 1
             end
+
+            # deal with the last column specially (remove the rightest part)
+            if column == ninput
+                this_graph_weight[2] -= 1
+                this_graph_weight[18] -= 1
+                this_graph_weight = this_graph_weight[vcat(1:2, 12:end)]
+                this_graph_loc = this_graph_loc[vcat(1:2, 12:end)]
+                inputR = length(locations) + 9
+                if column == 1
+                    inputL = length(locations) + 4
+                end
+            end
+
             # deal with the border between this row and next row
             if row != Time
                 this_graph_weight[end] += 1
@@ -147,4 +161,22 @@ function rule110_transverse_generate(ninput::Int, Time::Int)
         input_additional_weight = 1
     end
     return locations, weights, input_id, output_id, input_layer_id
+end
+
+
+function show_transversal_graph(n, m)
+    locations, weights, input_id, output_id, input_layer_id = rule110_transverse_generate(n,m)
+    G = SimpleGraph(length(weights))
+    radius_square = 4.2
+    for i in 1:length(locations)
+        for j in i+1:length(locations)
+            if (locations[i][1] - locations[j][1])^2 + (locations[i][2]-locations[j][2])^2 <= radius_square
+                add_edge!(G, i, j)
+            end
+        end
+    end
+
+    colorspace = ["Blue", "Red", "Green", "Black"]
+
+    show_graph(G, locs = locations; format = :svg, vertex_colors = colorspace[weights], texts = map(string, 1:nv(G)), vertex_text_colors = fill("White", nv(G)))
 end

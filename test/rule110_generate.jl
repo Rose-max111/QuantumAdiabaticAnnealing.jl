@@ -183,37 +183,21 @@ end
         
 # end
 
-function show_transversal_graph(n, m)
-    locations, weights, input_id, output_id, input_layer_id = rule110_transverse_generate(n,m)
-    G = SimpleGraph(length(weights))
-    radius_square = 4.2
-    for i in 1:length(locations)
-        for j in i+1:length(locations)
-            if (locations[i][1] - locations[j][1])^2 + (locations[i][2]-locations[j][2])^2 <= radius_square
-                add_edge!(G, i, j)
-            end
+n=1
+m=3
+locations, weights, input_id, output_id, input_layer_id = rule110_transverse_generate(n,m)
+G = SimpleGraph(length(weights))
+radius_square = 4.2
+for i in 1:length(locations)
+    for j in i+1:length(locations)
+        if (locations[i][1] - locations[j][1])^2 + (locations[i][2]-locations[j][2])^2 <= radius_square
+            add_edge!(G, i, j)
         end
     end
-
-    colorspace = ["Blue", "Red", "Green", "Black"]
-
-    show_graph(G, locs = locations; format = :svg, vertex_colors = colorspace[weights], vertexlabels = 1:nv(G))
 end
-
-# n=2
-# m=2
-# locations, weights, input_id, output_id, input_layer_id = rule110_transverse_generate(n,m)
-# G = SimpleGraph(length(weights))
-# radius_square = 4.2
-# for i in 1:length(locations)
-#     for j in i+1:length(locations)
-#         if (locations[i][1] - locations[j][1])^2 + (locations[i][2]-locations[j][2])^2 <= radius_square
-#             add_edge!(G, i, j)
-#         end
-#     end
-# end
-# problem = GenericTensorNetwork(IndependentSet(G, weights));
-# max_independent_set_size = solve(problem, ConfigsMax())[]
+problem = GenericTensorNetwork(IndependentSet(G, weights));
+max_independent_set_size = solve(problem, ConfigsMax())[]
+independent_set_size = solve(problem, CountingAll())[]
 # colorspace = ["Blue", "Red", "Green", "Black"]
 
 # show_graph(G, locs = locations; format = :svg, vertex_colors = colorspace[weights], show_number = true)

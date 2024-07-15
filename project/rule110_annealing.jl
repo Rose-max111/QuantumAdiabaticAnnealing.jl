@@ -1,11 +1,12 @@
-using QuantumAdiabaticAnnealing: rule110_transverse_generate
+using QuantumAdiabaticAnnealing: rule110_transverse_generate, show_transversal_graph
 using QuantumAdiabaticAnnealing: Hamiltonian_energy_plot
 using BloqadeExpr
 using BloqadeLattices, CairoMakie
 using BloqadeWaveforms
 using BloqadeMIS
 
-locations, weights, inputs_id, outputs_id, input_layer_id = rule110_transverse_generate(1, 1)
+
+locations, weights, inputs_id, outputs_id, input_layer_id = rule110_transverse_generate(2, 1)
 locations = map(t -> (Float64(t[1]), Float64(t[2])), locations)
 
 atoms = BloqadeLattices.AtomList(locations)
@@ -18,7 +19,7 @@ atoms = BloqadeLattices.AtomList(locations)
 # end
 
 for i in outputs_id
-    weights[i] = -50
+    weights[i] = -20
 end
 
 T_max = 2
