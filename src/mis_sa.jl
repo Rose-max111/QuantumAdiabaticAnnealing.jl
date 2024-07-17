@@ -55,7 +55,7 @@ node = node to update (or None if wants to choose a node at random)
 function step!(sa::SimulatedAnnealingMIS, T::Float64, node::Int)  # ! is a part of function name, for annotating functions that may change input variables.
     @assert 0 < node <= nv(sa.graph)
     new_obj = sa.obj
-    p_add = 0.6
+    p_add = 0.5
     no_move = false
     add = false
     remove = false
@@ -270,11 +270,11 @@ function track_equilibration!(sa::SimulatedAnnealingMIS, target_obj::Float64, de
                 mynodelist = mynewnodelist
             end
         end
-        @info "After Tscale = $T, best_obj = $(sa.best_obj)"
+        # @info "After Tscale = $T, best_obj = $(sa.best_obj)"
         if exit == true
             break
         end
     end
-    @info "final_best_obj = $(sa.best_obj)"
+    # @info "final_best_obj = $(sa.best_obj)"
     return states
 end
