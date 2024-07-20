@@ -24,6 +24,7 @@ We can encode the Rule 110 cellular automaton into a Weighted Maximum Independen
 
 This graph can be embedded into a grid graph, where two vertices are connected if and only if their Euclidean distance is no more than $\sqrt{5}$.
 ![Alt text](pictures/image-1.png)
+
 The correspondence between the Maximum Weighted Independent Set (MWIS) Solution and Rule 110 is as follows: 
 
 The states of vertex **1**, vertex **3**, and vertex **8** represent the states of the **middle**, **left**, and **right** cells of the automaton **input**, respectively. If the input value of a cell is 1, then the corresponding vertex must be in the MWIS solution; otherwise, it is not. Vertex **12** corresponds to the automaton **output. If the automaton output is 1, then vertex 12 is in the MWIS solution; otherwise, it is not.
