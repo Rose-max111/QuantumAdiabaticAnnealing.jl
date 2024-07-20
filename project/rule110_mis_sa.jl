@@ -86,11 +86,12 @@ ax = Axis(fig[1, 1])
 
 xs = run_time
 ys = prob
-low_errors = fill(0.02, length(xs))
-high_errors = fill(0.02, length(xs))
+# low_errors = fill(0.02, length(xs))
+# high_errors = fill(0.02, length(xs))
 lines!(ax, xs, ys, color = :blue)
-errorbars!(ax, xs, ys, low_errors, high_errors, color = :yellow, whiskerwidth = 10)
-scatter!(xs, ys, markersize = 3, color = :black)
+# errorbars!(ax, xs, ys, low_errors, high_errors, color = :yellow, whiskerwidth = 10)
+# scatter!(xs, ys, markersize = 3, color = :black)
+fig
 
 # colorconfig = [SA.best_IS_bitarr[i] + 1 for i in 1:nv(graph)]
 # print_graph(graph, locations, colorconfig)

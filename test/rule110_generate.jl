@@ -3,6 +3,7 @@ using QuantumAdiabaticAnnealing:rule110_generate, transversal_graph, rule110_tra
 using GenericTensorNetworks
 using LinearAlgebra
 using Graphs
+using LuxorGraphPlot
 # using LuxorGraphPlot.Luxor, LuxorGraphPlot
 
 @testset "rule110_generate" begin
@@ -183,21 +184,24 @@ end
         
 # end
 
-n=1
-m=3
-locations, weights, input_id, output_id, input_layer_id = rule110_transverse_generate(n,m)
-G = SimpleGraph(length(weights))
-radius_square = 4.2
-for i in 1:length(locations)
-    for j in i+1:length(locations)
-        if (locations[i][1] - locations[j][1])^2 + (locations[i][2]-locations[j][2])^2 <= radius_square
-            add_edge!(G, i, j)
-        end
-    end
-end
-problem = GenericTensorNetwork(IndependentSet(G, weights));
-max_independent_set_size = solve(problem, ConfigsMax())[]
-independent_set_size = solve(problem, CountingAll())[]
+# n=1
+# m=3
+# locations, weights, input_id, output_id, input_layer_id = rule110_transverse_generate(n,m)
+# G = SimpleGraph(length(weights))
+# radius_square = 4.2
+# for i in 1:length(locations)
+#     for j in i+1:length(locations)
+#         if (locations[i][1] - locations[j][1])^2 + (locations[i][2]-locations[j][2])^2 <= radius_square
+#             add_edge!(G, i, j)
+#         end
+#     end
+# end
+# problem = GenericTensorNetwork(IndependentSet(G, weights));
+# max_independent_set_size = solve(problem, ConfigsMax())[]
+# independent_set_size = solve(problem, CountingAll())[]
 # colorspace = ["Blue", "Red", "Green", "Black"]
 
 # show_graph(G, locs = locations; format = :svg, vertex_colors = colorspace[weights], show_number = true)
+
+
+
