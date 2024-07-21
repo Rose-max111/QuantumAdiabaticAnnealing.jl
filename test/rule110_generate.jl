@@ -1,6 +1,7 @@
 using QuantumAdiabaticAnnealing, Test
 using QuantumAdiabaticAnnealing:rule110_generate, transversal_graph, rule110_transverse_generate
 using GenericTensorNetworks
+using GenericTensorNetworks:unit_disk_graph
 using LinearAlgebra
 using Graphs
 using LuxorGraphPlot
@@ -165,6 +166,106 @@ end
             end
         end
     end
+end
+
+
+@testset "rule110_transverse_generate" begin
+    locations, weights, inputs_id, outputs_id, input_layer_id = rule110_transverse_generate(1, 1)
+    P = input_layer_id[1][1]
+    Q = inputs_id[1]
+    R = input_layer_id[1][2]
+    Target = outputs_id[1]
+    locations = map(t -> (Float64(t[1]), Float64(t[2])), locations)
+    graph = unit_disk_graph(locations, 2.05)
+
+    weights[P] = -50
+    weights[Q] = -50
+    weights[R] = -50
+
+    @info "Test 000"
+    problem = GenericTensorNetwork(IndependentSet(graph, weights));
+    max_config_weighted = solve(problem, SingleConfigMax())[]
+    max_independent_set_size = solve(problem, ConfigsMax())[]
+    @info "max_independent_set_size = $max_independent_set_size"
+    @test max_config_weighted.c.data[Target] == 0
+
+
+    weights[P] = -50
+    weights[Q] = -50
+    weights[R] = 50
+
+    @info "Test 001"
+    problem = GenericTensorNetwork(IndependentSet(graph, weights));
+    max_config_weighted = solve(problem, SingleConfigMax())[]
+    max_independent_set_size = solve(problem, ConfigsMax())[]
+    @info "max_independent_set_size = $max_independent_set_size"
+    @test max_config_weighted.c.data[Target] == 1
+
+    weights[P] = -50
+    weights[Q] = 50
+    weights[R] = -50
+
+    @info "Test 010"
+    problem = GenericTensorNetwork(IndependentSet(graph, weights));
+    max_config_weighted = solve(problem, SingleConfigMax())[]
+    max_independent_set_size = solve(problem, ConfigsMax())[]
+    @info "max_independent_set_size = $max_independent_set_size"
+    @test max_config_weighted.c.data[Target] == 1
+
+    weights[P] = -50
+    weights[Q] = 50
+    weights[R] = 50
+
+    @info "Test 011"
+    problem = GenericTensorNetwork(IndependentSet(graph, weights));
+    max_config_weighted = solve(problem, SingleConfigMax())[]
+    max_independent_set_size = solve(problem, ConfigsMax())[]
+    @info "max_independent_set_size = $max_independent_set_size"
+    @test max_config_weighted.c.data[Target] == 1
+
+    weights[P] = 50
+    weights[Q] = -50
+    weights[R] = -50
+
+    @info "Test 100"
+    problem = GenericTensorNetwork(IndependentSet(graph, weights));
+    max_config_weighted = solve(problem, SingleConfigMax())[]
+    max_independent_set_size = solve(problem, ConfigsMax())[]
+    @info "max_independent_set_size = $max_independent_set_size"
+    @test max_config_weighted.c.data[Target] == 0
+
+    weights[P] = 50
+    weights[Q] = -50
+    weights[R] = 50
+
+    @info "Test 101"
+    problem = GenericTensorNetwork(IndependentSet(graph, weights));
+    max_config_weighted = solve(problem, SingleConfigMax())[]
+    max_independent_set_size = solve(problem, ConfigsMax())[]
+    @info "max_independent_set_size = $max_independent_set_size"
+    @test max_config_weighted.c.data[Target] == 1
+
+    weights[P] = 50
+    weights[Q] = 50
+    weights[R] = -50
+
+    @info "Test 110"
+    problem = GenericTensorNetwork(IndependentSet(graph, weights));
+    max_config_weighted = solve(problem, SingleConfigMax())[]
+    max_independent_set_size = solve(problem, ConfigsMax())[]
+    @info "max_independent_set_size = $max_independent_set_size"
+    @test max_config_weighted.c.data[Target] == 1
+
+    weights[P] = 50
+    weights[Q] = 50
+    weights[R] = 50
+
+    @info "Test 111"
+    problem = GenericTensorNetwork(IndependentSet(graph, weights));
+    max_config_weighted = solve(problem, SingleConfigMax())[]
+    max_independent_set_size = solve(problem, ConfigsMax())[]
+    @info "max_independent_set_size = $max_independent_set_size"
+    @test max_config_weighted.c.data[Target] == 0
 end
 
 # @testset "rule110_transverse_generate" begin
