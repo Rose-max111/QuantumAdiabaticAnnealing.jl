@@ -22,7 +22,7 @@ Rule 110 has been shown to be Turing Complete[^Cook2009], and thus capable of un
 We can encode the Rule 110 cellular automaton into a Weighted Maximum Independent Set Problem, with blue vertices assigned a weight of 1 and red vertices assigned a weight of 2, as follows.
 ![Alt text](pictures/image.png)
 
-This graph can be embedded into a grid graph, where two vertices are connected if and only if their Euclidean distance is no more than $\sqrt{5}$.
+This graph can be embedded into a grid graph, where two vertices are connected if and only if their Euclidean distance is no more than $2$.
 ![Alt text](pictures/image-1.png)
 
 The correspondence between the Maximum Weighted Independent Set (MWIS) Solution and Rule 110 is as follows: 
@@ -47,6 +47,61 @@ The above gadget depicts a two-layer cellular automaton. The vertices in blue, r
 ![Alt text](pictures/rule110_2-2_automaton.png)
 
 One can easily verify that with this lattice-like structure, we can build infinitely large gadgets capable of universal computing in a surface. Thus we call it Surface Programmable Material.
+
+## Local cooling
+
+We test the hypothesis: Cooling is easy if the process is from the deterministic direction, hard if the process is from the non-deterministic direction. 
+
+In our gadget, cooling from deterministic direction is from input to output, non-deterministic direction is from output to input. The latter one must be non-deterministic because this gadget is Turing-Complete. 
+
+The gadget is dominated by such hamiltonian, correspond to the classical part of Rydberg atoms.
+
+$$
+H = -\Delta \sum_i w_i \hat n_i + \sum_{|\vec r_i - \vec r_j|\leq 2} U \hat n_i \hat n_j
+$$
+
+Our target is to calculate the **state** with lowest energy under the above hamiltonian as quickly as possible, while some positions are set to be 1 or 0 in the **state**.
+
+### Quantum adiabatic annealing energy gap
+
+One possible way is to use quantum adiabatic annealing: start from a simple hamiltonian $H(0)$ and its simple ground state $|\psi(0)\rang$, then gradually change the parameters until reaching the desire hamiltonian $H(t)$.
+
+More specifically, set $\Delta(t=0) <0$ and $\Omega(t=0) =0$ initially, then first turning on $\Omega(t)$ to a non-zero value, sweeping $\Delta(t)$ to final value, and finally turning off $\Omega(t)$.
+$$
+H_{QAA}(t) = \sum_{v\in V} (-\Delta(t)w_v \hat n_v + \Omega(t)\sigma_{v}^x) + \sum_{(u,w) \in E} U\hat n_u \hat n_w
+$$
+
+If the time evolution is sufficiently slow, then by the adiabatic theorem, the system follows the instantaneous ground state, ending up in the solution to the MWIS problem[^Pichler2018].Then we only need to evalute the minimum energy gap $\Delta_{QAA}$ between the ground and first-excited states of instantaneous hamiltonian. 
+
+We set $\Omega = 1 \times 2\pi$ and sweep the $\Delta$ from $3 \times 2\pi $ to $40 \times 2\pi$ with 1*1 gadget. For deterministic direction, we simply set the weight of the input vertices to $50$; as for non-deterministic direction, we set the weight of the output vertice to $50$.
+
+Result listed as follows. **However, we didn't see cooling from deterministic direction would give a smaller energy gap than the other direction. We think that's because the size of this gadget is too small.**
+
+![Alt text](pictures/energy_gap_1_gadget.png)
+
+### Local cooling test through simulated annealing
+
+We will refer to a toy-model limit: $\Delta = 1$ and $U = \infin$. What's more, we introduced **"Energy Gradient"** to the gadget to provide directionality for the simulated annealing. The hamiltonian for a m-layers automaton now change the form into:
+
+$$
+H = \sum_{|\vec r_i - \vec r_j|\leq 2} U \hat n_i \hat n_j  - \Delta \sum_{i,k|\text{vertice i belongs to layer k}} w_i \lambda^{m-k} \hat n_i
+$$
+
+The last term of our new hamiltonian represent the **"Energy Gradient"**. For vertice $i$ in the k-th layer along the computation direction, we reset its weight to $w_i\lambda^{m-k}$. 
+
+From an intuitive perspective, for layers where the thermal energy exceeds the energy required to flip the nodes in the current layer, simulated annealing always filps them randomly; for layers where the thermal energy is lower than the energy required to flip the nodes in the current layer, simulated annealing tends to maintain their configuration; for layers where the thermal energy is just comparable to the flipping energy, simulated annealing executes the corresponding cooling process.
+
+Hence, we can simply set the discrete annealing tempretures as $T(k) = T_0 \eta^k$, where $\eta < 1$ and $\eta ^R = \lambda$. Here $R$ represent the number of the cooling iterations performed for a given layer.
+
+Similar to what we did in QAA, firstly, we set the weights of the inputs/outputs vertices to $\infin$ for testing doing computation along deterministic direction/non-deterministic direction. Then we compare the probability of successfully finding the corresponding ground state under certain $T_0, R, \lambda$ and $\eta$. **We find that doing computation along the non-deterministic direction is harder than the other one**
+
+Next, we believe that for each layers's cooling process, we are essentially calculating a probability transition matrix $P(T,k)$, where $P(T,k)_{outputm, inputm}$ represent the probability that, given the input vertices state is $inputm$, the cooling process sets the output vertices state to $outputm$. 
+
+Thanks to the transvariant structure of our gadget and cooling process, we believe the matrix $P(T,k)$ is independent from $T$ and $k$, which give us an intuitation that if the failure probability of each layer's cooling process is $F$, the total success probability is $(1-F)^m$. **We test this in a 4-single-gadget per layer automaton and find this suit well.**
+
+Finally, we evaluate the error probability v.s. run time in a single layer 4-gadget automaton. Result listed as follows.
+
+![Alt text](<pictures/error vs runtime.png>)
 ## References
 
 [^wiki-1d-automaton]: https://en.wikipedia.org/wiki/Elementary_cellular_automaton 
@@ -55,3 +110,4 @@ One can easily verify that with this lattice-like structure, we can build infini
 
 [^Nguyen2023]: Nguyen, M.-T., Liu, J.-G., Wurtz, J., Lukin, M. D., Wang, S.-T., & Pichler, H. (2023). Quantum Optimization with Arbitrary Connectivity Using Rydberg Atom Arrays. PRX Quantum, 4(1), 010316. https://doi.org/10.1103/PRXQuantum.4.010316
 
+[^Pichler2018]: Pichler, H., Wang, S.-T., Zhou, L., Choi, S., & Lukin, M. D. (2018). Quantum Optimization for Maximum Independent Set Using Rydberg Atom Arrays (arXiv:1808.10816). arXiv. http://arxiv.org/abs/1808.10816
