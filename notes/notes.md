@@ -177,7 +177,7 @@ The probability transition matrix of the active zone at any given time $t$ (exce
 
 Under the assumption that $\left(1-\frac{\lambda_2(P)}{\lambda_1(P)}\right)\sim e^{-W}$, we have $t_{\text{th}} \sim e^{(1-\lambda)^{-1}}\epsilon^{-1}\log(\epsilon^{-1})$. The total time for the computation is $t_{\text{total}} \sim \left(\frac{m}{W}\right)^2\log(\frac{m}{W}) e^{(1-\lambda)^{-1}}$.
 
-Energy per computation scales as $E \sim m \log m$!
+Energy per computation scales as $E \sim m \log m$.
 
 ## References
 
