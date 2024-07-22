@@ -24,7 +24,7 @@ The ground state of which encodes the maximum weight independent set (MWIS) prob
 **Statement 3**: The classical Rydberg Hamiltonian is universal for classical computation.
 
 The NOR gate can be implemented using the Rydberg Hamiltonian (subfigure c below). The NOR gate is a universal gate for classical computation.
-![](images/gadgets.png){width=300}
+![Alt text](images/gadgets.png){width=300}
 
 The conjunction of gates can be implemented by "gluing" the Rydberg atoms together (subfigure d below). The weights are added together.
 
@@ -67,11 +67,11 @@ This graph can be embedded into a grid graph, where two vertices are connected i
 
 The correspondence between the Maximum Weighted Independent Set (MWIS) Solution and Rule 110 is as follows: 
 
-The states of vertex **1**, vertex **3**, and vertex **8** represent the states of the **middle**, **left**, and **right** cells of the automaton **input**, respectively. If the input value of a cell is 1, then the corresponding vertex must be in the MWIS solution; otherwise, it is not. Vertex **12** corresponds to the automaton **output. If the automaton output is 1, then vertex 12 is in the MWIS solution; otherwise, it is not.
+The states of vertex **1**, vertex **3**, and vertex **8** represent the states of the **middle**, **left**, and **right** cells of the automaton's **input**, respectively. If the input value of a cell is 1, then the corresponding vertex must be in the MWIS solution; otherwise, it is not. Vertex **12** corresponds to the automaton's **output**. If the automaton output is 1, then vertex 12 is in the MWIS solution; otherwise, it is not.
 
 In the automaton diagram, the above gadget is equivalent to:
 
-![Alt text](images/image-1.png){width=300}
+![Alt text](images/rule110.png){width=300}
 
 There are exactly **8** different MWIS solutions in this graph (the weighted size of each MWIS solution is 7), each corresponding to one of the **8** possible outputs of the automaton. We list them as follows.
 ![Alt text](images/gadget110.png){width=500}
@@ -130,6 +130,7 @@ Our target is to calculate the **state** with lowest energy under the above hami
 One possible way is to use quantum adiabatic annealing: start from a simple hamiltonian $H(0)$ and its simple ground state $|\psi(0)\rang$, then gradually change the parameters until reaching the desire hamiltonian $H(t)$.
 
 More specifically, set $\Delta(t=0) <0$ and $\Omega(t=0) =0$ initially, then first turning on $\Omega(t)$ to a non-zero value, sweeping $\Delta(t)$ to final value, and finally turning off $\Omega(t)$.
+
 $$
 H_{QAA}(t) = \sum_{v\in V} (-\Delta(t)w_v \hat n_v + \Omega(t)\sigma_{v}^x) + \sum_{(u,w) \in E} U\hat n_u \hat n_w
 $$
@@ -144,7 +145,7 @@ Result listed as follows. **However, we didn't see cooling from deterministic di
 
 ### Local cooling test through simulated annealing
 
-We will refer to a toy-model limit: $\Delta = 1$ and $U = \infin$. What's more, we introduced **"Energy Gradient"** to the gadget to provide directionality for the simulated annealing. The hamiltonian for a m-layers automaton now change the form into:
+We will refer to a toy-model limit: $\Delta = 1$ and $U = \infty$. What's more, we introduced **"Energy Gradient"** to the gadget to provide directionality for the simulated annealing. The hamiltonian for a m-layers automaton now change the form into:
 
 $$
 H = \sum_{|\vec r_i - \vec r_j|\leq 2} U \hat n_i \hat n_j  - \Delta \sum_{i,k|\text{vertice i belongs to layer k}} w_i \lambda^{m-k} \hat n_i
@@ -156,7 +157,7 @@ From an intuitive perspective, for layers where the thermal energy exceeds the e
 
 Hence, we can simply set the discrete annealing tempretures as $T(k) = T_0 \eta^k$, where $\eta < 1$ and $\eta ^R = \lambda$. Here $R$ represent the number of the cooling iterations performed for a given layer.
 
-Similar to what we did in QAA, firstly, we set the weights of the inputs/outputs vertices to $\infin$ for testing doing computation along deterministic direction/non-deterministic direction. Then we compare the probability of successfully finding the corresponding ground state under certain $T_0, R, \lambda$ and $\eta$. **We find that doing computation along the non-deterministic direction is harder than the other one**
+Similar to what we did in QAA, firstly, we set the weights of the inputs/outputs vertices to $\infty$ for testing doing computation along deterministic direction/non-deterministic direction. Then we compare the probability of successfully finding the corresponding ground state under certain $T_0, R, \lambda$ and $\eta$. **We find that doing computation along the non-deterministic direction is harder than the other one**
 
 Next, we believe that for each layers's cooling process, we are essentially calculating a probability transition matrix $P(T,k)$, where $P(T,k)_{outputm, inputm}$ represent the probability that, given the input vertices state is $inputm$, the cooling process sets the output vertices state to $outputm$. 
 
