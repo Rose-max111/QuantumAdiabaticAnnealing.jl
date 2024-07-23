@@ -200,7 +200,7 @@ eigvals, eigvecs, infos = eigsolve(P, rand(Float64, 2^(total_atoms)), 4, :LR; ma
 
 sss = 0
 for i in 1:2^total_atoms
-    sss += eigvecs[1][i] * calculate_state_energy(i-1, n)
+    sss += eigvecs[2][i] * calculate_state_energy(i-1, n)
 end
 sss
 
