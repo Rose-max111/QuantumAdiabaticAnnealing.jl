@@ -29,7 +29,7 @@ function transition_matrix(n, Temp)
     @info "finish calculating state energy"
     # P = spzeros(2^total_atoms, 2^total_atoms)
     for i in 0:(2^total_atoms - 1)
-        sum = 0
+        other_prob = 0
         for j in 1:total_atoms
             reverse_mask = i ⊻ (2^(j-1))
             push!(row, reverse_mask + 1)
@@ -38,15 +38,16 @@ function transition_matrix(n, Temp)
                 push!(val, 1.0 / total_atoms)
                 # P[reverse_mask + 1, i + 1] = 1.0 / total_atoms
             else
-                push!(val, exp(- (state_energy[reverse_mask + 1] - state_energy[i + 1]) / Temp))
+                push!(val, exp(- (state_energy[reverse_mask + 1] - state_energy[i + 1]) / Temp) * 1.0 / total_atoms)
                 # P[reverse_mask + 1, i + 1] = exp(- (state_energy[reverse_mask + 1] - state_energy[i + 1]) / Temp)
             end
-            sum += val[end]
+            other_prob += val[end]
         end
         push!(row, i+1)
         push!(col, i+1)
-        push!(val ,1 - sum)
+        push!(val ,1 - other_prob)
     end
+    # @info val
     return sparse(row, col, val)
 end
 
@@ -184,7 +185,7 @@ n = 3
 m = 1
 obserable_average = []
 high_temp = 1
-for run_time = 1000:500:20000
+for run_time = 1:1:20
     obs = annealing(n, m, 20000, fill(1.0 * high_temp, run_time), 1)
     push!(obserable_average,obs)
     @info "runtime = $run_time, obserable_average = $obs"
@@ -195,7 +196,13 @@ total_atoms = 2*n-2
 Temp = 1
 P = transition_matrix(n, Temp)
 
-eigvals, eigvecs, infos = eigsolve(P, rand(Float64, 2^(total_atoms)), 3, :LR; maxiter = 5000)
+eigvals, eigvecs, infos = eigsolve(P, rand(Float64, 2^(total_atoms)), 4, :LR; maxiter = 5000)
+
+sss = 0
+for i in 1:2^total_atoms
+    sss += eigvecs[1][i] * calculate_state_energy(i-1, n)
+end
+sss
 
 println(eigvals[1:2])
 @info infos.converged, infos.numiter
