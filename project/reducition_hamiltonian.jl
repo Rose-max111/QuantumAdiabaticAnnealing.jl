@@ -2,13 +2,21 @@ using QuantumAdiabaticAnnealing
 using SparseArrays
 using KrylovKit
 using Random
+using CurveFit
+using CairoMakie
 
 function rule110(p, q, r)
     return (q + r + q*r + p*q*r) % 2
 end
 
-function calculate_state_energy(state, n)
+function calculate_state_energy(state, n; on_site_energy = nothing)
     ret = 0
+    if on_site_energy == nothing
+        on_site_energy = fill(0, n)
+    end
+    for l in 1:n
+        ret += on_site_energy[l] * ((state & (2^(l-1))) > 0 ? 1 : -1)
+    end
     for l in 1:n-2
         p = (state & (2^(l-1))) > 0 ? 1 : 0
         q = (state & (2^(l))) > 0 ? 1 : 0
@@ -19,9 +27,13 @@ function calculate_state_energy(state, n)
     return ret
 end
 
-function transition_matrix(n, Temp)
+function transition_matrix(n, Temp; on_site_energy = nothing)
     total_atoms = 2 * n - 2
-    state_energy = [calculate_state_energy(i, n) for i in 0:(2^total_atoms - 1)]
+    if on_site_energy == nothing
+        on_site_energy = fill(0, n)
+    end
+    state_energy = [calculate_state_energy(i, n; on_site_energy) for i in 0:(2^total_atoms - 1)]
+
 
     row = Vector{Int}()
     col = Vector{Int}()
@@ -181,28 +193,55 @@ function annealing(n, m, run_annealing_iters, tempscale, niters)
     return 1.0 * obserable / run_annealing_iters
 end
 
-n = 3
-m = 1
-obserable_average = []
-high_temp = 1
-for run_time = 1:1:20
-    obs = annealing(n, m, 20000, fill(1.0 * high_temp, run_time), 1)
-    push!(obserable_average,obs)
-    @info "runtime = $run_time, obserable_average = $obs"
-end
+# n = 3
+# m = 1
+# obserable_average = []
+# high_temp = 1
+# for run_time = 1:1:20
+#     obs = annealing(n, m, 20000, fill(1.0 * high_temp, run_time), 1)
+#     push!(obserable_average,obs)
+#     @info "runtime = $run_time, obserable_average = $obs"
+# end
 
 
-total_atoms = 2*n-2
 Temp = 1
-P = transition_matrix(n, Temp)
-
-eigvals, eigvecs, infos = eigsolve(P, rand(Float64, 2^(total_atoms)), 4, :LR; maxiter = 5000)
-
-sss = 0
-for i in 1:2^total_atoms
-    sss += eigvecs[2][i] * calculate_state_energy(i-1, n)
+ED_average_slope = []
+sample_w = 3:10
+f = Figure()
+ax = Axis(f[1,1], title = "log(Energy Gap) vs log(Width)", xlabel = "log(Width)", ylabel = "log(Energy Gap)")
+for average_field in 1:1:8
+    ED_gap = []
+    for n in sample_w
+        on_site_energy = nothing
+        if average_field != nothing
+            on_site_energy = fill(average_field, n)
+        end
+        # @info on_site_energy
+        total_atoms = 2*n-2
+        P = transition_matrix(n, Temp; on_site_energy)
+        eigvals, eigvecs, infos = eigsolve(P, rand(Float64, 2^(total_atoms)), 2, :LM; maxiter = 5000)
+        push!(ED_gap, eigvals[1] - eigvals[2])
+        # @info "n = $n, average_field = $(average_field), gap = $(eigvals[1] - eigvals[2]), converged = $(infos.converged), numiter = $(infos.numiter)"
+    end
+    x = [i for i in sample_w]
+    logx = log.(x)
+    logy = log.(Real.(ED_gap))
+    scatter!(ax, logx, logy, label = "average_field = $average_field")
+    # fit = curve_fit(LinearFit, logx, logy)
+    # push!(ED_average_slope, fit.coefs[2])
+    @info "average_field = $(average_field)"
 end
-sss
 
-println(eigvals[1:2])
-@info infos.converged, infos.numiter
+axislegend(position = :rb)
+f
+# end
+
+# x = [i for i in 0.1:0.1:5]
+# ED_average_slope = Float64.(ED_average_slope)
+# ax = Axis(f[1,1], title = "Slope vs Average Field", xlabel = "Average Field", ylabel = "Slope")
+# scatter!(ax, x, ED_average_slope)
+# f
+# save("slope_vs_average_field.png", f)
+# for val in ED_average_slope
+#     println(val)
+# end
