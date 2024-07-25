@@ -29,7 +29,7 @@ function evaluate_parent(sa::ParallelSimulatedAnnealingState, inode::Int, ibatch
     return trueoutput ⊻ sa.state[idp[4], ibatch]
 end
 function calculate_energy(sa::ParallelSimulatedAnnealingState, ibatch::Int)
-    return sum(i->evaluate_parent(sa, i, ibatch), atoms(sa))
+    return sum(i->evaluate_parent(sa, i, ibatch), sa.n+1:natom(sa))
 end
 function parent_logic(sa::ParallelSimulatedAnnealingState, node::Int)
     n = sa.n
@@ -132,16 +132,11 @@ prob_accept(::Metroplis, Temp, ΔE::T) where T<:Real = ΔE < 0 ? one(T) : exp(- 
 prob_accept(::HeatBath, Temp, ΔE::Real) = inv(1 + exp(ΔE / Temp))
 
 function track_equilibration!(rule::TransitionRule, sa::ParallelSimulatedAnnealingState, tempscale = 4 .- (1:100 .-1) * 0.04)
-    best_state = copy(sa)
-    best_energy = calculate_energy.(Ref(sa), 1:nbatch(sa))
     # NOTE: do we really need niters? or just set it to 1?
     for Temp in tempscale
         # NOTE: do we really need to shuffle the nodes?
         for node in 1:natom(sa)
-            eng = step!(rule, sa, Temp, node)
-            mask = eng .< best_energy
-            best_energy[mask] .= eng[mask]
-            best_state.state[:, mask] .= sa.state[:, mask]
+            step!(rule, sa, Temp, node)
         end
     end
     return sa
