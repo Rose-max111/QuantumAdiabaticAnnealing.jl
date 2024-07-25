@@ -4,52 +4,43 @@ struct SimulatedAnnealingHamiltonian
 end
 natom(sa::SimulatedAnnealingHamiltonian) = sa.n * sa.m
 atoms(sa::SimulatedAnnealingHamiltonian) = Base.OneTo(natom(sa))
-function random_state(sa::SimulatedAnnealingHamiltonian, nbatch::Int)
+function random_state(sa::SimulatedAnnealingHamiltonian, nbatch::Integer)
     return rand(Bool, natom(sa), nbatch)
 end
-hasparent(sa::SimulatedAnnealingHamiltonian, node::Int) = node > sa.n
-linear_to_cartesian(sa::SimulatedAnnealingHamiltonian, node::Int) = CartesianIndices((sa.n, sa.m))[node]
-cartesian_to_linear(sa::SimulatedAnnealingHamiltonian, ci::CartesianIndex) = LinearIndices((sa.n, sa.m))[ci]
+hasparent(sa::SimulatedAnnealingHamiltonian, node::Integer) = node > sa.n
+function linear_to_cartesian(sa::SimulatedAnnealingHamiltonian, node::Integer)
+    j, i = divrem(node-1, sa.n)
+    return i + 1, j + 1
+end
+cartesian_to_linear(sa::SimulatedAnnealingHamiltonian, i::Integer, j::Integer) = i + (j - 1) * sa.n
 
 # evaluate the energy of the i-th gadget (involving atoms i and its parents)
-function evaluate_parent(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, inode::Int, ibatch::Int)
+function evaluate_parent(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, inode::Integer, ibatch::Integer)
     idp = parent_logic(sa, inode)
-    trueoutput = rule110(state[idp[1], ibatch], state[idp[2], ibatch], state[idp[3], ibatch])
-    return trueoutput ⊻ state[idp[4], ibatch]
+    trueoutput = @inbounds rule110(state[idp[1], ibatch], state[idp[2], ibatch], state[idp[3], ibatch])
+    return @inbounds trueoutput ⊻ state[idp[4], ibatch]
 end
-function calculate_energy(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, ibatch::Int)
+function calculate_energy(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, ibatch::Integer)
     return sum(i->evaluate_parent(sa, state, i, ibatch), sa.n+1:natom(sa))
 end
-function parent_logic(sa::SimulatedAnnealingHamiltonian, node::Int)
+function parent_logic(sa::SimulatedAnnealingHamiltonian, node::Integer)
     n = sa.n
-    ci = linear_to_cartesian(sa, node)
+    i, j = linear_to_cartesian(sa, node)
     (
-        cartesian_to_linear(sa, CartesianIndex(mod1(ci[1]-1, n), ci[2]-1)),  # periodic boundary condition
-        cartesian_to_linear(sa, CartesianIndex(ci[1], ci[2]-1)),
-        cartesian_to_linear(sa, CartesianIndex(mod1(ci[1]+1, n), ci[2]-1)),
+        cartesian_to_linear(sa, mod1(i-1, n), j-1),  # periodic boundary condition
+        cartesian_to_linear(sa, i, j-1),
+        cartesian_to_linear(sa, mod1(i+1, n), j-1),
         node
     )
 end
 
-function child_nodes(sa::SimulatedAnnealingHamiltonian, node::Int)
+function child_nodes(sa::SimulatedAnnealingHamiltonian, node::Integer)
     n = sa.n
-    ci = linear_to_cartesian(sa, node)
+    i, j = linear_to_cartesian(sa, node)
     (
-        cartesian_to_linear(sa, CartesianIndex(mod1(ci[1]-1, n), ci[2]+1)),  # periodic boundary condition
-        cartesian_to_linear(sa, CartesianIndex(mod1(ci[1], n), ci[2]+1)),
-        cartesian_to_linear(sa, CartesianIndex(mod1(ci[1]+1, n), ci[2]+1)),
-    )
-end
-
-# i can be -1, 0, 1
-function child_logic(sa::SimulatedAnnealingHamiltonian, node::Int, i::Int)
-    n = sa.n
-    ci = linear_to_cartesian(sa, node)
-    (
-        cartesian_to_linear(sa, CartesianIndex(mod1(ci[1]+i-1, n), ci[2])),  # periodic boundary condition
-        cartesian_to_linear(sa, CartesianIndex(mod1(ci[1]+i, n), ci[2])),
-        cartesian_to_linear(sa, CartesianIndex(mod1(ci[1]+i+1, n), ci[2])),
-        cartesian_to_linear(sa, CartesianIndex(mod1(ci[1]+i, n), ci[2]+1)),
+        cartesian_to_linear(sa, mod1(i-1, n), j+1),  # periodic boundary condition
+        cartesian_to_linear(sa, mod1(i, n), j+1),
+        cartesian_to_linear(sa, mod1(i+1, n), j+1),
     )
 end
 
@@ -57,25 +48,31 @@ abstract type TransitionRule end
 struct HeatBath <: TransitionRule end
 struct Metropolis <: TransitionRule end
 
-function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, Temp::Float64, node::Int)
+function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, Temp::Float64, node::Integer)
     for ibatch in 1:size(state, 2)
         step_kernel!(rule, sa, state, Temp, node, ibatch)
     end
     state
 end
-function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::CuMatrix, Temp::Float64, node::Int)
-    function kernel(rule, sa, Temp, node)
-        ibatch = threadIdx().x
-        step_kernel!(rule, sa, state, Temp, node, ibatch)
+function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::CuMatrix, Temp::Float64, node::Integer)
+    @inline function kernel(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, Temp::Float64, node::Integer)
+        ibatch = (blockIdx().x - Int32(1)) * blockDim().x + threadIdx().x
+        if ibatch <= size(state, 2)
+            step_kernel!(rule, sa, state, Temp, node, ibatch)
+        end
         return nothing
     end
-    @cuda threads = size(sa, 2) kernel(rule, sa, Temp, node)
+    kernel = @cuda launch=false kernel(rule, sa, state, Temp, node)
+    config = launch_configuration(kernel.fun)
+    threads = min(size(state, 2), config.threads)
+    blocks = cld(size(state, 2), threads)
+    CUDA.@sync kernel(rule, sa, state, Temp, node; threads, blocks)
     state
 end
 
-function step_kernel!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, Temp::Float64, node::Int, ibatch::Int)
+@inline function step_kernel!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state, Temp::Float64, node::Integer, ibatch::Integer)
     ΔE = 0
-    i, j = linear_to_cartesian(sa, node).I
+    i, j = linear_to_cartesian(sa, node)
     if j > 1 # not the first layer
         ΔE -= 2 * evaluate_parent(sa, state, node, ibatch)
     end
