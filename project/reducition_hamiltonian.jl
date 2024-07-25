@@ -5,63 +5,6 @@ using Random
 using CurveFit
 using CairoMakie
 
-function rule110(p, q, r)
-    return (q + r + q*r + p*q*r) % 2
-end
-
-function calculate_state_energy(state, n; on_site_energy = nothing)
-    ret = 0
-    if on_site_energy == nothing
-        on_site_energy = fill(0, n)
-    end
-    for l in 1:n
-        ret += on_site_energy[l] * ((state & (2^(l-1))) > 0 ? 1 : -1)
-    end
-    for l in 1:n-2
-        p = (state & (2^(l-1))) > 0 ? 1 : 0
-        q = (state & (2^(l))) > 0 ? 1 : 0
-        r = (state & (2^(l+1))) > 0 ? 1 : 0
-        next = (state & (2^(l + n - 1))) > 0 ? 1 : 0
-        ret += (rule110(p, q, r) ⊻ next)
-    end
-    return ret
-end
-
-function transition_matrix(n, Temp; on_site_energy = nothing)
-    total_atoms = 2 * n - 2
-    if on_site_energy == nothing
-        on_site_energy = fill(0, n)
-    end
-    state_energy = [calculate_state_energy(i, n; on_site_energy) for i in 0:(2^total_atoms - 1)]
-
-
-    row = Vector{Int}()
-    col = Vector{Int}()
-    val = Vector{Float64}()
-    @info "finish calculating state energy"
-    # P = spzeros(2^total_atoms, 2^total_atoms)
-    for i in 0:(2^total_atoms - 1)
-        other_prob = 0
-        for j in 1:total_atoms
-            reverse_mask = i ⊻ (2^(j-1))
-            push!(row, reverse_mask + 1)
-            push!(col, i+1)
-            if state_energy[reverse_mask + 1] < state_energy[i + 1] # accept transition
-                push!(val, 1.0 / total_atoms)
-                # P[reverse_mask + 1, i + 1] = 1.0 / total_atoms
-            else
-                push!(val, exp(- (state_energy[reverse_mask + 1] - state_energy[i + 1]) / Temp) * 1.0 / total_atoms)
-                # P[reverse_mask + 1, i + 1] = exp(- (state_energy[reverse_mask + 1] - state_energy[i + 1]) / Temp)
-            end
-            other_prob += val[end]
-        end
-        push!(row, i+1)
-        push!(col, i+1)
-        push!(val ,1 - other_prob)
-    end
-    # @info val
-    return sparse(row, col, val)
-end
 
 mutable struct SimulatedAnnealingHamiltonian
     const b::Float64 # violate hamiltonian energy
@@ -206,10 +149,11 @@ end
 
 Temp = 1
 ED_average_slope = []
-sample_w = 3:10
+sample_w = 3:9
+sample_average_field = 0:1:0
 f = Figure()
-ax = Axis(f[1,1], title = "log(Energy Gap) vs log(Width)", xlabel = "log(Width)", ylabel = "log(Energy Gap)")
-for average_field in 1:1:8
+ax = Axis(f[1,1], title = "log(Energy Gap) vs log(Width) (period_condition)", xlabel = "log(Width)", ylabel = "log(Energy Gap)")
+for average_field in sample_average_field
     ED_gap = []
     for n in sample_w
         on_site_energy = nothing
@@ -217,30 +161,33 @@ for average_field in 1:1:8
             on_site_energy = fill(average_field, n)
         end
         # @info on_site_energy
-        total_atoms = 2*n-2
-        P = transition_matrix(n, Temp; on_site_energy)
-        eigvals, eigvecs, infos = eigsolve(P, rand(Float64, 2^(total_atoms)), 2, :LM; maxiter = 5000)
-        push!(ED_gap, eigvals[1] - eigvals[2])
+        total_atoms = 2*n
+        P = toy_model_transition_matrix(n, Temp; on_site_energy, period_condition = true)
+        eigvals_positive, eigvecs_positive, infos = eigsolve(P, rand(Float64, 2^(total_atoms)), 2, :LR; maxiter = 5000)
+        eigvals_negetive, eigvecs_negetive, infos = eigsolve(P, rand(Float64, 2^(total_atoms)), 2, :SR; maxiter = 5000)
+        second_largest_eigenval = max(abs(Real(eigvals_positive[2])), abs(Real(eigvals_negetive[1])))
+        push!(ED_gap, Real(eigvals_positive[1]) - second_largest_eigenval)
         # @info "n = $n, average_field = $(average_field), gap = $(eigvals[1] - eigvals[2]), converged = $(infos.converged), numiter = $(infos.numiter)"
     end
     x = [i for i in sample_w]
     logx = log.(x)
-    logy = log.(Real.(ED_gap))
+    logy = log.(ED_gap)
     scatter!(ax, logx, logy, label = "average_field = $average_field")
-    # fit = curve_fit(LinearFit, logx, logy)
-    # push!(ED_average_slope, fit.coefs[2])
+    fit = curve_fit(LinearFit, logx, logy)
+    push!(ED_average_slope, fit.coefs[2])
     @info "average_field = $(average_field)"
 end
 
-axislegend(position = :rb)
+# axislegend(position = :lb)
 f
 # end
 
-# x = [i for i in 0.1:0.1:5]
-# ED_average_slope = Float64.(ED_average_slope)
-# ax = Axis(f[1,1], title = "Slope vs Average Field", xlabel = "Average Field", ylabel = "Slope")
-# scatter!(ax, x, ED_average_slope)
-# f
+x = [i for i in sample_average_field]
+# ax = Axis(f[1,1], title = "log(Energy Gap) vs log(Width) (period_condition)", xlabel = "log(Width)", ylabel = "log(Energy Gap)")
+ED_average_slope = Float64.(ED_average_slope)
+ax = Axis(f[1,1], title = "Slope vs Average Field", xlabel = "Average Field", ylabel = "Slope")
+scatter!(ax, x, ED_average_slope)
+f
 # save("slope_vs_average_field.png", f)
 # for val in ED_average_slope
 #     println(val)
