@@ -1,8 +1,3 @@
-using Random
-using CUDA
-using BitBasis
-using QuantumAdiabaticAnnealing: rule110
-
 struct SimulatedAnnealingHamiltonian
     n::Int # number of atoms per layer
     m::Int # number of full layers (count the last layer!)
@@ -58,28 +53,9 @@ function child_logic(sa::SimulatedAnnealingHamiltonian, node::Int, i::Int)
     )
 end
 
-using Test
-@testset "SimulatedAnnealingHamiltonian" begin
-    sa = SimulatedAnnealingHamiltonian(3, 2)
-    @test sa isa SimulatedAnnealingHamiltonian
-    @test natom(sa) == 6
-    @test sa.n == 3
-    @test sa.m == 2
-    @test linear_to_cartesian(sa, 4) == CartesianIndex(1, 2)
-    @test cartesian_to_linear(sa, CartesianIndex(1, 2)) == 4
-    @test hasparent(sa, 1) == false
-    @test hasparent(sa, 4) == true
-    @test random_state(sa, nbatch)
-    @test parent_logic(sa, 4) == (3, 1, 2, 4)
-    @test child_nodes(sa, 1) == (6, 4, 5)
-    @test child_logic(sa, 1, -1) == (2, 3, 1, 6)
-    @test child_logic(sa, 1, 0) == (3, 1, 2, 4)
-    @test child_logic(sa, 1, 1) == (1, 2, 3, 5)
-end
-
 abstract type TransitionRule end
 struct HeatBath <: TransitionRule end
-struct Metroplis <: TransitionRule end
+struct Metropolis <: TransitionRule end
 
 function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, Temp::Float64, node::Int)
     for ibatch in 1:size(state, 2)
@@ -121,7 +97,7 @@ function step_kernel!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, s
         0
     end
 end
-prob_accept(::Metroplis, Temp, ΔE::T) where T<:Real = ΔE < 0 ? 0.0 : exp(- (ΔE) / Temp)
+prob_accept(::Metropolis, Temp, ΔE::T) where T<:Real = ΔE < 0 ? 0.0 : exp(- (ΔE) / Temp)
 prob_accept(::HeatBath, Temp, ΔE::Real) = inv(1 + exp(ΔE / Temp))
 
 function track_equilibration!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, tempscale = 4 .- (1:100 .-1) * 0.04)
@@ -133,34 +109,4 @@ function track_equilibration!(rule::TransitionRule, sa::SimulatedAnnealingHamilt
         end
     end
     return sa
-end
-
-@testset "sa (cpu)" begin
-    sa = SimulatedAnnealingHamiltonian(4, 2)
-    nbatch = 30
-    @testset "Metroplis" begin
-        state = random_state(sa, nbatch)
-        step!(Metroplis(), sa, state, 1.0, 1)
-        @test track_equilibration!(Metroplis(), sa, state) isa SimulatedAnnealingHamiltonian
-    end
-    @testset "HeatBath" begin
-        state = random_state(sa, nbatch)
-        step!(HeatBath(), sa, state, 1.0, 1)
-        @test track_equilibration!(HeatBath(), sa, state) isa SimulatedAnnealingHamiltonian
-    end
-end
-
-@testset "sa (gpu)" begin
-    sa = SimulatedAnnealingHamiltonian(4, 2)
-    nbatch = 30
-    @testset "Metroplis" begin
-        state = CuArray(random_state(sa, nbatch))
-        @test step!(Metroplis(), sa, state, 1.0, 1) isa Matrix
-        @test track_equilibration!(Metroplis(), sa, state) isa SimulatedAnnealingHamiltonian
-    end
-    @testset "HeatBath" begin
-        state = CuArray(random_state(sa, nbatch))
-        @test step!(HeatBath(), sa, state, 1.0, 1) isa CuMatrix
-        @test track_equilibration!(HeatBath(), sa, state) isa SimulatedAnnealingHamiltonian
-    end
 end

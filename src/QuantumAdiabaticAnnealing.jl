@@ -27,5 +27,6 @@ include("rule54_generate.jl")
 include("rule110_generate.jl")
 include("mis_sa.jl")
 include("toy_model.jl")
+include("cusa.jl")
 
 end
