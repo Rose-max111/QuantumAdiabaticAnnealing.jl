@@ -36,7 +36,23 @@ function toy_model_state_energy(state, n; on_site_energy = nothing, period_condi
     return ret
 end
 
-function toy_model_transition_matrix(n, Temp; on_site_energy = nothing, period_condition = false)
+
+abstract type TransitionRule end
+struct HeatBath <: TransitionRule end
+struct Metroplis <: TransitionRule end
+function update(::Metroplis, Temp, ΔE, prior)
+    if ΔE < 0
+        1.0
+    else
+        exp(- (ΔE) / Temp)
+    end * prior
+end
+
+function update(::HeatBath, Temp, ΔE, prior)
+    exp(-ΔE / Temp) / (1 + exp(-ΔE / Temp)) * prior
+end
+
+function toy_model_transition_matrix(rule::TransitionRule, n, Temp; on_site_energy = nothing, period_condition = false)
     total_atoms = 2 * n - 2
     if period_condition == true
         total_atoms = 2 * n
@@ -57,13 +73,9 @@ function toy_model_transition_matrix(n, Temp; on_site_energy = nothing, period_c
             reverse_mask = i ⊻ (2^(j-1))
             push!(row, reverse_mask + 1)
             push!(col, i+1)
-            if state_energy[reverse_mask + 1] < state_energy[i + 1] # accept transition
-                push!(val, 1.0 / total_atoms)
-                # P[reverse_mask + 1, i + 1] = 1.0 / total_atoms
-            else
-                push!(val, exp(- (state_energy[reverse_mask + 1] - state_energy[i + 1]) / Temp) * 1.0 / total_atoms)
-                # P[reverse_mask + 1, i + 1] = exp(- (state_energy[reverse_mask + 1] - state_energy[i + 1]) / Temp)
-            end
+
+            ΔE = state_energy[reverse_mask + 1] - state_energy[i + 1]
+            push!(val, update(rule, Temp, ΔE, 1.0 / total_atoms))
             other_prob += val[end]
         end
         push!(row, i+1)

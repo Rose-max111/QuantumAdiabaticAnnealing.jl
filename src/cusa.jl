@@ -81,11 +81,14 @@ end
         for node in cnodes
             ΔE -= evaluate_parent(sa, state, node, ibatch)
         end
-        # flip the node
+        # flip the node@
         @inbounds state[node, ibatch] ⊻= true
         for node in cnodes
             ΔE += evaluate_parent(sa, state, node, ibatch)
         end
+    else
+        # also need to flip the node, but no need to calculate energy change due to parent(this node) change
+        @inbounds state[node, ibatch] ⊻= true
     end
     if rand() < prob_accept(rule, Temp, ΔE)
         ΔE
@@ -94,14 +97,15 @@ end
         0
     end
 end
-prob_accept(::Metropolis, Temp, ΔE::T) where T<:Real = ΔE < 0 ? 0.0 : exp(- (ΔE) / Temp)
+prob_accept(::Metropolis, Temp, ΔE::T) where T<:Real = ΔE < 0 ? 1.0 : exp(- (ΔE) / Temp)
 prob_accept(::HeatBath, Temp, ΔE::Real) = inv(1 + exp(ΔE / Temp))
 
 function track_equilibration!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, tempscale = 4 .- (1:100 .-1) * 0.04)
     # NOTE: do we really need niters? or just set it to 1?
     for Temp in tempscale
         # NOTE: do we really need to shuffle the nodes?
-        for node in 1:natom(sa)
+        # for node in 1:natom(sa)
+        for node in shuffle!(Vector(1:natom(sa)))
             step!(rule, sa, state, Temp, node)
         end
     end
