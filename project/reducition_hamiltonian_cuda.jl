@@ -14,28 +14,28 @@ using BenchmarkTools
 #@test track_equilibration!(Metropolis(), sa, state) isa SimulatedAnnealingHamiltonian
 
 
-sa = SimulatedAnnealingHamiltonian(3, 2)
+sa = SimulatedAnnealingHamiltonian(8, 2)
 nbatch = 5000
 
 state = CuArray(random_state(sa, nbatch))
 # state = random_state(sa, nbatch)
-anneal_time = 1000
+anneal_time = 10000
 # begin_temp = 20.0
 end_temp = 2.0
-anneal_temp = begin_temp .- (0:anneal_time - 1) .* (begin_temp - end_temp) / anneal_time
+# anneal_temp = begin_temp .- (0:anneal_time - 1) .* (begin_temp - end_temp) / anneal_time
 @btime track_equilibration!(HeatBath(), $sa, $state, fill(end_temp, anneal_time))
 
 cpu_state = Array(state)
 state_10 = [sum(cpu_state[:,i] .* [2^(j-1) for j in 1:sa.n*sa.m]) for i in 1:size(cpu_state)[2]]
 figure_count = [count(==(i), state_10) for i in 0:2^(sa.n*sa.m)-1]
 distribution_count = 1.0 .* figure_count ./ sum(figure_count)
-# state_energy = [calculate_energy(sa, cpu_state, i) for i in 1:nbatch]
-# state_energy_average = 1.0 * sum(state_energy) / nbatch
+state_energy = [calculate_energy(sa, cpu_state, i) for i in 1:nbatch]
+state_energy_average = 1.0 * sum(state_energy) / nbatch
 
 
 using KrylovKit
 using QuantumAdiabaticAnnealing:toy_model_transition_matrix, toy_model_state_energy
-n = 3
+n = 8
 Temp = end_temp
 P = toy_model_transition_matrix(HeatBath(), n, Temp; period_condition = true)
 eigvals, eigvecs, infos = eigsolve(P, rand(Float64, size(P)[1]), 2, :LR; maxiter = 5000)

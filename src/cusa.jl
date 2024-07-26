@@ -66,16 +66,18 @@ function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::C
     config = launch_configuration(kernel.fun)
     threads = min(size(state, 2), config.threads)
     blocks = cld(size(state, 2), threads)
-    CUDA.@sync kernel(rule, sa, state, Temp, node; threads, blocks)
+    CUDA.@sync kernel(rule, sa, state, Temp; threads, blocks)
     state
 end
 
 @inline function step_kernel!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state, Temp::Float64, ibatch::Integer)
     ΔE = 0
     node = rand(atoms(sa))
+
+    # E_initial = calculate_energy(sa, state, ibatch)
     i, j = linear_to_cartesian(sa, node)
     if j > 1 # not the first layer
-        ΔE -= 2 * evaluate_parent(sa, state, node, ibatch)
+        ΔE += 1 - 2 * evaluate_parent(sa, state, node, ibatch)
     end
     if j < sa.m # not the last layer
         cnodes = child_nodes(sa, node)
@@ -87,14 +89,14 @@ end
         for node in cnodes
             ΔE += evaluate_parent(sa, state, node, ibatch)
         end
-    else
-        # also need to flip the node, but no need to calculate energy change due to parent(this node) change
         @inbounds state[node, ibatch] ⊻= true
     end
     if rand() < prob_accept(rule, Temp, ΔE)
-        ΔE
-    else  # revert the flip
         @inbounds state[node, ibatch] ⊻= true
+        # E_end = calculate_energy(sa, state, ibatch)
+        # @assert E_end - E_initial == ΔE
+        ΔE
+    else
         0
     end
 end
