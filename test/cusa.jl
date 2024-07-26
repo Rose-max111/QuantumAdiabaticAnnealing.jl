@@ -61,13 +61,14 @@ using QuantumAdiabaticAnnealing:toy_model_transition_matrix, toy_model_state_ene
     state = CuArray(random_state(sa, nbatch))
     anneal_time = 10000
     end_temp = 2.0
+    energy_gradient = CUDA.ones(anneal_time)
     
-    @btime track_equilibration!(HeatBath(), $sa, $state, fill(end_temp, anneal_time))
+    @btime track_equilibration!(HeatBath(), $sa, $state, energy_gradient, fill(end_temp, anneal_time))
     
     cpu_state = Array(state)
 
     # calculate the corresponding sample-distribution energy
-    state_energy = [calculate_energy(sa, cpu_state, i) for i in 1:nbatch]
+    state_energy = [calculate_energy(sa, cpu_state, energy_gradient, i) for i in 1:nbatch]
     state_energy_average = 1.0 * sum(state_energy) / nbatch
     @info "sample energy is $state_energy_average"
 
