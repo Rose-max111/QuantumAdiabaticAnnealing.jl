@@ -78,7 +78,7 @@ end
 
     i, j = linear_to_cartesian(sa, node)
     if j > 1 # not the first layer
-        ΔE += 1 - 2 * evaluate_parent(sa, state, energy_gradient, node, ibatch)
+        ΔE += energy_gradient[ibatch]^(sa.m - j) - 2 * evaluate_parent(sa, state, energy_gradient, node, ibatch)
     end
     if j < sa.m # not the last layer
         cnodes = child_nodes(sa, node)

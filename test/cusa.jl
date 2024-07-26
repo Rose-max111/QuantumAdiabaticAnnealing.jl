@@ -79,12 +79,13 @@ using QuantumAdiabaticAnnealing:toy_model_transition_matrix, toy_model_state_ene
 
     # use ED to calculate the exact boltzmann distribution
     n = n_size
+    m = 2
     Temp = end_temp
-    P = toy_model_transition_matrix(HeatBath(), n, Temp; period_condition = true)
+    P = toy_model_transition_matrix(HeatBath(), n, m, Temp; period_condition = true)
     eigvals, eigvecs, infos = eigsolve(P, rand(Float64, size(P)[1]), 2, :LR; maxiter = 5000)
     
     # calculate the exact boltzmann distribution corresponding energy
-    ED_state_energy = [toy_model_state_energy(i, n; period_condition = true) for i in 0:2^(2n)-1]
+    ED_state_energy = [toy_model_state_energy(i, n, m; period_condition = true) for i in 0:2^(n*m)-1]
     maxeigvec_energy = sum(ED_state_energy .* (abs.(Real.(eigvecs[1])))) / abs(sum(Real.(eigvecs[1])))
 
     # # calculate exact boltzmann distribution
