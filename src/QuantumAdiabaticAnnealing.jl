@@ -19,6 +19,8 @@ export rule54_generate
 export rule110_generate, transversal_graph, rule110_transverse_generate, show_transversal_graph, show_transversal_graph_weight, rule110_gadget_plot
 export track_equilibration!, SimulatedAnnealingMIS
 
+export toy_model_state_energy, toy_model_transition_matrix, HeatBath, Metroplis, TransitionRule
+
 include("generate_graph.jl")
 include("energy_calculate.jl")
 include("rule54_generate.jl")
