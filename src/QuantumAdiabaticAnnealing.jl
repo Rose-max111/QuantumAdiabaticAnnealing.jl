@@ -21,6 +21,10 @@ export track_equilibration!, SimulatedAnnealingMIS
 
 export toy_model_state_energy, toy_model_transition_matrix
 
+# abstract type TransitionRule end
+# struct HeatBath <: TransitionRule end
+# struct Metropolis <: TransitionRule end
+
 include("generate_graph.jl")
 include("energy_calculate.jl")
 include("rule54_generate.jl")

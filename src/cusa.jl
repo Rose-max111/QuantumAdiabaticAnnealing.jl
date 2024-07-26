@@ -48,21 +48,21 @@ abstract type TransitionRule end
 struct HeatBath <: TransitionRule end
 struct Metropolis <: TransitionRule end
 
-function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, Temp::Float64, node::Integer)
+function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, Temp::Float64)
     for ibatch in 1:size(state, 2)
-        step_kernel!(rule, sa, state, Temp, node, ibatch)
+        step_kernel!(rule, sa, state, Temp, ibatch)
     end
     state
 end
-function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::CuMatrix, Temp::Float64, node::Integer)
-    @inline function kernel(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, Temp::Float64, node::Integer)
+function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::CuMatrix, Temp::Float64)
+    @inline function kernel(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, Temp::Float64)
         ibatch = (blockIdx().x - Int32(1)) * blockDim().x + threadIdx().x
         if ibatch <= size(state, 2)
-            step_kernel!(rule, sa, state, Temp, node, ibatch)
+            step_kernel!(rule, sa, state, Temp, ibatch)
         end
         return nothing
     end
-    kernel = @cuda launch=false kernel(rule, sa, state, Temp, node)
+    kernel = @cuda launch=false kernel(rule, sa, state, Temp)
     config = launch_configuration(kernel.fun)
     threads = min(size(state, 2), config.threads)
     blocks = cld(size(state, 2), threads)
@@ -70,8 +70,9 @@ function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::C
     state
 end
 
-@inline function step_kernel!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state, Temp::Float64, node::Integer, ibatch::Integer)
+@inline function step_kernel!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state, Temp::Float64, ibatch::Integer)
     ΔE = 0
+    node = rand(atoms(sa))
     i, j = linear_to_cartesian(sa, node)
     if j > 1 # not the first layer
         ΔE -= 2 * evaluate_parent(sa, state, node, ibatch)
@@ -104,9 +105,10 @@ function track_equilibration!(rule::TransitionRule, sa::SimulatedAnnealingHamilt
     # NOTE: do we really need niters? or just set it to 1?
     for Temp in tempscale
         # NOTE: do we really need to shuffle the nodes?
-        # for node in 1:natom(sa)
-        for node in shuffle!(Vector(1:natom(sa)))
-            step!(rule, sa, state, Temp, node)
+        for _ in 1:natom(sa)
+            node = rand(atoms(sa))
+        # for node in shuffle!(Vector(1:natom(sa)))
+            step!(rule, sa, state, Temp)
         end
     end
     return sa
