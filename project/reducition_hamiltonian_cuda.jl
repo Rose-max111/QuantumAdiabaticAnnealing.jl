@@ -20,7 +20,7 @@ nbatch = 5000
 
 state = CuArray(random_state(sa, nbatch))
 # state = random_state(sa, nbatch)
-anneal_time = 10000
+anneal_time = 1
 # begin_temp = 20.0
 end_temp = 2.0
 energy_gradient = CuArray(fill(3.0f0, anneal_time))
@@ -53,22 +53,25 @@ function evaluate_50percent_time(rule::TransitionRule, width::Integer, depth::In
 
     anneal_time = 0
     max_try = 1
-    while max_try
+    while max_try > 0
         next_try = anneal_time + max_try
         η = (Temp_end / Temp_start) ^ (1/next_try)
         energy_gradient_sa = CuArray(fill(Float32(energy_gradient), next_try))
-        Temp_sa = [Temp_start * η^i for i in 0:next_try-1]
+        Temp_sa = Float64.([Temp_start * η^i for i in 0:next_try-1])
         
         state = CuArray(random_state(sa, nbatch))
-        track_equilibration!(rule, sa, state, energy_gradient_sa, Temp_sa)
+        @info "Stage1, max_try = $max_try, next_try = $next_try, begin annealing"
+        CUDA.@sync track_equilibration!(HeatBath(), sa, state, energy_gradient_sa, Temp_sa)
         
         cpu_state = Array(state)
         state_energy = [calculate_energy(sa, cpu_state, energy_gradient, i) for i in 1:nbatch]
         success = count(x -> x == 0, state_energy)
+        @info "Stage 1, now max_try = $max_try, success time = $success, anneal_time = $anneal_time"
         if 1.0 * success / nbatch >= 0.49
             break
         else
-            anneal_time = next_try
+            continue
+            # anneal_time = next_try
         end
         max_try *= 2
     end
@@ -78,14 +81,16 @@ function evaluate_50percent_time(rule::TransitionRule, width::Integer, depth::In
         next_try = anneal_time + max_try
         η = (Temp_end / Temp_start) ^ (1/next_try)
         energy_gradient_sa = CuArray(fill(Float32(energy_gradient), next_try))
-        Temp_sa = [Temp_start * η^i for i in 0:next_try-1]
+        Temp_sa = Float64.([Temp_start * η^i for i in 0:next_try-1])
         
+        @info "Stage2, max_try = $max_try, next_try = $next_try, begin annealing"
         state = CuArray(random_state(sa, nbatch))
-        track_equilibration!(rule, sa, state, energy_gradient_sa, Temp_sa)
+        CUDA.@sync track_equilibration!(HeatBath(), sa, state, energy_gradient_sa, Temp_sa)
         
         cpu_state = Array(state)
         state_energy = [calculate_energy(sa, cpu_state, energy_gradient, i) for i in 1:nbatch]
         success = count(x -> x == 0, state_energy)
+        @info "Stage 2, now max_try = $max_try, success time = $success, anneal_time = $anneal_time"
         if 1.0 * success / nbatch >= 0.49
             continue
         else
@@ -95,3 +100,4 @@ function evaluate_50percent_time(rule::TransitionRule, width::Integer, depth::In
     return anneal_time
 end
 
+evaluate_50percent_time(HeatBath(), 3, 4, 2.0)
