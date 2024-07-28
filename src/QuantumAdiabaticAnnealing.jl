@@ -20,7 +20,7 @@ export rule110_generate, transversal_graph, rule110_transverse_generate, show_tr
 export track_equilibration!, SimulatedAnnealingMIS
 
 export toy_model_state_energy, toy_model_transition_matrix
-export TransitionRule, calculate_energy
+export TransitionRule, calculate_energy, local_energy
 
 # abstract type TransitionRule end
 # struct HeatBath <: TransitionRule end

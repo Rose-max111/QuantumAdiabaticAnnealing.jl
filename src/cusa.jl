@@ -16,8 +16,11 @@ cartesian_to_linear(sa::SimulatedAnnealingHamiltonian, i::Integer, j::Integer) =
 
 # evaluate the energy of the i-th gadget (involving atoms i and its parents)
 function evaluate_parent(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, inode::Integer, ibatch::Integer)
-    idp = parent_logic(sa, inode)
     i, j = linear_to_cartesian(sa, inode)
+    # if i == 1
+    #     return 0
+    # end
+    idp = parent_logic(sa, inode)
     trueoutput = @inbounds rule110(state[idp[1], ibatch], state[idp[2], ibatch], state[idp[3], ibatch])
     return @inbounds (trueoutput ⊻ state[idp[4], ibatch]) * (energy_gradient[ibatch] ^ (sa.m - j))
     # return @inbounds (trueoutput ⊻ state[idp[4], ibatch])
@@ -25,6 +28,28 @@ end
 function calculate_energy(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, ibatch::Integer)
     return sum(i->evaluate_parent(sa, state, energy_gradient, i, ibatch), sa.n+1:natom(sa))
 end
+
+function local_energy!(sa::SimulatedAnnealingHamiltonian, state::CuMatrix, energy_gradient::CuVector, energy::CuVector)
+    @inline function kernel(sa::SimulatedAnnealingHamiltonian, state, energy_gradient, energy)
+        ibatch = (blockIdx().x - Int32(1)) * blockDim().x + threadIdx().x
+        if ibatch <= size(state, 2)
+            # step_kernel!(rule, sa, state, energy_gradient, Temp, ibatch)
+            for i in sa.n+1:natom(sa)
+                energy[ibatch] += evaluate_parent(sa, state, energy_gradient, i, ibatch)
+            end
+        end
+        return nothing
+    end
+    kernel = @cuda launch=false kernel(sa, state, energy_gradient, energy)
+    config = launch_configuration(kernel.fun)
+    threads = min(size(state, 2), config.threads)
+    blocks = cld(size(state, 2), threads)
+    CUDA.@sync kernel(sa, state, energy_gradient, energy; threads, blocks)
+    energy
+end
+
+
+
 function parent_logic(sa::SimulatedAnnealingHamiltonian, node::Integer)
     n = sa.n
     i, j = linear_to_cartesian(sa, node)
