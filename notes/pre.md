@@ -208,7 +208,6 @@ $$
 ---
 
 ### Energy Gap
-
 ![Alt text](images/energy_gap_1_gadget.png){width=800}
 
 - Blue line: Deterministic
