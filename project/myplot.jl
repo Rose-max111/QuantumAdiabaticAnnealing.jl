@@ -13,7 +13,7 @@ evaluate_time = Vector{Float64}()
 #     end
 # end
 
-graph_depth = [4, 6, 8, 10, 12, 15, 18, 20, 22, 25, 28, 30]
+graph_depth = [4, 6, 8, 10, 12, 15, 18, 20, 22, 25, 28, 30, 33, 35, 37]
 λ = 1.3
 for d in graph_depth
     filepath = joinpath(@__DIR__, "data_toymodel/W=$(graph_width)_D=$(d)_E=$(λ).txt")
@@ -38,17 +38,17 @@ end
 
 function draw_timevsdepth(xdata, ydata)
     f = Figure()
-    ax = Axis(f[1, 1], xlabel = "depth", ylabel = "log(sweep times)",
+    ax = Axis(f[1, 1], xlabel = "depth", ylabel = "sweep times",
         title = "Time v.s. Depth(50% success probability, λ=1.3)")
     scatter!(ax, xdata, ydata)
 
-    fit = curve_fit(LinearFit, xdata, ydata)
+    fit = curve_fit(Polynomial, xdata, ydata, 2)
     lines!(ax, xdata, fit.(xdata))
     # ylims!(ax, low=0)
     f
 end
 
-draw_timevsdepth(Float64.(graph_depth)[2:end], log.(evaluate_time[2:end]))
+draw_timevsdepth(Float64.(graph_depth)[1:end], (evaluate_time[1:end]))
 # draw(xx[1:10], yy[1:10])
 
 filepath = joinpath(@__DIR__, "test.txt")

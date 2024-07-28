@@ -1,0 +1,984 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+
+  <title>Reveal JS presentation</title>
+
+  <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+  <meta name="author" content="Hakim El Hattab">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="libs/reveal.js/4.3.1/reset.css">
+  <link rel="stylesheet" href="libs/reveal.js/4.3.1/reveal.css">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+  <!-- highlight Theme -->
+  
+  <link rel="stylesheet" href="libs/highlight.js/11.3.1/styles/monokai.min.css">
+  
+	
+		
+	<link rel="stylesheet" href="libs/reveal.js/4.3.1/plugin/chalkboard/style.css">
+	
+	
+	
+  <link rel="stylesheet" href="libs/reveal.js/4.3.1/plugin/customcontrols/style.css">
+  
+	
+
+
+
+  <!-- Revealjs Theme -->
+  
+  <link rel="stylesheet" href="libs/reveal.js/4.3.1/theme/black.css" id="theme">
+  
+  
+
+  <link rel="stylesheet" href="libs/styles/tasklist.css">
+	<link rel="stylesheet" href="libs/styles/iota.css">
+	<link rel="stylesheet" href="libs/styles/layout.css">
+
+
+  <!-- Revealjs Theme -->
+  
+
+   <!-- css list -->
+	
+
+   
+
+</head>
+
+<body>
+
+   
+
+  <div class="reveal">
+
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+
+      
+
+
+    
+        <section >
+            
+            <style>
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5 {
+                  text-transform: none;
+		  }
+    .reveal p {
+        text-align: left;
+    }
+    .reveal ul {
+        display: block;
+    }
+    .reveal ol {
+        display: block;
+    }
+    .reveal p:has(> img){
+        text-align: center;
+    }
+    h3 {
+        border-bottom: 2px solid yellow;
+        padding: 10px;
+    }
+</style>
+<h1>Surface Programmable Material</h1>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Rydberg atoms array</h3>
+<p>The Rydberg Hamiltonian is defined as
+$$<br>
+H_{ryd} = \sum_{v} \frac{\Omega_v}{2}\sigma_v^x - \sum_v \Delta_v \hat n_v + \sum_{v &lt; w}V_{ryd}(|\vec r_v - \vec r_w|)\hat n_v\hat n_w
+$$</p>
+<ul>
+<li>$\Omega_v$ : Rabi frequency</li>
+<li>$\Delta_v$ : Detuning</li>
+<li>$n_v = \dfrac{1}{2}(1 - \sigma^z_v)$ : Number operator,</li>
+<li>$V_{\text{Ryd}}(|\overrightarrow{\mathbf{r}_v} - \overrightarrow{\mathbf{r}_w}|) = C_6/|\overrightarrow{\mathbf{r}_v} - \overrightarrow{\mathbf{r}_w}|^6$ : Rydberg interaction potential.</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Classical Part</h3>
+<p>$$
+H_\text{MWIS} = -\sum_{v \in V}\delta_v n_v + \sum_{(u, v) \in E} U_{uv} n_u n_v.
+$$</p>
+<p>The ground state of which encodes the maximum weight independent set (MWIS) problem.</p>
+<blockquote>
+<p>Finding the ground state of the classical part of the Rydberg Hamiltonian is equivalent to finding the maximum weight independent set.</p>
+</blockquote>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Energy Based Computation with Rydberg atoms</h3>
+<p><img src="images/gadgets.png" alt="Alt text" width="500"></p>
+<ul>
+<li>NOR gate: Fig.c</li>
+<li>“Gluing Together” : Fig.d</li>
+<li>NOT gate: Fig.a</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Energy Based Computation with Rydberg atoms</h3>
+<p>NOR gate is universal.</p>
+<p>With Copy gates(2 NOT gates gluing together), can be shown that rydberg atoms computation is universal.</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Cooling the Rydberg Hamiltonian</h3>
+<p>The Rydberg Hamiltonian, if cooled successfully with some vertices fixed to certain configuration, can be used to solve the circuit satisfiability problem, which is NP-complete.</p>
+<p><strong>Guess</strong>:</p>
+<blockquote>
+<p>$P \neq NP$: Cooling is generally hard, especially when from the non-deterministic direction.</p>
+</blockquote>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Surface Programmable Material</h3>
+<p><strong>Definition: (Surface programmable material)</strong>:</p>
+<blockquote>
+<p>a lattice (with translational invariance) model that can be programmed on its surfaces to perform universal computation.</p>
+</blockquote>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Elementary cellular automaton</h3>
+<ul>
+<li>
+<p>Each cellular only has 2 states(0 and 1)</p>
+</li>
+<li>
+<p>The state of the next generation of current cell,  only depends on current state of the cell and its two immediate neighbors.</p>
+</li>
+<li>
+<p>$8 = 2^3$ possible configurations of the three cells</p>
+</li>
+<li>
+<p>$256 = 2^8$ different automatons.</p>
+</li>
+</ul>
+<p><img src="images/formrule110.png" alt="Alt text"></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Transfrom rule 110</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Current</th>
+<th style="text-align:center">111</th>
+<th style="text-align:center">110</th>
+<th style="text-align:center">101</th>
+<th style="text-align:center">100</th>
+<th style="text-align:center">011</th>
+<th style="text-align:center">010</th>
+<th style="text-align:center">001</th>
+<th style="text-align:center">000</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">New</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">0</td>
+</tr>
+</tbody>
+</table>
+<p><img src="images/formrule110.png" alt="Alt text"></p>
+<ul>
+<li>Rule 110 has been proved to be universal for computation</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Rule 110 Gadget</h3>
+<p>Encoded Rule 110 automaton into a Weighted Maximum Independent Set Problem</p>
+<p><img src="images/image.png" alt="Alt text" width="400"></p>
+<ul>
+<li>Blue vertices: Weight = 1</li>
+<li>Red vertices: Weights = 2</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Rule 110 Gadget</h3>
+<p>Enbedded this graph into a grid graph</p>
+<p><img src="images/image-1.png" alt="Alt text" height="300," width="250"></p>
+<ul>
+<li>Connected Rule: Distance no more than 2</li>
+<li>Left input: Vertex 3</li>
+<li>Central input: Vertex 1</li>
+<li>Right input: Vertex 8</li>
+<li>Output: Vertex 12</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Rule 110 Gadget</h3>
+<p><img src="images/image-1.png" alt="Alt text" width="250"></p>
+<p>Can be represented in automaton form:</p>
+<p><img src="images/rule110.png" alt="Alt text" width="300"></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Rule 110 Gadget solution space</h3>
+<p><img src="images/gadget110.png" alt="Alt text" width="500"></p>
+<ul>
+<li>Exact 8 solutions, corresponding to 8 different input</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>2D Surface Programmable Material</h3>
+<p><img src="images/rule110_transvarient.svg" alt="Alt text" width="500"></p>
+<ul>
+<li>Constructed with Rule 110 gadget and Copy gadget.</li>
+<li>Blue, Red, Green and Black : Weights of 1, 2, 3 and 4</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>2D Surface Programmable Material</h3>
+<p>Represented in automaton form:</p>
+<p><img src="images/rule110_2-2_automaton.png" alt="Alt text" width="300"></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Deterministic and non-deterministic computation</h3>
+<p>Definitions:</p>
+<ul>
+<li><em>in-surface/out-suface</em>: The surface of a surface programmable material that associated with the input/output of the logic circuit.</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Deterministic direction</h3>
+<p>The computation contains the following steps:</p>
+<ol>
+<li>Initialize the in-surface configuration. By removing some atoms on the in-surface.</li>
+<li>Connect the in-surface/out-surface to external heat sources at temperature $T_1 &lt; T_2$, respectively. We also require that the energy gap between the ground state and the first excited state of the Hamiltonian to be $\Delta E&lt; T_1$.</li>
+<li>Lower the temperature of the heat sources “slowly” to cool the system to the ground state of the Hamiltonian. The temperature of the heat sources at time $t$ is $T_{1/2}(t) = T_{1/2}(0)\lambda^{-c t}$, where $T_{1/2}(0)$ is the initial temperature of the heat sources, and $\alpha$ is a constant.</li>
+</ol>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Quantum Adiabatic Annealing</h3>
+<p>$$
+H_{QAA}(t) = \sum_{v\in V} (-\Delta(t)w_v \hat n_v + \Omega(t)\sigma_{v}^x) + \sum_{(u,w) \in E} U\hat n_u \hat n_w
+$$</p>
+<ul>
+<li>Set $\Omega = 1 \times 2\pi$ and sweep the $\Delta$ from $3 \times 2\pi $ to $40 \times 2\pi$ with 1*1 gadget.</li>
+<li>For deterministic direction, simply set the weight of the input vertices to $50$</li>
+<li>For non-deterministic direction, we set the weight of the output vertice to $50$.</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Energy Gap</h3>
+<p><img src="images/energy_gap_1_gadget.png" alt="Alt text" width="800"></p>
+<ul>
+<li>Blue line: Deterministic</li>
+<li>Red line: Non-deterministic</li>
+</ul>
+<p><strong>Didn’t see deterministic better than non-deterministic. Maybe the size is too small?</strong></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Simulated Annealing</h3>
+<ul>
+<li>Toy-model limit: $\Delta = 1$ and $U = \infty$.</li>
+<li>Introduced <strong>“Energy Gradient”</strong> to the gadget to provide directionality for the simulated annealing.</li>
+</ul>
+<p>$$
+H = \sum_{|\vec r_i - \vec r_j|\leq 2} U \hat n_i \hat n_j  - \Delta \sum_{i,k|\text{vertice i belongs to layer k}} w_i \lambda^{m-k} \hat n_i
+$$</p>
+<ul>
+<li>
+<p>Last term of our new hamiltonian represent the <strong>“Energy Gradient”</strong>.</p>
+</li>
+<li>
+<p>For vertice $i$ in the k-th layer along the computation direction, we reset its weight to $w_i\lambda^{m-k}$.</p>
+</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Simulated Annealing</h3>
+<p>“<strong>What will SA do?</strong>”</p>
+<ul>
+<li>Thermal energy $&gt;$ Frustration energy: Flips them randomly</li>
+<li>Thermal energy $&lt;$ Frustration energy: Maintains their configuations</li>
+<li>Thermal energy $\approx$ Frustration energy: Executes the corresponding cooling process.</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Simulated Annealing</h3>
+<p>Hence:</p>
+<p>$$
+E_{max, nextlayer} \ll E_{min, previous layer}
+$$</p>
+<p>or</p>
+<p>$$
+\frac{E_{min, previous}}{E_{max, next}} = \lambda \gg 1
+$$</p>
+<p>led to exp-like energy gradient</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Simulated Annealing</h3>
+<p>“<strong>What we do in per layer?</strong>”</p>
+<p>SA is a markov procress</p>
+<ul>
+<li>stable distribution</li>
+</ul>
+<p>How fast will the SA converge to stable distribution?</p>
+<ul>
+<li>Transition matrix gap</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Simulated Annealing</h3>
+<p><img src="images/error%20vs%20runtime.png" alt="Alt text"></p>
+<ul>
+<li>Single layer, 4 gadgets.</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Toy model</h3>
+<p>Unable to perform larger scale simulation.</p>
+<p>Turn into a similar toy model (Translation invariant, Rule 110).</p>
+<p>$$
+H = \sum_{\text{each gadget}} [\text{gadget is not satisfied}]
+$$</p>
+<p>Tested some SA properties, firstly go with single layer properties.</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Energy gap v.s. Average field(Open)</h3>
+<ul>
+<li>Single layer energy gap V.S. average field (use ED)</li>
+</ul>
+<p><img src="images/toy_model_single_layer_gap_vs_onsite_image.png" alt="Alt text" width="700"></p>
+<ul>
+<li>Width = 9, added on-site energy to control input</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Energy gap v.s. Average field(Period)</h3>
+<p><img src="images/toy_model_single_gap_vs_field_period.png" alt="Alt text" width="700"></p>
+<ul>
+<li>Period Boundary Condition, width=8</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Energy gap v.s. Width</h3>
+<ul>
+<li>Single layer energy gap V.S. width (use ED)</li>
+</ul>
+<p><img src="images/toy_model_single_layer_gap_vs_width.png" alt="Alt text" width="600"></p>
+<ul>
+<li>$$\Delta \propto w^{-1}$$</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Slope V.S. Average field</h3>
+<ul>
+<li>Then we test the slope V.S. average field(used to pin input) (use ED)</li>
+</ul>
+<p><img src="images/toy_model_single_slope_vs_field_open.png" alt="Alt text" width="600"></p>
+<ul>
+<li>Open Boundary Condition</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Slope V.S. Average field</h3>
+<p><img src="images/toy_model_single_slope_vs_field_period.png" alt="Alt text" width="600"></p>
+<ul>
+<li>Period Boundary Condition</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Toy model</h3>
+<p>Conclusion:</p>
+<p>The annealing time and the model’s width is in linear relation ship</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Toy model</h3>
+<ul>
+<li>
+<p>Now it’s the time to find the relation ship between annealing time and other parameters</p>
+</li>
+<li>
+<p>For a model with given width, depth, energy gradient, use the annealing time that success probability is 50% to be the cooling time</p>
+</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Annealing time v.s. Depth(big gradient)</h3>
+<p><img src="images/toy_model_time_vs_depth.png" alt="Alt text" width="600"></p>
+<ul>
+<li>With bigger $\lambda$, the annealing time seems to be linear with depth (desired)</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Annealing time v.s. Depth(small gradient)</h3>
+<ul>
+<li>However, in smaller $\lambda$ situation, the relation ship seems to be quadratic.</li>
+</ul>
+<p><img src="images/toy_model_time_vs_depth_1_3.png" alt="Alt text" width="600"></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Annealing time v.s. Energy gradient</h3>
+<ul>
+<li>
+<p>Now try to describe the relationship between annealing time and energy gradient</p>
+</li>
+<li>
+<p>With bigger energy gradient, SA will only cool down single layer each time.</p>
+</li>
+<li>
+<p>Smaller energy gradient? -&gt; We need expand the width of the “being cooled down layer” -&gt; Call it “Combined layer”</p>
+</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Annealing time v.s. Energy gradient</h3>
+<ul>
+<li>
+<p>Assume the width of the “Combined layer” is $W$</p>
+</li>
+<li>
+<p>Cooling this “Combined layer” need $e^W$ time</p>
+</li>
+<li>
+<p>$\frac{n}{W}$ “Combined layer” in total</p>
+</li>
+<li>
+<p>Should takes $T \propto \frac{n}{W}e^{W}$ form</p>
+</li>
+<li>
+<p>$\lambda ^ W = 2$ -&gt; $W \propto \frac{1}{\log(\lambda)}$</p>
+</li>
+<li>
+<p>$T \propto \log(\lambda)e^{\frac{1}{\log(\lambda)}}$</p>
+</li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Annealing time v.s. Energy gradient</h3>
+<p><img src="images/toy_model_time_vs_gradient_1010.png" alt="Alt text" width="600"></p>
+<ul>
+<li>
+<p>Width = 10, Depth = 10</p>
+</li>
+<li>
+<p>Fitted not bad?</p>
+</li>
+</ul>
+
+            </section>
+    
+
+
+    </div>
+
+
+  </div>
+
+  <div class="line top"></div>
+  <div class="line bottom"></div>
+  <div class="line left"></div>
+  <div class="line right"></div>
+
+  <script src="libs/reveal.js/4.3.1/reveal.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/notes/notes.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/markdown/markdown.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/highlight/highlight.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/math/math.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/fullscreen/plugin.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/animate/plugin.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/animate/svg.min.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/anything/plugin.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/anything/Chart.min.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/anything/d3/d3.v3.min.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/anything/d3.patch.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/anything/d3/queue.v1.min.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/anything/d3/topojson.v1.min.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/anything/function-plot.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/customcontrols/plugin.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/embed-tweet/plugin.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/chart/chart.min.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/chart/plugin.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/verticator/verticator.js"></script>
+
+<script src="libs/reveal.js/4.3.1/plugin/zoom/zoom.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/search/search.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/menu/menu.js"></script>
+<script src="libs/reveal.js/4.3.1/plugin/chalkboard/plugin.js"></script>
+
+<!--	<script src="libs/reveal.js/4.3.1/plugin/audio-slideshow/plugin.js"></script>  -->
+<!--	<script src="libs/reveal.js/4.3.1/plugin/audio-slideshow/recorder.js"></script>-->
+<!--	<script src="libs/reveal.js/4.3.1/plugin/audio-slideshow/RecordRTC.js"></script>-->
+
+  
+
+<script>
+  const printPlugins = [
+      RevealNotes,
+      RevealHighlight,
+      RevealMath.MathJax3,
+      RevealAnimate,
+      RevealChalkboard, 
+			RevealEmbedTweet,
+			RevealChart,
+		];
+
+		const plugins =  [...printPlugins,
+		RevealZoom, 
+		RevealSearch, 
+				RevealMarkdown, 
+				RevealMenu, 
+				RevealFullscreen,
+				RevealAnything,
+				//RevealAudioSlideshow,
+				//RevealAudioRecorder,
+				RevealCustomControls, 
+				// poll
+				// question
+				// seminar
+				Verticator 
+				 ]
+
+
+		// Also available as an ES module, see:
+		// https://revealjs.com/initialization/
+		Reveal.initialize({
+			controls: true,
+      controlsTutorial: true,
+      controlsLayout: 'bottom-right',
+      controlsBackArrows: 'faded',
+      progress: true,
+      slideNumber: false,
+      //#showSlideNumber "all" "print" "speaker"
+      hash: true, //# hash: false,
+      //# respondToHashChanges: true,
+      //# history: false,
+      keyboard: true,
+      //#keyboardCondition: null,
+      overview: true,
+      center: false,
+      touch: true,
+      loop: false,
+      rtl: false,
+      //#navigationMode: 'default', linear grid
+      shuffle: false,
+      fragments: true,
+      fragmentInURL: false,
+      embedded: false,
+      help: true,
+      //#pause: true
+      showNotes: false,
+      autoPlayMedia: false, // TODO fix this to a nullable value
+      //#preloadIframes: null. true false
+      //#autoAnimate: true
+      //#autoAnimateMatcher: null,
+      //#autoAnimateEasing: 'ease',
+      //autoAnimateDuration: 1.0,
+      //#autoAnimateUnmatched: true
+      //#autoAnimateStyles: []
+      autoSlide: 0, // TODO fix this to a falseable value
+      autoSlideStoppable: true,
+      autoSlideMethod: '0',
+      defaultTiming: 120,
+      mouseWheel: false,
+      //#previewLinks: false
+      //#postMessage: true, // TODO : this can cause issues with the vscode api ???
+      //#postMessageEvents: false,
+      //#focusBodyOnPageVisibilityChange: true,
+      transition: 'fade',
+      transitionSpeed: 'default',
+      backgroundTransition: 'fade',
+      //#pdfMaxPagesPerSlide: Number.POSITIVE_INFINITY,
+      //#pdfSeparateFragments: true,
+      //#pdfPageHeightOffset: -1,
+      viewDistance: 3,
+      //#mobileViewDistance: 2,
+      display: 'block',
+      //#hideInactiveCursor: true,
+      //#hideCursorTime: 5000
+
+      // Parallax Background
+      parallaxBackgroundImage: '',
+      parallaxBackgroundSize: '',
+      parallaxBackgroundHorizontal: 0,
+      parallaxBackgroundVertical: 0,
+
+      //Presentation Size
+      width: 960,
+			height: 800,
+			margin: 0.04,
+      minScale: 0.2,
+      maxScale: 2,
+      disableLayout: false,
+
+      audio: {
+        prefix: 'audio/', // audio files are stored in the "audio" folder
+        suffix: '.ogg', // audio files have the ".ogg" ending
+        textToSpeechURL: null, // the URL to the text to speech converter
+        defaultNotes: false, // use slide notes as default for the text to speech converter
+        defaultText: false, // use slide text as default for the text to speech converter
+        advance: 0, // advance to next slide after given time in milliseconds after audio has played, use negative value to not advance
+        autoplay: false, // automatically start slideshow
+        defaultDuration: 5, // default duration in seconds if no audio is available
+        defaultAudios: true, // try to play audios with names such as audio/1.2.ogg
+        playerOpacity: 0.05, // opacity value of audio player if unfocused
+        playerStyle: 'position: fixed; bottom: 4px; left: 25%; width: 50%; height:75px; z-index: 33;', // style used for container of audio controls
+        startAtFragment: false, // when moving to a slide, start at the current fragment or at the start of the slide
+      },
+      
+      chalkboard: { // font-awesome.min.css must be available
+        //src: "chalkboard/chalkboard.json",
+        storage: "chalkboard-demo",
+      },
+      
+			customcontrols: {
+					controls: [
+      						{
+						  id: 'toggle-overview',
+						  title: 'Toggle overview (O)',
+						  icon: '<i class="fa fa-th"></i>',
+						  action: 'Reveal.toggleOverview();'
+						}
+						,
+      {
+        icon: '<i class="fa fa-pen-square"></i>',
+        title: 'Toggle chalkboard (B)',
+        action: 'RevealChalkboard.toggleChalkboard();'
+      },
+      {
+        icon: '<i class="fa fa-pen"></i>',
+        title: 'Toggle notes canvas (C)',
+        action: 'RevealChalkboard.toggleNotesCanvas();'
+      }
+      
+				]
+			},
+			chart: {
+					defaults: { 
+						color: 'lightgray', // color of labels
+						scale: { 
+							beginAtZero: true, 
+							ticks: { stepSize: 1 },
+							grid: { color: "lightgray" } , // color of grid lines
+						},
+					},
+					line: { borderColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ], "borderDash": [ [5,10], [0,0] ] }, 
+					bar: { backgroundColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ]}, 
+					pie: { backgroundColor: [ ["rgba(0,0,0,.8)" , "rgba(220,20,20,.8)", "rgba(20,220,20,.8)", "rgba(220,220,20,.8)", "rgba(20,20,220,.8)"] ]},
+					radar: { borderColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ]}, 
+			},
+			math: {
+				mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+				config: 'TeX-AMS_HTML-full',
+				// pass other options into `MathJax.Hub.Config()`
+				TeX: { Macros: { RR: "{\\bf R}" } }
+				},
+				anything: [ 
+				{
+		className: "plot",
+		defaults: {width:500, height: 500, grid:true},
+		initialize: (function(container, options){ options.target = "#"+container.id; functionPlot(options) })
+	 },
+	 {
+		className: "chart",  
+		initialize: (function(container, options){ container.chart = new Chart(container.getContext("2d"), options);  })
+	 },
+	 {
+		className: "anything",
+		initialize: (function(container, options){ if (options && options.initialize) { options.initialize(container)} })
+	 },
+					],
+			// Learn about plugins: https://revealjs.com/plugins/
+			plugins: (window.location.search.match(/print-pdf/gi) ? printPlugins : plugins ) 
+		});
+			
+
+
+	    // Change chalkboard theme : 
+		function changeTheme(input) {
+			var config = {};
+			config.theme = input.value;
+			Reveal.getPlugin("RevealChalkboard").configure(config);
+			input.blur();
+		}
+
+		// // Handle the message inside the webview
+        // window.addEventListener('message', event => {
+
+        //     const message = event.data; // The JSON data our extension sent
+
+        //     switch (message.command) {
+        //         case 'refactor':
+        //             Reveal.toggleHelp();
+        //     }
+        // });
+
+		if (window.location.search.match(/print-pdf-now/gi)) {
+      		setTimeout(() => {
+				window.print();
+			  }, 2500);
+			
+    }
+</script>
+
+</body>
+
+</html>
