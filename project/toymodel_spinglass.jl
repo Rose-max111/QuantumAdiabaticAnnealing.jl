@@ -6,10 +6,9 @@ mutable struct spinglassmodel
     const m::Int
     const edges::Vector{Tuple{Int,Int,Float64}}
     const onsite::Vector{Float64}
-    theta::Vector{Float64}
-    theta_dot::Vector{Float64}
-    function spinglassmodel(n::Int, m::Int, edges::Vector{Tuple{Int,Int,Float64}}, onsite::Vector{Float64}, theta::Vector{Float64} = fill(π/2, length(onsite)), theta_dot::Vector{Float64} = zeros(length(onsite)))
-        new(n, m, edges, onsite, theta, theta_dot)
+    M::Vector{Vector{Float64}}
+    function spinglassmodel(n::Int, m::Int, edges::Vector{Tuple{Int,Int,Float64}}, onsite::Vector{Float64}, M::Vector{Vector{Float64}} = fill([1.0, 0.0, 0.0], length(onsite)))
+        new(n, m, edges, onsite, M)
     end
 end
 
@@ -48,35 +47,76 @@ function spinglass_mapping(n::Int, m::Int)
     return spinglassmodel(n, m, edges, onsites)
 end
 
+
+# H(i) = -hx̂ + ∑_j J_{i,j} M_j^z ẑ + onsite ẑ
+# ̇M = H \cross M
 function integrator(sp::spinglassmodel, t, T, Vtrans)
-    delta_theta_dot = - sin.(sp.theta) .* sp.onsite
+    Mxdot = - sp.onsite .* [u[2] for u in sp.M] .* (t/T)
+    Mydot = sp.onsite .* [u[1] for u in sp.M] .* (t/T)
     for edge in sp.edges
         i, j, w = edge
-        delta_theta_dot[i] -= w * sin(sp.theta[i]) * cos(sp.theta[j])
-        delta_theta_dot[j] -= w * cos(sp.theta[i]) * sin(sp.theta[j])
+        Mydot[i] += w * sp.M[j][3] * sp.M[i][1] * (t/T)
+        Mydot[j] += w * sp.M[i][3] * sp.M[j][1] * (t/T)
+
+        Mxdot[i] -= w * sp.M[j][3] * sp.M[i][2] * (t/T)
+        Mxdot[j] -= w * sp.M[i][3] * sp.M[j][2] * (t/T)
     end
-    delta_theta_dot = (delta_theta_dot .* (t/T)) .- (Vtrans .* cos.(sp.theta) .* ((T-t)/T))
-    return delta_theta_dot
+    Mydot -= - Vtrans .* [u[3] for u in sp.M] .* ((T-t)/T)
+    Mzdot = - Vtrans .* [u[2] for u in sp.M] .* ((T-t)/T)
+
+    return Mxdot, Mydot, Mzdot
 end
+
+function renorm(point)
+    norm = sqrt(sum(point .* point))
+    return point ./ norm
+end
+
+ss = spinglassmodel(1, 1, Vector{Tuple{Int64,Int64,Float64}}(), [2.0])
+tt = 0
+TT = round(π/4 , digits = 4)
+while tt < TT
+    delta_t = min(1e-4, TT-tt)
+    Mxdot, Mydot, Mzdot = integrator(ss, 1, 1, zeros(1))
+    # Mxdot1, Mydot1, Mzdot1 = integrator(sp, t/5, T/5, Vtrans)
+    # @assert round.((Mxdot1 .-  Mxdot), digits=2) == zeros(length(sp.onsite))
+    # @assert round.((Mydot1 .-  Mydot), digits=2) == zeros(length(sp.onsite))
+    # @assert round.((Mzdot1 .-  Mzdot), digits=2) == zeros(length(sp.onsite))
+    d_Mx = Mxdot .* delta_t
+    d_My = Mydot .* delta_t
+    d_Mz = Mzdot .* delta_t
+    ss.M = [renorm([ss.M[i][1]+d_Mx[i], ss.M[i][2]+d_My[i], ss.M[i][3]+d_Mz[i]]) for i in 1:length(ss.onsite)]
+    tt += delta_t
+end
+println(ss.M)
+
+
 
 function sp_energy(sp::spinglassmodel, t, T, Vtrans)
     ret = 0.0
-    ret += sum(sp.onsite .* (cos.(sp.theta))) * (t/T)
-    ret -= sum(Vtrans .* sin.(sp.theta)) * (T-t)/T
+    ret += sum([t[3] for t in sp.M] .* sp.onsite) * (t/T)
+    ret -= sum([t[1] for t in sp.M] .* Vtrans) * ((T-t)/T)
     for edge in sp.edges
         i, j, w = edge
-        ret += w * cos(sp.theta[i]) * cos(sp.theta[j]) * (t/T)
+        ret += w * sp.M[i][3] * sp.M[j][3] * (t/T)
     end
     return ret
 end
+
 
 function integrate!(sp::spinglassmodel, dt, T, Vtrans)
     t=0
     while(t<T)
         delta_t = min(dt, T-t)
-        delta_theta_dot = integrator(sp, t, T, Vtrans)
-        sp.theta = sp.theta + sp.theta_dot .* delta_t
-        sp.theta_dot = sp.theta_dot .+ delta_theta_dot .* delta_t
+        Mxdot, Mydot, Mzdot = integrator(sp, t, T, Vtrans)
+        # Mxdot1, Mydot1, Mzdot1 = integrator(sp, t/5, T/5, Vtrans)
+        # @assert round.((Mxdot1 .-  Mxdot), digits=2) == zeros(length(sp.onsite))
+        # @assert round.((Mydot1 .-  Mydot), digits=2) == zeros(length(sp.onsite))
+        # @assert round.((Mzdot1 .-  Mzdot), digits=2) == zeros(length(sp.onsite))
+        d_Mx = Mxdot .* delta_t
+        d_My = Mydot .* delta_t
+        d_Mz = Mzdot .* delta_t
+        sp.M = [renorm([sp.M[i][1]+d_Mx[i], sp.M[i][2]+d_My[i], sp.M[i][3]+d_Mz[i]]) for i in 1:length(sp.onsite)]
         t += delta_t
         # @info "t = $t, energy = $(sp_energy(sp, t, T, Vtrans))"
     end
@@ -94,11 +134,10 @@ sp = spinglass_mapping(3, 2)
 
 # spgls = SpinGlass(length(sp.onsite), hyperedges, hyperweights)
 # problem = GenericTensorNetwork(spgls)
-# configs = solve(problem, SingleConfigMin())[]
+# configs = solve(problem, ConfigsMin())[]
 
-Vtrans = fill(2.0, length(sp.onsite))
+Vtrans = fill(1, length(sp.onsite))
 
 integrate!(sp, 0.00001, 1, Vtrans)
 
-cos.(sp.theta)
-# sp.theta ./ 2π
+println(sp.M)
