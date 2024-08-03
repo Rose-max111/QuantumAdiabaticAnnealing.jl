@@ -12,3 +12,7 @@ end
 @testset "cuda" begin
     include("cusa.jl")
 end
+
+@testset "spinglass" begin
+    include("spinglass_adiabatic.jl")
+end

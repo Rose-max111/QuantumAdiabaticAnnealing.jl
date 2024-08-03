@@ -23,6 +23,7 @@ export track_equilibration!, SimulatedAnnealingMIS
 export toy_model_state_energy, toy_model_transition_matrix
 export TransitionRule, calculate_energy, local_energy
 
+export sp_check_vaild, spinglass_adiabatic_dp8
 # abstract type TransitionRule end
 # struct HeatBath <: TransitionRule end
 # struct Metropolis <: TransitionRule end
@@ -34,5 +35,6 @@ include("rule110_generate.jl")
 include("mis_sa.jl")
 include("toy_model.jl")
 include("cusa.jl")
+include("spinglass_adiabatic.jl")
 
 end
