@@ -93,7 +93,7 @@ end
 hyperspinglass = SpinGlass(5, hyperedges, weights)
 hyperproblem = GenericTensorNetwork(hyperspinglass)
 
-counting_min_eneregy = solve(hyperproblem, CountingMin())[]
+counting_min_eneregy = GenericTensorNetworks.solve(hyperproblem, CountingMin())[]
 msk = 17
 cnt = 0
 for p in [0,1]

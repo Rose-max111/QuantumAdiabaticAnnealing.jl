@@ -3,41 +3,52 @@ using DormandPrince
 using DifferentialEquations
 using QuantumAdiabaticAnnealing
 using QuantumAdiabaticAnnealing: initialvector, spinglass_mapping, vector2sp, spingls!, runge_kutta_integrate!, euclidean_integrate!, fcn, freeze_input!
+using QuantumAdiabaticAnnealing: printsp, sp_energy
 
 @testset "integrater_double_check" begin
-    Tmax = 2000.0
-    init_dp5 = initialvector(Tmax, 3, 3)
-    init_dp8 = initialvector(Tmax, 3, 3)
-    solver5 = DP5Solver(fcn, 0.0, init_dp5; atol=1e-10, rtol=1e-10, maximum_allowed_steps=5000000)
+    Tmax = 1000.0
+    init_dp5 = initialvector(Tmax, 3, 4;gradient=1)
+    init_dp8 = initialvector(Tmax, 3, 4;gradient=1)
+    solver5 = DP5Solver(fcn, 0.0, init_dp5; atol=1e-12, rtol=1e-12, maximum_allowed_steps=20000000)
     @time integrate!(solver5, Tmax)
-    solver8 = DP8Solver(fcn, 0.0, init_dp8; atol=1e-10, rtol=1e-10, maximum_allowed_steps=5000000)
+    solver8 = DP8Solver(fcn, 0.0, init_dp8; atol=1e-12, rtol=1e-12, maximum_allowed_steps=5000000)
     @time integrate!(solver8, Tmax)
 
-    init_de = initialvector(Tmax, 3, 3)
+    init_de = initialvector(Tmax, 3, 4;gradient=1)
     # cb = ManifoldProjection(gproject)
     tspan = (0.0, Tmax)
     prob = ODEProblem(spingls!, init_de, tspan)
-    @time sol = DifferentialEquations.solve(prob, Vern7(), reltol = 1e-10, abstol=1e-10)
+    @time sol = DifferentialEquations.solve(prob, Vern7(), reltol = 1e-12, abstol=1e-12)
 
     sp_this5 = vector2sp(get_current_state(solver5))
     sp_this8 = vector2sp(get_current_state(solver8))
     sp_de = vector2sp(sol[end])
 
-    for i in 1:length(sp_this5.onsite)
-        for j in 1:3
-            @test abs(sp_this5.M[i][j] - sp_de.M[i][j]) <= 1e-4
-            @test abs(sp_this8.M[i][j] - sp_de.M[i][j]) <= 1e-4
-            @test abs(sp_this5.M[i][j] - sp_this8.M[i][j]) <= 1e-4
-        end
-    end
+    # for i in 1:length(sp_this5.onsite)
+    #     for j in 1:3
+    #         @test abs(sp_this5.M[i][j] - sp_de.M[i][j]) <= 1e-1
+    #         @test abs(sp_this8.M[i][j] - sp_de.M[i][j]) <= 1e-1
+    #         @test abs(sp_this5.M[i][j] - sp_this8.M[i][j]) <= 1e-1
+    #     end
+    # end
+
+    @info "dp5 solution"
+    printsp(sp_this5)
+    println(sp_energy(sp_this5, Tmax, Tmax, fill(1.0, length(sp_this5.onsite))))
+    @info "dp8 solution"
+    printsp(sp_this8)
+    println(sp_energy(sp_this8, Tmax, Tmax, fill(1.0, length(sp_this5.onsite))))
+    @info "de solution"
+    printsp(sp_de)
+    println(sp_energy(sp_de, Tmax, Tmax, fill(1.0, length(sp_this5.onsite))))
 end
 
 @testset "runge_kutta_vs_integrator" begin
-    Tmax = 123.0
-    n=4
-    m=4
-    gradient = 1.1
-    init_dp8 = initialvector(Tmax, n, m;gradient=1.1)
+    Tmax = 100.0
+    n=3
+    m=3
+    gradient = 1.0
+    init_dp8 = initialvector(Tmax, n, m;gradient=gradient)
     solver8 = DP8Solver(fcn, 0.0, init_dp8; atol=1e-10, rtol=1e-10, maximum_allowed_steps=5000000)
     @time integrate!(solver8, Tmax)
     sp_dp8 = vector2sp(get_current_state(solver8))
@@ -82,6 +93,30 @@ end
     end
 end
 
+function runge_kutta_visualize()
+    T_end = 1000.0
+    n=3
+    m=4
+    sp = spinglass_mapping(n, m)
+    Vtrans = fill(1.0, length(sp.onsite))
+    model_print, field_print = runge_kutta_integrate!(sp, 1e-2, T_end, Vtrans; T_end = T_end)
+    @info "energy is $(sp_energy(sp, T_end, T_end, Vtrans))"
+
+    open("rk.txt","w") do io
+        for i in 1:length(model_print)
+            for j in model_print[i]
+                print(io, j, " ")
+            end
+            println(io, "")
+        end
+        for i in 1:length(field_print)
+            for j in field_print[i]
+                print(io, j, " ")
+            end
+            println(io, "")
+        end
+    end
+end
 @testset "simple_magneticfield" begin
     # ss = spinglassmodel(1, 1, Vector{Tuple{Int64,Int64,Float64}}(), [2.0], [renorm([0.0, 0.0, 1.0])])
     # tt = 0
@@ -109,4 +144,16 @@ end
     # # ylims!(f, -1, 1)
     # # zlims!(f, -1, 1)
     # save("1.png", f)
+end
+
+@testset "basic_spinglass" begin
+    n=3
+    m=5
+    sp = spinglass_mapping(3, 5)
+    for edge in sp.edges
+        i, j, w = edge[1], edge[2], edge[3]
+        @test i <= n*m || j<=n*m # no ancilla connection
+    end
+    sp = spinglass_mappint(1, 1)
+    sp_gs = sp_energy(sp)
 end

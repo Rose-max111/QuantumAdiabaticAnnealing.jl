@@ -11,6 +11,7 @@ using GenericTensorNetworks
 using BloqadeExpr
 using SparseArrays
 using YaoAPI
+using DormandPrince
 
 export get_low_energy_state, generate_some_graph, distance
 export state_energy_calculation, Hamiltonian_energy_plot, pulse_energy_plot
@@ -23,7 +24,7 @@ export track_equilibration!, SimulatedAnnealingMIS
 export toy_model_state_energy, toy_model_transition_matrix
 export TransitionRule, calculate_energy, local_energy
 
-export sp_check_vaild, spinglass_adiabatic_dp8
+export sp_check_vaild, spinglass_adiabatic_dp8, sp_ground_state_sa, sp_ground_state, spinglass_mapping, sp_energy
 # abstract type TransitionRule end
 # struct HeatBath <: TransitionRule end
 # struct Metropolis <: TransitionRule end
