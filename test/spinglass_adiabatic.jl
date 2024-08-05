@@ -4,17 +4,18 @@ using DifferentialEquations
 using QuantumAdiabaticAnnealing
 using QuantumAdiabaticAnnealing: initialvector, spinglass_mapping, vector2sp, spingls!, runge_kutta_integrate!, euclidean_integrate!, fcn, freeze_input!
 using QuantumAdiabaticAnnealing: printsp, sp_energy
+using QuantumAdiabaticAnnealing: instantaneous_field, instantaneous_field_autodiff
 
 @testset "integrater_double_check" begin
     Tmax = 1000.0
-    init_dp5 = initialvector(Tmax, 3, 4;gradient=1)
-    init_dp8 = initialvector(Tmax, 3, 4;gradient=1)
+    init_dp5 = initialvector(Tmax, 3, 4;gradient=1.0)
+    init_dp8 = initialvector(Tmax, 3, 4;gradient=1.0)
     solver5 = DP5Solver(fcn, 0.0, init_dp5; atol=1e-12, rtol=1e-12, maximum_allowed_steps=20000000)
     @time integrate!(solver5, Tmax)
     solver8 = DP8Solver(fcn, 0.0, init_dp8; atol=1e-12, rtol=1e-12, maximum_allowed_steps=5000000)
     @time integrate!(solver8, Tmax)
 
-    init_de = initialvector(Tmax, 3, 4;gradient=1)
+    init_de = initialvector(Tmax, 3, 4;gradient=1.0)
     # cb = ManifoldProjection(gproject)
     tspan = (0.0, Tmax)
     prob = ODEProblem(spingls!, init_de, tspan)
@@ -101,6 +102,7 @@ function runge_kutta_visualize()
     Vtrans = fill(1.0, length(sp.onsite))
     model_print, field_print = runge_kutta_integrate!(sp, 1e-2, T_end, Vtrans; T_end = T_end)
     @info "energy is $(sp_energy(sp, T_end, T_end, Vtrans))"
+    @info "using autodiff energy is $(spinglass_hamiltonian(sp, T_end, T_end, Vtrans))"
 
     open("rk.txt","w") do io
         for i in 1:length(model_print)
@@ -117,6 +119,8 @@ function runge_kutta_visualize()
         end
     end
 end
+
+
 @testset "simple_magneticfield" begin
     # ss = spinglassmodel(1, 1, Vector{Tuple{Int64,Int64,Float64}}(), [2.0], [renorm([0.0, 0.0, 1.0])])
     # tt = 0
@@ -156,4 +160,24 @@ end
     end
     sp = spinglass_mappint(1, 1)
     sp_gs = sp_energy(sp)
+end
+
+using Random
+@testset "autodiff vs exact" begin
+    sp=spinglass_mapping(3, 4)
+    for i in 1:length(sp.onsite)
+        sp.M[i]=[rand()*2-1, rand()*2-1, rand()*2-1]
+    end
+    @info "sp.M[1] = $(sp.M[1])"
+    Vtrans = fill(1.0, length(sp.onsite))
+    Tmax = 10.0
+    this_t = 3.0
+    H_autodiff = instantaneous_field_autodiff(sp, this_t, Tmax, Vtrans)
+    H_exact = instantaneous_field(sp, this_t, Tmax, Vtrans)
+    
+    for i in 1:length(sp.onsite)
+        for j in 1:3
+            @test abs(H_exact[i][j] - H_autodiff[i][j]) <= 1e-6
+        end
+    end
 end

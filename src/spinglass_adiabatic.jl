@@ -2,11 +2,12 @@ mutable struct spinglassmodel
     # n::Int
     const n::Int
     const m::Int
+    const gradient::Float64
     const edges::Vector{Tuple{Int,Int,Float64}}
     const onsite::Vector{Float64}
     M::Vector{Vector{Float64}}
-    function spinglassmodel(n::Int, m::Int, edges::Vector{Tuple{Int,Int,Float64}}, onsite::Vector{Float64}, M::Vector{Vector{Float64}} = cat(fill([0.0, 0.0, 1.0], n), fill([-1.0, 0.0, 0.0], length(onsite)-n);dims=1))
-        new(n, m, edges, onsite, M)
+    function spinglassmodel(n::Int, m::Int, gradient::Float64, edges::Vector{Tuple{Int,Int,Float64}}, onsite::Vector{Float64}, M::Vector{Vector{Float64}} = cat(fill([0.0, 0.0, 1.0], n), fill([-1.0, 0.0, 0.0], length(onsite)-n);dims=1))
+        new(n, m, gradient, edges, onsite, M)
     end
 end
 
@@ -42,7 +43,7 @@ function spinglass_mapping(n::Int, m::Int; gradient = 1.0)
             end
         end
     end
-    return spinglassmodel(n, m, edges, onsites)
+    return spinglassmodel(n, m, gradient, edges, onsites)
 end
 
 function freeze_input!(sp::spinglassmodel)
@@ -79,27 +80,32 @@ function integrator(sp::spinglassmodel, t, T, Vtrans::Vector{Float64}) # evaluat
     for i in 1:sp.n
         sp.M[i] = [0.0, 0.0, 1.0]
     end # used set-way
-    Mxdot =  sp.onsite .* [u[2] for u in sp.M]
-    Mydot = -sp.onsite .* [u[1] for u in sp.M]
-    for edge in sp.edges
-        i, j, w = edge
-        Mydot[i] += -w * sp.M[j][3] * sp.M[i][1]
-        Mydot[j] += -w * sp.M[i][3] * sp.M[j][1]
+    # Mxdot =  sp.onsite .* [u[2] for u in sp.M]
+    # Mydot = -sp.onsite .* [u[1] for u in sp.M]
+    # for edge in sp.edges
+    #     i, j, w = edge
+    #     Mydot[i] += -w * sp.M[j][3] * sp.M[i][1]
+    #     Mydot[j] += -w * sp.M[i][3] * sp.M[j][1]
 
-        Mxdot[i] -= -w * sp.M[j][3] * sp.M[i][2]
-        Mxdot[j] -= -w * sp.M[i][3] * sp.M[j][2]
-    end
-    Mxdot .*= (t/T)
-    Mydot .*= (t/T)
-    Mydot -= - Vtrans .* [u[3] for u in sp.M] .* ((T-t)/T)
-    Mzdot = - Vtrans .* [u[2] for u in sp.M] .* ((T-t)/T)
-    # Mxdot .*= (1-exp(-1e-2*t))
-    # Mydot .*= (1-exp(-1e-2*t))
-    # Mydot -= - Vtrans .* [u[3] for u in sp.M] .* (1.0 - (1-exp(-1e-2*t)))
-    # Mzdot = - Vtrans .* [u[2] for u in sp.M] .* (1.0 - (1-exp(-1e-2*t)))
+    #     Mxdot[i] -= -w * sp.M[j][3] * sp.M[i][2]
+    #     Mxdot[j] -= -w * sp.M[i][3] * sp.M[j][2]
+    # end
+    # Mxdot .*= (t/T)
+    # Mydot .*= (t/T)
+    # Mydot -= - Vtrans .* [u[3] for u in sp.M] .* ((T-t)/T)
+    # Mzdot = - Vtrans .* [u[2] for u in sp.M] .* ((T-t)/T)
 
-    # inst_H = instantaneous_field(sp, t, T, Vtrans)
-    # exact_Mdot = integrator(sp, inst_H)
+    inst_H = instantaneous_field(sp, t, T, Vtrans)
+    exact_Mdot = integrator(sp, inst_H)
+    damping_term = crossdot.(sp.M, exact_Mdot) .* 0.01
+
+    # Mxdot = [exact_Mdot[i][1] - damping_term[i][1] for i in 1:length(sp.onsite)]
+    # Mydot = [exact_Mdot[i][2] - damping_term[i][2] for i in 1:length(sp.onsite)]
+    # Mzdot = [exact_Mdot[i][3] - damping_term[i][3] for i in 1:length(sp.onsite)]
+
+    Mxdot = [exact_Mdot[i][1] for i in 1:length(sp.onsite)]
+    Mydot = [exact_Mdot[i][2] for i in 1:length(sp.onsite)]
+    Mzdot = [exact_Mdot[i][3] for i in 1:length(sp.onsite)]
     # for i in 1:length(sp.onsite)
     #     @assert abs(-Mxdot[i] - exact_Mdot[i][1]) < 1e-7
     #     @assert abs(-Mydot[i] - exact_Mdot[i][2]) < 1e-7
@@ -110,7 +116,8 @@ function integrator(sp::spinglassmodel, t, T, Vtrans::Vector{Float64}) # evaluat
     Mydot[1:sp.n] .= 0.0
     Mzdot[1:sp.n] .= 0.0
 
-    return [-Mxdot, -Mydot, -Mzdot]
+    return [Mxdot, Mydot, Mzdot]
+    # return [-Mxdot, -Mydot, -Mzdot]
 end
 
 function runge_kutta_singlejump!(sp::spinglassmodel, t0, delta_t, T, Vtrans::Vector{Float64})
@@ -135,31 +142,19 @@ function runge_kutta_integrate!(sp::spinglassmodel, dt::Float64, T::Float64, Vtr
     H_print = Vector{Vector{Float64}}()
     while t0 < T_end
         delta_t = min(dt, T_end-t0)
-        # now calculate jump with 2-step
-        # sp_error_moniter.M = copy(sp.M)
-        # runge_kutta_singlejump!(sp_error_moniter, t0, delta_t/2, T, Vtrans)
-        # runge_kutta_singlejump!(sp_error_moniter, t0, delta_t/2, T, Vtrans)
-        # now calculate jump with 1-step
-
-        # inst_H = instantaneous_field(sp, t0, T, Vtrans)
-        # inst_norm = [sqrt(sum(inst_H[i] .* inst_H[i])) for i in 1:length(sp.onsite)]
-        # inst_dot_norm = [sum(inst_H[i] .* sp.M[i]) for i in 1:length(sp.onsite)]
-        # inst_cos_theta = inst_dot_norm ./ inst_norm
-        # inst_min_cos_theta = minimum(inst_cos_theta)
-        # @info "t = $t0, inst_min_cos_theta = $inst_min_cos_theta"
-        # if inst_min_cos_theta < 0
-        #     @info "inst_H = $inst_H"
-        #     @info "sp.M = $(sp.M)"
-        #     error("err")
-        # end
         append!(sp_print, copy(sp.M))
         append!(H_print, instantaneous_field(sp, t0, T, Vtrans))
+
+        # @info "testing effective field"
+        H_inst_directcalulate = instantaneous_field(sp, t0, T, Vtrans)
+        H_inst_autodiff = instantaneous_field_autodiff(sp, t0, T, Vtrans)
+        for i in 1:length(sp.onsite)
+            for j in 1:3
+                @assert abs(H_inst_directcalulate[i][j] - H_inst_autodiff[i][j]) < 1e-7
+            end
+        end
+
         runge_kutta_singlejump!(sp, t0, delta_t, T, Vtrans)
-        # now calculate local truncation error
-        # local_error = maximum(sp.M .- sp_error_moniter.M) / (1 - 2^-4)
-        # total_error += maximum(local_error)
-        # @assert maximum(local_error) <= 1e-10
-        # @info "t = $t0, local_error = $local_error"
         t0 += delta_t
     end
     return sp_print, H_print
@@ -302,9 +297,9 @@ function vectorgradient(vec, this_t; freeze=false)
     Vtrans = Vector(vec[3*length(sp.onsite)+2:3*length(sp.onsite)+2+length(sp.onsite)-1])
     Tmax = Float64(vec[3*length(sp.onsite)+1])
     Mxdot, Mydot, Mzdot = integrator(sp, this_t, Tmax, Vtrans)
-    @assert Mxdot[1] == 0.0
-    @assert Mydot[1] == 0.0
-    @assert Mzdot[1] == 0.0
+    # @assert Mxdot[1] == 0.0
+    # @assert Mydot[1] == 0.0
+    # @assert Mzdot[1] == 0.0
     ret = Vector{Float64}()
     for i in 1:length(sp.onsite)
         append!(ret, [Mxdot[i], Mydot[i], Mzdot[i]])
