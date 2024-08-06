@@ -29,6 +29,7 @@ Base.:+(x::Point, y::Point) = Point(x.data .+ y.data)
 Base.:-(x::Point, y::Point) = Point(x.data .- y.data)
 Base.isapprox(x::Point, y::Point; kwargs...) = all(isapprox.(x.data, y.data; kwargs...))
 Base.getindex(p::Point, i::Int) = p.data[i]
+Base.length(p::Point) = length(p.data)
 Base.broadcastable(p::Point) = p.data
 Base.iterate(p::Point, args...) = iterate(p.data, args...)
 Base.zero(::Type{Point{D, T}}) where {D, T} = Point(ntuple(i->zero(T), D))

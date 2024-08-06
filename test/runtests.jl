@@ -18,7 +18,11 @@ end
 end
 
 @testset "simulated annealing" begin
-    include("sa.jl")
+    include("toy_model.jl")
+end
+
+@testset "spinglass_adiabatic" begin
+    include("spinglass_adiabatic.jl")
 end
 
 @testset "cuda" begin

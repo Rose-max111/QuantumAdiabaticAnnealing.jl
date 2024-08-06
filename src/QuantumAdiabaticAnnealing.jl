@@ -4,14 +4,12 @@ using UnitDiskMapping
 using Graphs
 using KrylovKit
 using CairoMakie
-using ITensors
 using Random
 using CUDA
 using GenericTensorNetworks
-using BloqadeExpr
 using SparseArrays
-using YaoAPI
 using DormandPrince
+using LinearAlgebra
 using Enzyme
 using BitBasis
 
@@ -36,7 +34,6 @@ include("quantum/energy_calculate.jl")
 include("gadgets/gadgets.jl")
 include("mis_sa.jl")
 include("toy_model.jl")
-include("sa.jl")
 include("cusa.jl")
 include("autodiff.jl")
 include("spinglass_adiabatic.jl")
