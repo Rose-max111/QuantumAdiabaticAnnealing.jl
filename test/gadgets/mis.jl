@@ -78,7 +78,8 @@ end
 
 
 @testset "rule110_transverse_generate" begin
-    locations, weights, inputs_id, outputs_id, input_layer_id = rule110_transverse_generate(1, 1)
+    rule = CellularAutomata1D{110}()
+    locations, weights, inputs_id, outputs_id, input_layer_id = transversal_mis_gadget(rule, 1, 1)
     P = input_layer_id[1][1]
     Q = inputs_id[1]
     R = input_layer_id[1][2]

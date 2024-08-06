@@ -1,5 +1,5 @@
 struct UnitDiskMISGadget
-    weights::Vector{Float6}
+    weights::Vector{Float64}
     inputs::Vector{Int}
     outputs::Vector{Int}
     # for unit disk embedding
@@ -200,21 +200,21 @@ function transversal_mis_gadget(::CellularAutomata1D{110})
         2,
         2,
         1])
-    P = 2
-    O = 23
     # L input = 13, R input = 5
     # return locations, weights, P, O
-    return UnitDiskMISGadget(weights, [P], [O], locations, sqrt(4.2))
+    return UnitDiskMISGadget(weights, [13, 2, 5], [23], locations, sqrt(4.2))
 end
 
-function transverse_mis_gadget(::CellularAutomata1D{110}, ninput::Int, Time::Int; gradient=nothing)
-    locations = []
-    weights = []
+function transversal_mis_gadget(::CellularAutomata1D{110}, ninput::Int, Time::Int; gradient=nothing)
+    locations = Tuple{Float64, Float64}[]
+    weights = Float64[]
     g = transversal_mis_gadget(CellularAutomata1D{110}())
     basic_loc, basic_weight = g.coordinates, g.weights
 
-    input_id = []
-    output_id = []
+    input_id = Int[]
+    inputL_id = Int[]
+    inputR_id = Int[]
+    output_id = Int[]
     input_layer_id = Vector{Vector{Int}}()
 
     if gradient === nothing
@@ -224,20 +224,13 @@ function transverse_mis_gadget(::CellularAutomata1D{110}, ninput::Int, Time::Int
     input_additional_weight = 0
     last_graph_size = 0
     for row in 1:Time
-        inputL = 0
-        inputR = 0
         for column in 1:ninput
             this_graph_loc = map(x -> (x[1] + padding_position[1], x[2] + padding_position[2]), basic_loc)
             this_graph_weight = copy(basic_weight)
-            if row == 1
-                push!(input_id, length(locations) + 2)
-            end
-            if column == 1
-                inputL = length(locations) + 13
-            end
-            if column == ninput
-                inputR = length(locations) + 5
-            end
+            # top, left and right inputs
+            column == 1 && push!(inputL_id,  length(locations) + g.inputs[1])
+            row == 1 && push!(input_id, length(locations) + g.inputs[2])
+            column == ninput && push!(inputR_id, length(locations) + g.inputs[3])
 
             if gradient !== nothing
                 this_graph_weight .*= gradient[row]
@@ -285,5 +278,6 @@ function transverse_mis_gadget(::CellularAutomata1D{110}, ninput::Int, Time::Int
         padding_position[2] += 10
         input_additional_weight = 1
     end
-    return locations, weights, input_id, output_id, input_layer_id
+    #return locations, weights, input_id, output_id, input_layer_id
+    return UnitDiskMISGadget(weights, input_id, output_id, locations, sqrt(4.2))
 end

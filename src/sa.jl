@@ -1,7 +1,3 @@
-function rule110(p, q, r)
-    return (q + r + q*r + p*q*r) % 2
-end
-
 # NOTE: we'd better use periodic boundary condition
 function calculate_state_energy(state, on_site_energy::AbstractVector{T}) where T
     ret = zero(T)
@@ -19,15 +15,7 @@ function calculate_state_energy(state, on_site_energy::AbstractVector{T}) where 
     return ret
 end
 
-@testset "state energy" begin
-    @test calculate_state_energy(0, fill(0.5, 4)) == -0.5 * 4 + 2
-end
-
-abstract type TransitionRule end
-struct HeatBath <: TransitionRule end
-struct Metroplis <: TransitionRule end
-
-function transition_matrix(rule::TransitionRule, Temp, on_site_energy::AbstractVector{T}) where {T}
+function transition_matrix(rule::TransitionRule, temperature, on_site_energy::AbstractVector{T}) where {T}
     n = length(on_site_energy)
     total_atoms = 2 * n - 2
     state_energy = [calculate_state_energy(i, on_site_energy) for i in 0:(2^total_atoms - 1)]
@@ -44,7 +32,7 @@ function transition_matrix(rule::TransitionRule, Temp, on_site_energy::AbstractV
             push!(row, reverse_mask + 1)  # the transition from i to reverse_mask
             push!(col, i+1)
             ΔE = state_energy[reverse_mask + 1] - state_energy[i + 1]
-            push!(val, update(rule, Temp, ΔE, 1.0 / total_atoms))
+            push!(val, update(rule, temperature, ΔE, 1.0 / total_atoms))
             other_prob += val[end]
         end
         push!(row, i+1)
@@ -55,22 +43,22 @@ function transition_matrix(rule::TransitionRule, Temp, on_site_energy::AbstractV
     return sparse(row, col, val)
 end
 # Metropolis-Hastings algorithm
-function update(::Metroplis, Temp, ΔE, prior)
+function update(::Metropolis, temperature, ΔE, prior)
     if ΔE < 0
         1.0
     else
-        exp(- (ΔE) / Temp)
+        exp(- (ΔE) / temperature)
     end * prior
 end
 
-function update(::HeatBath, Temp, ΔE, prior)
-    exp(-ΔE / Temp) / (1 + exp(-ΔE / Temp)) * prior
+function update(::HeatBath, temperature, ΔE, prior)
+    exp(-ΔE / temperature) / (1 + exp(-ΔE / temperature)) * prior
 end
 
-function spectral(rule::TransitionRule, Temp, on_site_energy, k::Int)
+function spectral(rule::TransitionRule, temperature, on_site_energy, k::Int)
     n = length(on_site_energy)
     total_atoms = 2 * n - 2
-    P = transition_matrix(rule, Temp, on_site_energy)
+    P = transition_matrix(rule, temperature, on_site_energy)
     eigvals, eigvecs, info = eigsolve(P, rand(Float64, 2^(total_atoms)), k, :LM; maxiter = 5000)
     @assert info.converged >= k "not converged"
     @assert eigvals[1] ≈ 1
@@ -78,28 +66,12 @@ function spectral(rule::TransitionRule, Temp, on_site_energy, k::Int)
     return real.(eigvals), eigvecs
 end
 
-function spectral_gap(rule::TransitionRule, Temp, on_site_energy)
-    evals, _ = spectral(rule, Temp, on_site_energy, 2)
+function spectral_gap(rule::TransitionRule, temperature, on_site_energy)
+    evals, _ = spectral(rule, temperature, on_site_energy, 2)
     return abs(abs(evals[1]) - abs(evals[2]))
 end
 
-@testset "spectral gap" begin
-    @test isapprox(spectral_gap(Metroplis(), 1e10, fill(0.0, 3)), 0; atol=1e-5)
-    @test spectral_gap(Metroplis(), 1.0, fill(0.0, 3)) ≈ 0.21850742086556896
-    @test spectral_gap(HeatBath(), 1e10, fill(0.0, 3)) ≈ 0.24999999999458677
-    @test spectral_gap(HeatBath(), 1.0, fill(0.0, 3)) ≈ 0.1573320844237781
-end
-@testset "transition matrix" begin
-    P = transition_matrix(Metroplis(), 2.0, fill(0.5, 4))
-    @test size(P) == (2^6, 2^6)
-    @test all(≈(1), sum(P; dims=1))
-
-    P = transition_matrix(HeatBath(), 2.0, fill(0.5, 4))
-    @test size(P) == (2^6, 2^6)
-    @test all(≈(1), sum(P; dims=1))
-end
-
-function plot_spectral_gap(rule::TransitionRule, Temp;
+function plot_spectral_gap(rule::TransitionRule, temperature;
             on_site_energies = 2 .^ (0:8),
             sample_w = 3:9,
         )
@@ -108,7 +80,7 @@ function plot_spectral_gap(rule::TransitionRule, Temp;
     for average_field in on_site_energies
         ED_gap = []
         for n in sample_w
-            gap = spectral_gap(rule, Temp, fill(average_field, n))
+            gap = spectral_gap(rule, temperature, fill(average_field, n))
             push!(ED_gap, gap)
             # @info "n = $n, average_field = $(average_field), gap = $(eigvals[1] - eigvals[2]), converged = $(infos.converged), numiter = $(infos.numiter)"
         end
@@ -123,16 +95,11 @@ function plot_spectral_gap(rule::TransitionRule, Temp;
     axislegend(position = :rb)
     f
 end
-plot_spectral_gap(HeatBath(), 10)
-plot_spectral_gap(Metroplis(), 10)
 
 tostring(n::Int, idx::Int) = bitstring(idx)[end-2n+3:end]
-function plot_spectrum(rule::TransitionRule, Temp, on_site_energy, k::Int)
+function plot_spectrum(rule::TransitionRule, temperature, on_site_energy, k::Int)
     n = length(on_site_energy)
-    evals, evecs = spectral(rule, Temp, on_site_energy, k)
+    evals, evecs = spectral(rule, temperature, on_site_energy, k)
     @info evals
     barplot(real.(evecs[k]); axis = (xticks=(1:2^(2n-2), tostring.(length(on_site_energy), 0:(2^(2n-2) - 1))), title=""))
 end
-
-plot_spectrum(Metroplis(), 0.3, fill(1.0, 3), 6)
-plot_spectrum(HeatBath(), 0.3, fill(1.0, 4), 16)

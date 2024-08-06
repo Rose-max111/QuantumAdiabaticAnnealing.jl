@@ -1,5 +1,16 @@
-function rule110(p, q, r)
-    return (q + r + q*r + p*q*r) % 2
+abstract type TransitionRule end
+struct HeatBath <: TransitionRule end
+struct Metropolis <: TransitionRule end
+function update(::Metropolis, Temp, ΔE, prior)
+    if ΔE < 0
+        1.0
+    else
+        exp(- (ΔE) / Temp)
+    end * prior
+end
+
+function update(::HeatBath, Temp, ΔE, prior)
+    exp(-ΔE / Temp) / (1 + exp(-ΔE / Temp)) * prior
 end
 
 function get_bit(state, l)
@@ -52,21 +63,6 @@ function toy_model_state_energy(state, n, m; on_site_energy = nothing, period_co
     return ret
 end
 
-
-abstract type TransitionRule end
-struct HeatBath <: TransitionRule end
-struct Metropolis <: TransitionRule end
-function update(::Metropolis, Temp, ΔE, prior)
-    if ΔE < 0
-        1.0
-    else
-        exp(- (ΔE) / Temp)
-    end * prior
-end
-
-function update(::HeatBath, Temp, ΔE, prior)
-    exp(-ΔE / Temp) / (1 + exp(-ΔE / Temp)) * prior
-end
 
 function toy_model_transition_matrix(rule::TransitionRule, n, m, Temp; on_site_energy = nothing, period_condition = false, energy_gradient = nothing)
     total_atoms = n * m - 2

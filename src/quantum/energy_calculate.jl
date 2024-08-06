@@ -1,18 +1,25 @@
-function distance(u::Tuple, v::Tuple)
-    return sqrt((u[1] - v[1])^2 + (u[2] - v[2])^2)
+module QuantumAnnealing
+
+using BloqadeExpr, ITensors
+
+export state_energy_calculation, Hamiltonian_energy_plot, pulse_energy_plot, get_low_energy_state
+
+function van_der_waals_potential(u, v; C=862690)
+    d2 = (u[1] - v[1])^2 + (u[2] - v[2])^2
+    return 2*π*C / d2^2
 end
 
 function state_energy_calculation(state, Δ, T_set, nodes)
     energy = 0.0
-    for i in 1:length(state)
+    for i in eachindex(state)
         for j in (i+1):length(state)
             if state[i] == state[j] && state[i] == 1
-                energy += 2*π*862690 / distance(nodes[i], nodes[j])^6
+                energy += van_der_waals_potential(nodes[i], nodes[j])
             end
         end
     end
 
-    for i in 1:length(state)
+    for i in eachindex(state)
         if state[i] == 1
             energy -= Δ[i](T_set)
         end
@@ -25,14 +32,14 @@ function Hamiltonian_energy_plot(hamiltonian, T_max, T_step, howmany; subspace =
     val = []
     for t in clocks
         h = hamiltonian |> attime(t)
-        if subspace == nothing
+        if subspace === nothing
             mat_h = mat(h)
         else
             mat_h = mat(h, subspace)
         end
         eigvals, eigvecs, info = eigsolve(mat_h, rand(Float64, size(mat_h, 1)), howmany, :SR; tol = 1e-7, maxiter = 5000)
         append!(val, [eigvals])
-        if outputwhich == nothing
+        if outputwhich === nothing
             @info t, eigvals[1], eigvals[2], eigvals[2] - eigvals[1], info.converged, info.numiter
         else
             @info t, eigvals[2] - eigvals[1], eigvals[3] - eigvals[2], eigvals[4] - eigvals[3], info.converged, info.numiter
@@ -45,7 +52,6 @@ end
 function pulse_energy_plot(Δ_T, Ω_T, nodes, T_max, T_step)
     clocks = 0.0:T_step:T_max
     val = []
-    last_psi = [nothing, nothing, nothing]
     for t in clocks
         Δ = [Δ_T[i](t) for i in 1:length(nodes)]
         Ω = fill(Ω_T(t), length(nodes))
@@ -60,7 +66,7 @@ end
 """
     H / ħ = ∑ 1 / 2 * Ω_j * (|0⟩⟨1|_j + |1⟩⟨0|_j) - ∑ Δ_j * (|0⟩⟨0|_j) + ∑ 2π * 862690 / (x_j - x_k)^6 * (|0⟩⟨0|_j * |0⟩⟨0|_k)
 """
-function get_low_energy_state(Δ, Ω, nodes; given_psi = [nothing, nothing, nothing], outputlevel = 0)
+function get_low_energy_state(Δ, Ω, nodes; outputlevel = 0)
     N = length(nodes)
     sites = siteinds("S=1/2", N)
     
@@ -69,7 +75,7 @@ function get_low_energy_state(Δ, Ω, nodes; given_psi = [nothing, nothing, noth
         os += Ω[j], "Sx", j
         os += -Δ[j], "Proj0", j
         for k in (j+1):N
-            os += 2π * 862690 / (distance(nodes[j], nodes[k])^6), "Proj0", j, "Proj0", k
+            os += van_der_waals_potential(nodes[j], nodes[k]), "Proj0", j, "Proj0", k
         end
     end
     H = MPO(os, sites)
@@ -104,9 +110,7 @@ function get_low_energy_state(Δ, Ω, nodes; given_psi = [nothing, nothing, noth
     return energy, psi_pre
 end
 
-
-
-function get_low_energy_state_gpu(Δ, Ω, nodes; given_psi = [nothing, nothing, nothing], outputlevel = 0)
+function get_low_energy_state_gpu(Δ, Ω, nodes; outputlevel = 0)
     N = length(nodes)
     sites = siteinds("S=1/2", N)
     
@@ -115,7 +119,7 @@ function get_low_energy_state_gpu(Δ, Ω, nodes; given_psi = [nothing, nothing, 
         os += Ω[j], "Sx", j
         os += -Δ[j], "Proj0", j
         for k in (j+1):N
-            os += 2π * 862690 / (distance(nodes[j], nodes[k])^6), "Proj0", j, "Proj0", k
+            os += van_der_waals_potential(nodes[j], nodes[k]), "Proj0", j, "Proj0", k
         end
     end
     H = MPO(os, sites)
@@ -147,4 +151,5 @@ function get_low_energy_state_gpu(Δ, Ω, nodes; given_psi = [nothing, nothing, 
 
     sort!(energy)
     return energy, psi_pre
+end
 end
