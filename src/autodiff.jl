@@ -20,7 +20,7 @@ function spinglass_hamiltonian(spin_M, Vtrans, gradient, n, m, t, Tmax)
     return ret
 end
 
-function spinglass_hamiltonian(sp::spinglassmodel, t, Tmax, Vtrans)
+function spinglass_hamiltonian(sp, t, Tmax, Vtrans)
     spin_M = Vector{Float64}()
     for i in 1:length(sp.onsite)
         append!(spin_M, [sp.M[i][1], sp.M[i][2], sp.M[i][3]])
@@ -29,7 +29,7 @@ function spinglass_hamiltonian(sp::spinglassmodel, t, Tmax, Vtrans)
 end
 
 
-function instantaneous_field_autodiff(sp::spinglassmodel, t, T, Vtrans::Vector{Float64})
+function instantaneous_field_autodiff(sp, t, T, Vtrans::Vector{Float64})
     spin_M = Vector{Float64}()
     for i in 1:length(sp.onsite)
         append!(spin_M, [sp.M[i][1], sp.M[i][2], sp.M[i][3]])

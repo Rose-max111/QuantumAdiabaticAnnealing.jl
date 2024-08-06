@@ -47,7 +47,8 @@ push!(ps,Point3f(3*(n-1)+3, 3*(m-1)+3, 8))
 ns_point = Observable([Vec3f(point_data[1][i]...) for i in 1:length(point_data[1])])
 ns_field = Observable([Vec3f(field_data[1][i]...) for i in 1:length(field_data[1])])
 f = Figure(size = (800, 800))
-ax = Axis3(f[1, 1])
+ttt = Observable(0.0)
+ax = Axis3(f[1, 1], title = @lift("Time = $($ttt)"))
 arrows!(ax,
     ps, ns_point, fxaa=true, # turn on anti-aliasing
     linecolor = :gray, arrowcolor = :black,
@@ -64,10 +65,10 @@ scatter!(ps[1:n*m], color = :blue, markersize = 10, fxaa=true)
 scatter!(ps[n*m+1:n*(2m-1)], color = :red, markersize = 10, fxaa=true)
 # scatter!(f[1,2], ps[1:n*m], color = :blue, markersize = 10, fxaa=true)
 # scatter!(f[1,2], ps[n*m+1:n*(2m-1)], color = :red, markersize = 10, fxaa=true)
-save("my.png", fig)
 
 record(f, "my.mp4", 1:50:100000) do val
     @info "val = $val"
+    ttt[] = 1e-2 * val
     ns_point[] = [Vec3f(point_data[val][i]...) for i in 1:length(point_data[val])]
     ns_field[] = [Vec3f(field_data[val][i]...) for i in 1:length(field_data[val])]
 end

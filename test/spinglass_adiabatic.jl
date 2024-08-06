@@ -181,3 +181,19 @@ using Random
         end
     end
 end
+
+@testset "singlemodel" begin
+    single_onsite = [1.0, 2.0, 2.0, 2.0, 5.0] # last one is ancilla
+    single_edge_weights = [1.0, 1.0, 2.0, 3.0, 2.0, 2.0, 5.0, 2.0, 5.0, 6.0]
+    configs = [1.0, 1.0, 1.0, -1.0, -1.0]
+    ret = 0.0
+    cnt = 0
+    for i in 1:5
+        for j in i+1:5
+            cnt += 1
+            ret += single_edge_weights[cnt] * configs[i] * configs[j]
+        end
+    end
+    ret += sum(configs .* single_onsite)
+    @test ret == -11
+end
