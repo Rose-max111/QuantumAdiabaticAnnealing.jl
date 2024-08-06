@@ -55,8 +55,8 @@ end
 
 abstract type TransitionRule end
 struct HeatBath <: TransitionRule end
-struct Metroplis <: TransitionRule end
-function update(::Metroplis, Temp, ΔE, prior)
+struct Metropolis <: TransitionRule end
+function update(::Metropolis, Temp, ΔE, prior)
     if ΔE < 0
         1.0
     else

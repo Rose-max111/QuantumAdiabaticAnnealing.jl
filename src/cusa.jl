@@ -71,10 +71,6 @@ function child_nodes(sa::SimulatedAnnealingHamiltonian, node::Integer)
     )
 end
 
-abstract type TransitionRule end
-struct HeatBath <: TransitionRule end
-struct Metropolis <: TransitionRule end
-
 function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, Temp::Float64)
     for ibatch in 1:size(state, 2)
         step_kernel!(rule, sa, state, energy_gradient, Temp, ibatch)

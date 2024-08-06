@@ -5,6 +5,10 @@ using Test
     include("generate_graph.jl")
 end
 
+@testset "gadgets" begin
+    include("gadgets/gadgets.jl")
+end
+
 # @testset "energy_calculate.jl" begin
 #     include("energy_calculate.jl")
 # end

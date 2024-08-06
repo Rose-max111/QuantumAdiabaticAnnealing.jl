@@ -18,8 +18,8 @@ export get_low_energy_state, generate_some_graph, distance
 export state_energy_calculation, Hamiltonian_energy_plot, pulse_energy_plot
 export get_low_energy_state_gpu
 export generate_random_lattice
-export rule54_generate
-export rule110_generate, transversal_graph, rule110_transverse_generate, show_transversal_graph, show_transversal_graph_weight, rule110_gadget_plot
+export mis_gadget, CellularAutomata1D, topology
+export show_transversal_graph_weight
 export track_equilibration!, SimulatedAnnealingMIS
 
 export toy_model_state_energy, toy_model_transition_matrix
@@ -33,14 +33,15 @@ export spinglass_hamiltonian, instantaneous_field_autodiff, runge_kutta_integrat
 # struct HeatBath <: TransitionRule end
 # struct Metropolis <: TransitionRule end
 
+include("ca1d.jl")
 include("generate_graph.jl")
 include("energy_calculate.jl")
-include("rule54_generate.jl")
-include("rule110_generate.jl")
+include("gadgets/gadgets.jl")
 include("mis_sa.jl")
 include("toy_model.jl")
 include("cusa.jl")
 include("autodiff.jl")
 include("spinglass_adiabatic.jl")
+include("visualize.jl")
 
 end
