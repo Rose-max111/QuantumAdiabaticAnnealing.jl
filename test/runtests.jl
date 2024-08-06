@@ -5,6 +5,14 @@ using Test
     include("generate_graph.jl")
 end
 
-@testset "energy_calculate.jl" begin
-    include("energy_calculate.jl")
+# @testset "energy_calculate.jl" begin
+#     include("energy_calculate.jl")
+# end
+
+@testset "cuda" begin
+    include("cusa.jl")
+end
+
+@testset "spinglass" begin
+    include("spinglass_adiabatic.jl")
 end

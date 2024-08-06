@@ -24,7 +24,7 @@ The ground state of which encodes the maximum weight independent set (MWIS) prob
 **Statement 3**: The classical Rydberg Hamiltonian is universal for classical computation.
 
 The NOR gate can be implemented using the Rydberg Hamiltonian (subfigure c below). The NOR gate is a universal gate for classical computation.
-![](images/gadgets.png){width=300}
+![Alt text](images/gadgets.png){width=300}
 
 The conjunction of gates can be implemented by "gluing" the Rydberg atoms together (subfigure d below). The weights are added together.
 
@@ -67,11 +67,11 @@ This graph can be embedded into a grid graph, where two vertices are connected i
 
 The correspondence between the Maximum Weighted Independent Set (MWIS) Solution and Rule 110 is as follows: 
 
-The states of vertex **1**, vertex **3**, and vertex **8** represent the states of the **middle**, **left**, and **right** cells of the automaton **input**, respectively. If the input value of a cell is 1, then the corresponding vertex must be in the MWIS solution; otherwise, it is not. Vertex **12** corresponds to the automaton **output. If the automaton output is 1, then vertex 12 is in the MWIS solution; otherwise, it is not.
+The states of vertex **1**, vertex **3**, and vertex **8** represent the states of the **middle**, **left**, and **right** cells of the automaton's **input**, respectively. If the input value of a cell is 1, then the corresponding vertex must be in the MWIS solution; otherwise, it is not. Vertex **12** corresponds to the automaton's **output**. If the automaton output is 1, then vertex 12 is in the MWIS solution; otherwise, it is not.
 
 In the automaton diagram, the above gadget is equivalent to:
 
-![Alt text](images/image-1.png){width=300}
+![Alt text](images/rule110.png){width=300}
 
 There are exactly **8** different MWIS solutions in this graph (the weighted size of each MWIS solution is 7), each corresponding to one of the **8** possible outputs of the automaton. We list them as follows.
 ![Alt text](images/gadget110.png){width=500}
@@ -95,14 +95,16 @@ Definitions:
 ### Deterministic direction
 The computation contains the following steps:
 1. Initialize the in-surface configuration. By removing some atoms on the in-surface.
-2. Connect the in-surface/out-surface to external heat sources at temperature $\Delta E< T_1 < T_2$, respectively.
-3. Lower the temperature of the heat sources "slowly" to cool the system to the ground state of the Hamiltonian. The temperature of the heat sources at time $t$ is $T_{1/2}(t) = T_{1/2}(0)e^{-\alpha t}$, where $T_{1/2}(0)$ is the initial temperature of the heat sources, and $\alpha$ is a constant.
+2. Connect the in-surface/out-surface to external heat sources at temperature $T_1 < T_2$, respectively. We also require that the energy gap between the ground state and the first excited state of the Hamiltonian to be $\Delta E< T_1$.
+3. Lower the temperature of the heat sources "slowly" to cool the system to the ground state of the Hamiltonian. The temperature of the heat sources at time $t$ is $T_{1/2}(t) = T_{1/2}(0)\lambda^{-c t}$, where $T_{1/2}(0)$ is the initial temperature of the heat sources, and $\alpha$ is a constant.
 
 ## Speed and work
 
 The trade-off between the energy consumption and the speed of computation[^Feynman2018]. To avoid confusion, we emphasize the "energy consumption" is defined as the work done in a computational process, which is the same as the amount of heat dissipated to the environment. This quantity has a lower bound given by the Landauer principle, which states that the work done in a computation is at least $kT\ln 2$ per bit erased[^Reeb2014].
 
 Information erasure in the surface programmable material is proportional to the volume of the material, which is $O(tS)$, where $t$ is the time of computation, and $S$ is memory (proportional to the surface area) of the material.
+
+From the chemical reaction perspective, the speed of computation is determined by the parameter $\lambda$.
 
 
 ### Non-deterministic direction
@@ -130,6 +132,7 @@ Our target is to calculate the **state** with lowest energy under the above hami
 One possible way is to use quantum adiabatic annealing: start from a simple hamiltonian $H(0)$ and its simple ground state $|\psi(0)\rang$, then gradually change the parameters until reaching the desire hamiltonian $H(t)$.
 
 More specifically, set $\Delta(t=0) <0$ and $\Omega(t=0) =0$ initially, then first turning on $\Omega(t)$ to a non-zero value, sweeping $\Delta(t)$ to final value, and finally turning off $\Omega(t)$.
+
 $$
 H_{QAA}(t) = \sum_{v\in V} (-\Delta(t)w_v \hat n_v + \Omega(t)\sigma_{v}^x) + \sum_{(u,w) \in E} U\hat n_u \hat n_w
 $$
@@ -144,7 +147,7 @@ Result listed as follows. **However, we didn't see cooling from deterministic di
 
 ### Local cooling test through simulated annealing
 
-We will refer to a toy-model limit: $\Delta = 1$ and $U = \infin$. What's more, we introduced **"Energy Gradient"** to the gadget to provide directionality for the simulated annealing. The hamiltonian for a m-layers automaton now change the form into:
+We will refer to a toy-model limit: $\Delta = 1$ and $U = \infty$. What's more, we introduced **"Energy Gradient"** to the gadget to provide directionality for the simulated annealing. The hamiltonian for a m-layers automaton now change the form into:
 
 $$
 H = \sum_{|\vec r_i - \vec r_j|\leq 2} U \hat n_i \hat n_j  - \Delta \sum_{i,k|\text{vertice i belongs to layer k}} w_i \lambda^{m-k} \hat n_i
@@ -156,15 +159,27 @@ From an intuitive perspective, for layers where the thermal energy exceeds the e
 
 Hence, we can simply set the discrete annealing tempretures as $T(k) = T_0 \eta^k$, where $\eta < 1$ and $\eta ^R = \lambda$. Here $R$ represent the number of the cooling iterations performed for a given layer.
 
-Similar to what we did in QAA, firstly, we set the weights of the inputs/outputs vertices to $\infin$ for testing doing computation along deterministic direction/non-deterministic direction. Then we compare the probability of successfully finding the corresponding ground state under certain $T_0, R, \lambda$ and $\eta$. **We find that doing computation along the non-deterministic direction is harder than the other one**
+Similar to what we did in QAA, firstly, we set the weights of the inputs/outputs vertices to $\infty$ (NOTE: by removing vertices) for testing doing computation along deterministic direction/non-deterministic direction. Then we compare the probability of successfully finding the corresponding ground state under certain $T_0, R, \lambda$ and $\eta$. **We find that doing computation along the non-deterministic direction is harder than the other one**
 
 Next, we believe that for each layers's cooling process, we are essentially calculating a probability transition matrix $P(T,k)$, where $P(T,k)_{outputm, inputm}$ represent the probability that, given the input vertices state is $inputm$, the cooling process sets the output vertices state to $outputm$. 
 
-Thanks to the transvariant structure of our gadget and cooling process, we believe the matrix $P(T,k)$ is independent from $T$ and $k$, which give us an intuitation that if the failure probability of each layer's cooling process is $F$, the total success probability is $(1-F)^m$. **We test this in a 4-single-gadget per layer automaton and find this suit well.**
+Thanks to the translational invariant structure of our gadget and cooling process, we believe the matrix $P(T,k)$ is independent from $T$ and $k$, which give us an intuitation that if the failure probability of each layer's cooling process is $F$, the total success probability is $(1-F)^m$. **We test this in a 4-single-gadget per layer automaton and find this suit well.**
 
 Finally, we evaluate the error probability v.s. run time in a single layer 4-gadget automaton. Result listed as follows.
 
 ![Alt text](<images/error vs runtime.png>)
+
+## Estimation of the computing time
+Let the temperature of the $k$-th layer at time $t$ be $T(t, k) = T \lambda^{ct + k}$, where $T$ is the initial temperature, $c$ is a constant, and $\lambda < 1$ is a constant.
+At any given time $t$, we denote the subset of atoms at depth $-\frac{W}{2} < ct + k < \frac{W}{2}$ as the active zone, where $W$ is the width of the sliding window such that $e^{-\Delta E /\lambda^{W/2}} = \epsilon \ll 1$. The active zone is the region where non-trivial computation occurs. The atoms outside the active zone are either frozen or completely randomized. Clearly, $W$ asymptotically scales as $(1-\lambda)^{-1} \log(\log\epsilon^{-1})$.
+
+We consider thermalizing the system in units of $W$ time steps. $\epsilon$ is the error probability of each unit of time, which should scale as $\epsilon \sim\left(\frac{m}{W}\right)^{-1}$, where $m$ is the total number of time steps.
+
+The probability transition matrix of the active zone at any given time $t$ (except the starting and ending time) is the same, so we denote it as $P = P(t)$. The error tolerance requires the zone to be thermalized to certain extent, i.e. $\left(\frac{\lambda_2(P)}{\lambda_1(P)}\right)^{t_{\text{th}}} < \epsilon$, where $\lambda_1(P) \geq \lambda_2(P)$ are the two largest eigenvalues of $P$. We have $t_{\text{th}} \sim \left(1-\frac{\lambda_2(P)}{\lambda_1(P)}\right)^{-1}\log(\epsilon^{-1})$.
+
+Under the assumption that $\left(1-\frac{\lambda_2(P)}{\lambda_1(P)}\right)\sim e^{-W}$, we have $t_{\text{th}} \sim e^{(1-\lambda)^{-1}}\log^2(\epsilon^{-1})$. The total time for the computation is $t_{\text{total}} \sim \left(\frac{m}{W}\right)\log^2(\frac{m}{W}) e^{(1-\lambda)^{-1}}$.
+
+Time per computation scales as $E \sim \log^2 \frac{m}{W}$.
 
 ## References
 

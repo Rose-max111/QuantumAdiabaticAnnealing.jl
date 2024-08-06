@@ -41,57 +41,45 @@ function control_output!(weights, outputs_id, input_layer_id)
     end
 end
 
-n = 4
-m = 1
-energy_gap = 6
-# energy_gap = ARGS[1]
-# energy_gap = parse(Float64, energy_gap)
+function evaluate_slice_performance(n, energy_gap)
+    m = 1
+    locations, weights, inputs_id, outputs_id, input_layer_id = rule110_transverse_generate(n, m; gradient = [energy_gap^i for i in m-1:-1:0])
+    locations = map(t -> (Float64(t[1]), Float64(t[2])), locations)
+    weights = Float64.(weights)
 
-locations, weights, inputs_id, outputs_id, input_layer_id = rule110_transverse_generate(n, m; gradient = [energy_gap^i for i in m-1:-1:0])
-locations = map(t -> (Float64(t[1]), Float64(t[2])), locations)
-weights = Float64.(weights)
+    control_input!(weights, inputs_id, input_layer_id)
+    graph = unit_disk_graph(locations, 2.05)
 
-control_input!(weights, inputs_id, input_layer_id)
-# control_output!(weights, outputs_id, input_layer_id)
+    # First use TensorNetwork method to get the size of weighted MIS problem   
+    problem = GenericTensorNetwork(IndependentSet(graph, weights));
+    max_independent_set = solve(problem, SizeMax(1))[]
 
-graph = unit_disk_graph(locations, 2.05)
+    MIS_size = max_independent_set.orders[1].n
 
-# First use TensorNetwork method to get the size of weighted MIS problem
-problem = GenericTensorNetwork(IndependentSet(graph, weights));
-max_independent_set = solve(problem, SizeMax(1))[]
-# max_independent_set = solve(problem, ConfigsMax())[]
-# colorconfig = [max_independent_set.c.data[1][i] == 0 ? 1 : 2 for i in 1:nv(graph)]
-# print_graph(graph, locations, colorconfig)
+    # Now try Simulated annealing
 
-MIS_size = max_independent_set.orders[1].n
+    prob = []
+    run_time = 1000:500:21000
+    for simulate_time in run_time
+        Temp_max = 10.0
+        tempscale = Temp_max .- (1:simulate_time .- 1) .* (Temp_max / simulate_time)
+        Real_tempscale = [tempscale[i] * energy_gap^j for j in m-1:-1:0 for i in 1:length(tempscale)]
+        niters = 1
 
-# Now try Simulated annealing
-
-prob = []
-run_time = 1000:300:21000
-for simulate_time in run_time
-    Temp_max = 10.0
-    tempscale = Temp_max .- (1:simulate_time .- 1) .* (Temp_max / simulate_time)
-    Real_tempscale = [tempscale[i] * energy_gap^j for j in m-1:-1:0 for i in 1:length(tempscale)]
-    niters = 1
-
-    detuning = -weights
-    success_time = annealing(graph, detuning, Inf, MIS_size, 2000, Real_tempscale, niters)
-    @info "simulate_time = $simulate_time, success_time = $success_time, success_prob = $(1.0 * success_time / 2000)"
-    push!(prob, 1.0 * success_time / 2000)
+        detuning = -weights
+        success_time = annealing(graph, detuning, Inf, MIS_size, 2000, Real_tempscale, niters)
+        @info "simulate_time = $simulate_time, success_time = $success_time, success_prob = $(1.0 * success_time / 2000)"
+        push!(prob, 1.0 * success_time / 2000)
+    end
+    return prob
 end
 
-fig = Figure()
-ax = Axis(fig[1, 1])
 
-xs = run_time
-ys = prob
-# low_errors = fill(0.02, length(xs))
-# high_errors = fill(0.02, length(xs))
-lines!(ax, xs, ys, color = :blue)
-# errorbars!(ax, xs, ys, low_errors, high_errors, color = :yellow, whiskerwidth = 10)
-# scatter!(xs, ys, markersize = 3, color = :black)
-fig
+prob_3_gadgets = evaluate_slice_performance(3, 1)
 
-# colorconfig = [SA.best_IS_bitarr[i] + 1 for i in 1:nv(graph)]
-# print_graph(graph, locations, colorconfig)
+filepath = joinpath(@__DIR__, "data/prob_3_gadgets.txt")
+open(filepath,"w") do file
+    for i in prob_3_gadgets
+        println(file, i)
+    end
+end

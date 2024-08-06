@@ -25,7 +25,7 @@ end
 @testset "toy_model_transition_matrix" begin
     n = 4
     Temp = 0.001
-    P = toy_model_transition_matrix(Metroplis(), n, Temp)
+    P = toy_model_transition_matrix(n, Temp)
     eigvals, eigvecs, infos = eigsolve(P, rand(Float64, 2^(2*n-2)), 2, :LM; maxiter = 5000)
     total = 0
     for i in 1:2^(2*n-2)
@@ -39,7 +39,7 @@ end
 
     n = 3
     Temp = 0.001
-    P = toy_model_transition_matrix(Metroplis(), n, Temp; period_condition = true)
+    P = toy_model_transition_matrix(n, Temp; period_condition = true)
     eigvals, eigvecs, infos = eigsolve(P, rand(Float64, 2^(2*n)), 2, :LM; maxiter = 5000)
     total = 0
     for i in 1:2^(2*n)
