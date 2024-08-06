@@ -6,3 +6,7 @@ Manifest.toml
 /docs/build/
 .CondaPkg/
 .vscode/
+
+*.mp4
+*.png
+*.txt
