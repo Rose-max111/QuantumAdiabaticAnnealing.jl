@@ -50,14 +50,14 @@ end
 
 # edge, weights = ioinfile()
 # sp = spinglass_random_mapping(108, edge, weights)
-edges, weights = randominit(50)
-sp = spinglass_random_mapping(50, edges, weights)
+edges, weights = randominit(40)
+sp = spinglass_random_mapping(40, edges, weights)
 initial_randomize!(sp)
 
 # @info "energy is $(sp_energy(sp, 0, 1, fill(1.0, length(sp.onsite))))"
 sp_ground_state(sp)
 
-runge_kutta_integrate!(sp, 1e-2, 1000.0, fill(1.0, length(sp.onsite)))
+runge_kutta_integrate!(sp, 1e-2, 1000.0, fill(1.0, length(sp.onsite));pin_input = false)
 for i in 1:length(sp.onsite)
     sp.M[i][3] = sp.M[i][3] > 0 ? 1 : -1
 end

@@ -99,6 +99,17 @@ function runge_kutta_visualize()
     n=3
     m=4
     sp = spinglass_mapping(n, m)
+
+    # for i in sp.n+1:length(sp.onsite)
+    #     aa = rand()*0.2 - 0.1
+    #     bb = rand()*0.2 - 0.1
+    #     # @info "aa = $aa, bb=$bb, i=$i"
+    #     sp.M[i][3] = bb
+    #     sp.M[i][2] = aa
+    #     sp.M[i][1] = -sqrt(1 - bb^2 - aa^2)
+    #     # @info "i=$i, sp.M[i]= $(sp.M[i])"
+    # end
+
     Vtrans = fill(1.0, length(sp.onsite))
     model_print, field_print = runge_kutta_integrate!(sp, 1e-2, T_end, Vtrans; T_end = T_end)
     @info "energy is $(sp_energy(sp, T_end, T_end, Vtrans))"

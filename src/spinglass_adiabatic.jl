@@ -85,10 +85,12 @@ function instantaneous_field(sp::spinglassmodel, t, T, Vtrans::Vector{Float64})
     return H
 end
 
-function integrator(sp::spinglassmodel, t, T, Vtrans::Vector{Float64}) # evaluate F(t, y)
-    # for i in 1:sp.n
-    #     sp.M[i] = [0.0, 0.0, 1.0]
-    # end # used set-way
+function integrator(sp::spinglassmodel, t, T, Vtrans::Vector{Float64}; pin_input = true) # evaluate F(t, y)
+    if pin_input == true
+        for i in 1:sp.n
+            sp.M[i] = [0.0, 0.0, 1.0]
+        end # used set-way
+    end
 
     # Mxdot =  sp.onsite .* [u[2] for u in sp.M]
     # Mydot = -sp.onsite .* [u[1] for u in sp.M]
@@ -121,29 +123,30 @@ function integrator(sp::spinglassmodel, t, T, Vtrans::Vector{Float64}) # evaluat
     #     @assert abs(-Mydot[i] - exact_Mdot[i][2]) < 1e-7
     #     @assert abs(-Mzdot[i] - exact_Mdot[i][3]) < 1e-7
     # end
-
-    # Mxdot[1:sp.n] .= 0.0
-    # Mydot[1:sp.n] .= 0.0
-    # Mzdot[1:sp.n] .= 0.0
+    if pin_input == true
+        Mxdot[1:sp.n] .= 0.0
+        Mydot[1:sp.n] .= 0.0
+        Mzdot[1:sp.n] .= 0.0
+    end
 
     return [Mxdot, Mydot, Mzdot]
     # return [-Mxdot, -Mydot, -Mzdot]
 end
 
-function runge_kutta_singlejump!(sp::spinglassmodel, t0, delta_t, T, Vtrans::Vector{Float64})
+function runge_kutta_singlejump!(sp::spinglassmodel, t0, delta_t, T, Vtrans::Vector{Float64}; pin_input = true)
     origin_M = copy(sp.M)
-    k1 = integrator(sp, t0, T, Vtrans)
+    k1 = integrator(sp, t0, T, Vtrans;pin_input=pin_input)
     sp.M = [renorm([origin_M[i][1] + k1[1][i] * delta_t / 2, origin_M[i][2] + k1[2][i] * delta_t / 2, origin_M[i][3] + k1[3][i] * delta_t / 2]) for i in 1:length(sp.onsite)]
-    k2 = integrator(sp, t0 + delta_t / 2, T, Vtrans)
+    k2 = integrator(sp, t0 + delta_t / 2, T, Vtrans; pin_input=pin_input)
     sp.M = [renorm([origin_M[i][1] + k2[1][i] * delta_t / 2, origin_M[i][2] + k2[2][i] * delta_t / 2, origin_M[i][3] + k2[3][i] * delta_t / 2]) for i in 1:length(sp.onsite)]
-    k3 = integrator(sp, t0 + delta_t / 2, T, Vtrans)
+    k3 = integrator(sp, t0 + delta_t / 2, T, Vtrans; pin_input=pin_input)
     sp.M = [renorm([origin_M[i][1] + k3[1][i] * delta_t, origin_M[i][2] + k3[2][i] * delta_t, origin_M[i][3] + k3[3][i] * delta_t]) for i in 1:length(sp.onsite)]
-    k4 = integrator(sp, t0 + delta_t, T, Vtrans)
+    k4 = integrator(sp, t0 + delta_t, T, Vtrans; pin_input=pin_input)
     real_k = (k1 .+ 2*k2 .+ 2*k3 .+ k4) ./ 6 * delta_t
     sp.M = [renorm([origin_M[i][1] .+ real_k[1][i], origin_M[i][2]+real_k[2][i], origin_M[i][3]+real_k[3][i]]) for i in 1:length(sp.onsite)]
 end
 
-function runge_kutta_integrate!(sp::spinglassmodel, dt::Float64, T::Float64, Vtrans::Vector{Float64}; T_end = nothing)
+function runge_kutta_integrate!(sp::spinglassmodel, dt::Float64, T::Float64, Vtrans::Vector{Float64}; T_end = nothing, pin_input = true)
     t0 = 0.0
     if T_end == nothing
         T_end = T
@@ -165,7 +168,7 @@ function runge_kutta_integrate!(sp::spinglassmodel, dt::Float64, T::Float64, Vtr
         #     end
         # end
 
-        runge_kutta_singlejump!(sp, t0, delta_t, T, Vtrans)
+        runge_kutta_singlejump!(sp, t0, delta_t, T, Vtrans; pin_input = pin_input)
         t0 += delta_t
     end
     return sp_print, H_print
