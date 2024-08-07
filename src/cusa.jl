@@ -141,7 +141,7 @@ function toymodel_gausspulse(sa::SimulatedAnnealingHamiltonian,
                             middle_position::Float64,
                             gradient::Float64)
     # amplitude * e^(- (1 /width) * (x-middle_position)^2)
-    eachposition = Tuple([gausspulse_amplitude * gradient^(- (1.0/gausspulse_width) * (i-middle_position)^2) + 1e-4 for i in 1:sa.m-1])
+    eachposition = Tuple([gausspulse_amplitude * gradient^(- (1.0/gausspulse_width) * (i-middle_position)^2) + 1e-5 for i in 1:sa.m-1])
     return eachposition
 end
 
@@ -176,21 +176,21 @@ end
 function track_equilibration_gausspulse_gpu!(rule::TransitionRule,
                                         sa::SimulatedAnnealingHamiltonian, 
                                         state::AbstractMatrix, 
-                                        energy_gradient::AbstractArray, 
-                                        gausspulse_amplitude::Float32,
-                                        gausspulse_width::Float32,
+                                        energy_gradient, 
+                                        gausspulse_amplitude,
+                                        gausspulse_width,
                                         annealing_time
                                         )
-    midposition = 1.0 - sqrt(-(gausspulse_width) * log(1e-5/gausspulse_amplitude)) / log(energy_gradient[1])
+    midposition = 1.0 - sqrt(-(gausspulse_width) * log(1e-5/gausspulse_amplitude)) / log(energy_gradient)
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
     @info "each_movement = $each_movement"
 
     # NOTE: do we really need niters? or just set it to 1?
     for t in 1:annealing_time
-        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient[1])
+        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient)
         Temp = CuArray(fill(Float32.(singlebatch_temp), size(state, 2)))
         for _ in 1:natom(sa)
-            step!(rule, sa, state, energy_gradient, Temp)
+            step!(rule, sa, state, CuArray(fill(1.0f0, size(state, 2))), Temp)
         end
         midposition += each_movement
     end
