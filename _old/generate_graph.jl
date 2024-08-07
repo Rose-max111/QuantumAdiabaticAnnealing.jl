@@ -1,16 +1,3 @@
-function countbits(u::Int)
-    if u == 0
-        return 0
-    end
-    c = 0
-    while u != 0 
-        u = u >> 1
-        c += 1
-    end
-    return c
-end
-
-
 function generate_factoring_new_graph(x1::Int, x2::Int)
     mres = UnitDiskMapping.map_factoring(x1, x2)
     vaild = ones(length(mres.grid_graph.nodes))

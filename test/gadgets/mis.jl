@@ -1,120 +1,28 @@
 using QuantumAdiabaticAnnealing, Test
-using QuantumAdiabaticAnnealing:rule110_generate, transversal_graph, rule110_transverse_generate
 using GenericTensorNetworks
-using GenericTensorNetworks:unit_disk_graph
 using LinearAlgebra
 using Graphs
 using LuxorGraphPlot
-# using LuxorGraphPlot.Luxor, LuxorGraphPlot
 
-@testset "rule110_generate" begin
-    graph, weights, locations, P, Q, R, Target = rule110_generate()
-
-    weights[P] = -50
-    weights[Q] = -50
-    weights[R] = -50
-
-    @info "Test 000"
-    problem = GenericTensorNetwork(IndependentSet(graph, weights));
-    max_config_weighted = solve(problem, SingleConfigMax())[]
-    max_independent_set_size = solve(problem, ConfigsMax())[]
-    @info "max_independent_set_size = $max_independent_set_size"
-    @test max_config_weighted.c.data[Target] == 0
-
-
-    weights[P] = -50
-    weights[Q] = -50
-    weights[R] = 50
-
-    @info "Test 001"
-    problem = GenericTensorNetwork(IndependentSet(graph, weights));
-    max_config_weighted = solve(problem, SingleConfigMax())[]
-    max_independent_set_size = solve(problem, ConfigsMax())[]
-    @info "max_independent_set_size = $max_independent_set_size"
-    @test max_config_weighted.c.data[Target] == 1
-
-    weights[P] = -50
-    weights[Q] = 50
-    weights[R] = -50
-
-    @info "Test 010"
-    problem = GenericTensorNetwork(IndependentSet(graph, weights));
-    max_config_weighted = solve(problem, SingleConfigMax())[]
-    max_independent_set_size = solve(problem, ConfigsMax())[]
-    @info "max_independent_set_size = $max_independent_set_size"
-    @test max_config_weighted.c.data[Target] == 1
-
-    weights[P] = -50
-    weights[Q] = 50
-    weights[R] = 50
-
-    @info "Test 011"
-    problem = GenericTensorNetwork(IndependentSet(graph, weights));
-    max_config_weighted = solve(problem, SingleConfigMax())[]
-    max_independent_set_size = solve(problem, ConfigsMax())[]
-    @info "max_independent_set_size = $max_independent_set_size"
-    @test max_config_weighted.c.data[Target] == 1
-
-    weights[P] = 50
-    weights[Q] = -50
-    weights[R] = -50
-
-    @info "Test 100"
-    problem = GenericTensorNetwork(IndependentSet(graph, weights));
-    max_config_weighted = solve(problem, SingleConfigMax())[]
-    max_independent_set_size = solve(problem, ConfigsMax())[]
-    @info "max_independent_set_size = $max_independent_set_size"
-    @test max_config_weighted.c.data[Target] == 0
-
-    weights[P] = 50
-    weights[Q] = -50
-    weights[R] = 50
-
-    @info "Test 101"
-    problem = GenericTensorNetwork(IndependentSet(graph, weights));
-    max_config_weighted = solve(problem, SingleConfigMax())[]
-    max_independent_set_size = solve(problem, ConfigsMax())[]
-    @info "max_independent_set_size = $max_independent_set_size"
-    @test max_config_weighted.c.data[Target] == 1
-
-    weights[P] = 50
-    weights[Q] = 50
-    weights[R] = -50
-
-    @info "Test 110"
-    problem = GenericTensorNetwork(IndependentSet(graph, weights));
-    max_config_weighted = solve(problem, SingleConfigMax())[]
-    max_independent_set_size = solve(problem, ConfigsMax())[]
-    @info "max_independent_set_size = $max_independent_set_size"
-    @test max_config_weighted.c.data[Target] == 1
-
-    weights[P] = 50
-    weights[Q] = 50
-    weights[R] = 50
-
-    @info "Test 111"
-    problem = GenericTensorNetwork(IndependentSet(graph, weights));
-    max_config_weighted = solve(problem, SingleConfigMax())[]
-    max_independent_set_size = solve(problem, ConfigsMax())[]
-    @info "max_independent_set_size = $max_independent_set_size"
-    @test max_config_weighted.c.data[Target] == 0
-
-    Max_radius_square = 4.2
-    for i in 1:nv(graph)
-        for j in i+1:nv(graph)
-            @info "now testing edge $i $j"
-            if has_edge(graph, i, j)
-                @test (locations[i][1] - locations[j][1])^2 + (locations[i][2]-locations[j][2])^2 <= Max_radius_square
-            else
-                @test (locations[i][1] - locations[j][1])^2 + (locations[i][2]-locations[j][2])^2 > Max_radius_square
-            end
+@testset "mis rules" begin
+    for ridx in (54, 110)
+        rule = CellularAutomata1D{ridx}()
+        g = mis_gadget(rule)
+        locations, weights, (P, Q, R), Target = g.coordinates, g.weights, g.inputs, g.outputs[]
+        graph = topology(g)
+        configs = solve(GenericTensorNetwork(IndependentSet(graph, weights)), ConfigsMax())[].c.data
+        @test length(unique!(getindex.(configs, Ref([P, Q, R])))) == 8
+        for c in configs
+            input = c[[P, Q, R]]
+            input_idx = input[3] + 2*input[2] + 4*input[1]
+            @test c[Target] == ((ridx >> input_idx) & 1)
         end
     end
 end
 
 @testset "transversal_graph" begin
-    locations, weights, input, output = transversal_graph()
-    radius_square = 4.2
+    g = QuantumAdiabaticAnnealing.transversal_mis_gadget(CellularAutomata1D{110}())
+    locations = g.coordinates
 
     el = Edge.([(1,2),
             (2,3),
@@ -159,7 +67,7 @@ end
     for i in 1:length(locations)
         for j in i+1:length(locations)
             @info "now testing edge $i $j"
-            if (locations[i][1] - locations[j][1])^2 + (locations[i][2]-locations[j][2])^2 <= radius_square
+            if (locations[i][1] - locations[j][1])^2 + (locations[i][2]-locations[j][2])^2 <= g.radius^2
                 @test has_edge(G, i, j)
             else
                 @test !has_edge(G, i, j)
@@ -170,7 +78,8 @@ end
 
 
 @testset "rule110_transverse_generate" begin
-    locations, weights, inputs_id, outputs_id, input_layer_id = rule110_transverse_generate(1, 1)
+    rule = CellularAutomata1D{110}()
+    locations, weights, inputs_id, outputs_id, input_layer_id = transversal_mis_gadget(rule, 1, 1)
     P = input_layer_id[1][1]
     Q = inputs_id[1]
     R = input_layer_id[1][2]
@@ -303,6 +212,5 @@ end
 # colorspace = ["Blue", "Red", "Green", "Black"]
 
 # show_graph(G, locs = locations; format = :svg, vertex_colors = colorspace[weights], show_number = true)
-
 
 

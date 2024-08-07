@@ -177,7 +177,7 @@ using Random
 @testset "autodiff vs exact" begin
     sp=spinglass_mapping(3, 4)
     for i in 1:length(sp.onsite)
-        sp.M[i]=[rand()*2-1, rand()*2-1, rand()*2-1]
+        sp.M[i]=Point(rand()*2-1, rand()*2-1, rand()*2-1)
     end
     @info "sp.M[1] = $(sp.M[1])"
     Vtrans = fill(1.0, length(sp.onsite))

@@ -8,22 +8,14 @@ function random_state(sa::SimulatedAnnealingHamiltonian, nbatch::Integer)
     return rand(Bool, natom(sa), nbatch)
 end
 hasparent(sa::SimulatedAnnealingHamiltonian, node::Integer) = node > sa.n
-function linear_to_cartesian(sa::SimulatedAnnealingHamiltonian, node::Integer)
-    j, i = divrem(node-1, sa.n)
-    return i + 1, j + 1
-end
 cartesian_to_linear(sa::SimulatedAnnealingHamiltonian, i::Integer, j::Integer) = i + (j - 1) * sa.n
 
 # evaluate the energy of the i-th gadget (involving atoms i and its parents)
 function evaluate_parent(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, inode::Integer, ibatch::Integer)
-    i, j = linear_to_cartesian(sa, inode)
-    # if i == 1
-    #     return 0
-    # end
-    idp = parent_logic(sa, inode)
+    i, j = CartesianIndices((sa.n, sa.m))[inode].I
+    idp = parent_nodes(sa, inode)
     trueoutput = @inbounds rule110(state[idp[1], ibatch], state[idp[2], ibatch], state[idp[3], ibatch])
-    return @inbounds (trueoutput ⊻ state[idp[4], ibatch]) * (energy_gradient[ibatch] ^ (sa.m - j))
-    # return @inbounds (trueoutput ⊻ state[idp[4], ibatch])
+    return @inbounds (trueoutput ⊻ state[inode, ibatch]) * (energy_gradient[ibatch] ^ (sa.m - j))
 end
 function calculate_energy(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, ibatch::Integer)
     return sum(i->evaluate_parent(sa, state, energy_gradient, i, ibatch), sa.n+1:natom(sa))
@@ -48,32 +40,27 @@ function local_energy!(sa::SimulatedAnnealingHamiltonian, state::CuMatrix, energ
     energy
 end
 
-
-
-function parent_logic(sa::SimulatedAnnealingHamiltonian, node::Integer)
+function parent_nodes(sa::SimulatedAnnealingHamiltonian, node::Integer)
     n = sa.n
-    i, j = linear_to_cartesian(sa, node)
-    (
-        cartesian_to_linear(sa, mod1(i-1, n), j-1),  # periodic boundary condition
-        cartesian_to_linear(sa, i, j-1),
-        cartesian_to_linear(sa, mod1(i+1, n), j-1),
-        node
+    i, j = CartesianIndices((n, sa.m))[node].I
+    lis = LinearIndices((n, sa.m))
+    @inbounds (
+        lis[mod1(i-1, n), j-1],  # periodic boundary condition
+        lis[i, j-1],
+        lis[mod1(i+1, n), j-1],
     )
 end
 
 function child_nodes(sa::SimulatedAnnealingHamiltonian, node::Integer)
     n = sa.n
-    i, j = linear_to_cartesian(sa, node)
-    (
-        cartesian_to_linear(sa, mod1(i-1, n), j+1),  # periodic boundary condition
-        cartesian_to_linear(sa, mod1(i, n), j+1),
-        cartesian_to_linear(sa, mod1(i+1, n), j+1),
+    i, j = CartesianIndices((n, sa.m))[node].I
+    lis = LinearIndices((n, sa.m))
+    @inbounds (
+        lis[mod1(i-1, n), j+1],  # periodic boundary condition
+        lis[mod1(i, n), j+1],
+        lis[mod1(i+1, n), j+1],
     )
 end
-
-abstract type TransitionRule end
-struct HeatBath <: TransitionRule end
-struct Metropolis <: TransitionRule end
 
 function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, Temp::Float64)
     for ibatch in 1:size(state, 2)
@@ -101,7 +88,7 @@ end
     ΔE = 0
     node = rand(atoms(sa))
 
-    i, j = linear_to_cartesian(sa, node)
+    i, j = CartesianIndices((sa.n, sa.m))[node].I
     if j > 1 # not the first layer
         ΔE += energy_gradient[ibatch]^(sa.m - j) - 2 * evaluate_parent(sa, state, energy_gradient, node, ibatch)
     end

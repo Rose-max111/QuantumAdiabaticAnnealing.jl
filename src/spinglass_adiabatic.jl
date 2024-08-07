@@ -1,12 +1,11 @@
-mutable struct spinglassmodel
-    # n::Int
-    const n::Int
-    const m::Int
-    const gradient::Float64
-    const edges::Vector{Tuple{Int,Int,Float64}}
-    const onsite::Vector{Float64}
-    M::Vector{Vector{Float64}}
-    function spinglassmodel(n::Int, m::Int, gradient::Float64, edges::Vector{Tuple{Int,Int,Float64}}, onsite::Vector{Float64}, M::Vector{Vector{Float64}} = cat([[0.0, 0.0, 1.0] for i in 1:n], [[-1.0, 0.0, 0.0] for i in 1:length(onsite)-n];dims=1))
+struct SpinGlassModel
+    n::Int
+    m::Int
+    gradient::Float64
+    edges::Vector{Tuple{Int,Int,Float64}}
+    onsite::Vector{Float64}
+    M::Vector{Point3D{Float64}}
+    function SpinGlassModel(n::Int, m::Int, gradient::Float64, edges::Vector{Tuple{Int,Int,Float64}}, onsite::Vector{Float64}, M::Vector{Point3D{Float64}} = cat([Point(0.0, 0.0, 1.0) for i in 1:n], [Point(-1.0, 0.0, 0.0) for i in 1:length(onsite)-n];dims=1))
         new(n, m, gradient, edges, onsite, M)
     end
 end
@@ -16,7 +15,7 @@ function spinglass_random_mapping(n, interaction_part::Vector{Tuple{Int, Int}}, 
     for i in 1:length(interaction_part)
         push!(edges, (interaction_part[i][1], interaction_part[i][2], interaction_weight[i]))
     end|
-    return spinglassmodel(n, 1, 1.0, edges, onsite_part, [[-1.0, 0.0, 0.0] for i in 1:n])
+    return SpinGlassModel(n, 1, 1.0, edges, onsite_part, [Point(-1.0, 0.0, 0.0) for i in 1:n])
 end
         
 
@@ -52,77 +51,44 @@ function spinglass_mapping(n::Int, m::Int; gradient = 1.0)
             end
         end
     end
-    return spinglassmodel(n, m, gradient, edges, onsites)
-end
-
-function freeze_input!(sp::spinglassmodel)
-    # for i in 1:sp.n
-    #     sp.onsite[i] += 50.0
-    # end
-    # sp.onsite[1] += 50.0
-    # sp.onsite[2] -= 50.0
-    # sp.onsite[3] += 50.0
+    return SpinGlassModel(n, m, gradient, edges, onsites)
 end
 
 # H(i) = -hx̂ + ∑_j J_{i,j} M_j^z ẑ + onsite ẑ
 # ̇M = H \cross M
-function crossdot(A::Vector{Float64}, B::Vector{Float64})
-    return [A[2]*B[3] - A[3]*B[2], A[3]*B[1] - A[1]*B[3], A[1]*B[2] - A[2]*B[1]]
+function crossdot(A::Point3D{Float64}, B::Point3D{Float64})
+    return Point(A[2]*B[3] - A[3]*B[2], A[3]*B[1] - A[1]*B[3], A[1]*B[2] - A[2]*B[1])
 end
 
-function integrator(sp::spinglassmodel, H::Vector{Vector{Float64}})
+function integrator(sp::SpinGlassModel, H::Vector{Point3D{Float64}})
     Mdot = crossdot.(sp.M, H)
     return Mdot
 end
 
-function instantaneous_field(sp::spinglassmodel, t, T, Vtrans::Vector{Float64})
-    H = [[-Vtrans[i] .* ((T-t)/T), 0.0, -sp.onsite[i] .* (t/T)] for i in 1:length(sp.onsite)]
+function instantaneous_field(sp::SpinGlassModel, t, T, Vtrans::Vector{Float64})
+    H = [Point(-Vtrans[i] .* ((T-t)/T), 0.0, -sp.onsite[i] .* (t/T)) for i in 1:length(sp.onsite)]
     for edge in sp.edges
         i, j, w = edge
-        H[i][3] += -w * sp.M[j][3] * (t/T)
-        H[j][3] += -w * sp.M[i][3] * (t/T)
+        H[i] += Point(0.0, 0.0, -w * sp.M[j][3] * (t/T))
+        H[j] += Point(0.0, 0.0, -w * sp.M[i][3] * (t/T))
     end
     return H
 end
 
-function integrator(sp::spinglassmodel, t, T, Vtrans::Vector{Float64}; pin_input = true) # evaluate F(t, y)
+function integrator(sp::SpinGlassModel, t, T, Vtrans::Vector{Float64}; pin_input = true) # evaluate F(t, y)
     if pin_input == true
         for i in 1:sp.n
-            sp.M[i] = [0.0, 0.0, 1.0]
+            sp.M[i] = Point(0.0, 0.0, 1.0)
         end # used set-way
     end
 
-    # Mxdot =  sp.onsite .* [u[2] for u in sp.M]
-    # Mydot = -sp.onsite .* [u[1] for u in sp.M]
-    # for edge in sp.edges
-    #     i, j, w = edge
-    #     Mydot[i] += -w * sp.M[j][3] * sp.M[i][1]
-    #     Mydot[j] += -w * sp.M[i][3] * sp.M[j][1]
-
-    #     Mxdot[i] -= -w * sp.M[j][3] * sp.M[i][2]
-    #     Mxdot[j] -= -w * sp.M[i][3] * sp.M[j][2]
-    # end
-    # Mxdot .*= (t/T)
-    # Mydot .*= (t/T)
-    # Mydot -= - Vtrans .* [u[3] for u in sp.M] .* ((T-t)/T)
-    # Mzdot = - Vtrans .* [u[2] for u in sp.M] .* ((T-t)/T)
-
     inst_H = instantaneous_field(sp, t, T, Vtrans)
     exact_Mdot = integrator(sp, inst_H)
-    # damping_term = crossdot.(sp.M, exact_Mdot) .* 0.01
-
-    # Mxdot = [exact_Mdot[i][1] - damping_term[i][1] for i in 1:length(sp.onsite)]
-    # Mydot = [exact_Mdot[i][2] - damping_term[i][2] for i in 1:length(sp.onsite)]
-    # Mzdot = [exact_Mdot[i][3] - damping_term[i][3] for i in 1:length(sp.onsite)]
 
     Mxdot = [exact_Mdot[i][1] for i in 1:length(sp.onsite)]
     Mydot = [exact_Mdot[i][2] for i in 1:length(sp.onsite)]
     Mzdot = [exact_Mdot[i][3] for i in 1:length(sp.onsite)]
-    # for i in 1:length(sp.onsite)
-    #     @assert abs(-Mxdot[i] - exact_Mdot[i][1]) < 1e-7
-    #     @assert abs(-Mydot[i] - exact_Mdot[i][2]) < 1e-7
-    #     @assert abs(-Mzdot[i] - exact_Mdot[i][3]) < 1e-7
-    # end
+
     if pin_input == true
         Mxdot[1:sp.n] .= 0.0
         Mydot[1:sp.n] .= 0.0
@@ -130,52 +96,40 @@ function integrator(sp::spinglassmodel, t, T, Vtrans::Vector{Float64}; pin_input
     end
 
     return [Mxdot, Mydot, Mzdot]
-    # return [-Mxdot, -Mydot, -Mzdot]
 end
 
-function runge_kutta_singlejump!(sp::spinglassmodel, t0, delta_t, T, Vtrans::Vector{Float64}; pin_input = true)
+function runge_kutta_singlejump!(sp::SpinGlassModel, t0, delta_t, T, Vtrans::Vector{Float64}; pin_input = true)
     origin_M = copy(sp.M)
     k1 = integrator(sp, t0, T, Vtrans;pin_input=pin_input)
-    sp.M = [renorm([origin_M[i][1] + k1[1][i] * delta_t / 2, origin_M[i][2] + k1[2][i] * delta_t / 2, origin_M[i][3] + k1[3][i] * delta_t / 2]) for i in 1:length(sp.onsite)]
+    sp.M .= [normalize(Point(origin_M[i][1] + k1[1][i] * delta_t / 2, origin_M[i][2] + k1[2][i] * delta_t / 2, origin_M[i][3] + k1[3][i] * delta_t / 2)) for i in 1:length(sp.onsite)]
     k2 = integrator(sp, t0 + delta_t / 2, T, Vtrans; pin_input=pin_input)
-    sp.M = [renorm([origin_M[i][1] + k2[1][i] * delta_t / 2, origin_M[i][2] + k2[2][i] * delta_t / 2, origin_M[i][3] + k2[3][i] * delta_t / 2]) for i in 1:length(sp.onsite)]
+    sp.M .= [normalize(Point(origin_M[i][1] + k2[1][i] * delta_t / 2, origin_M[i][2] + k2[2][i] * delta_t / 2, origin_M[i][3] + k2[3][i] * delta_t / 2)) for i in 1:length(sp.onsite)]
     k3 = integrator(sp, t0 + delta_t / 2, T, Vtrans; pin_input=pin_input)
-    sp.M = [renorm([origin_M[i][1] + k3[1][i] * delta_t, origin_M[i][2] + k3[2][i] * delta_t, origin_M[i][3] + k3[3][i] * delta_t]) for i in 1:length(sp.onsite)]
+    sp.M .= [normalize(Point(origin_M[i][1] + k3[1][i] * delta_t, origin_M[i][2] + k3[2][i] * delta_t, origin_M[i][3] + k3[3][i] * delta_t)) for i in 1:length(sp.onsite)]
     k4 = integrator(sp, t0 + delta_t, T, Vtrans; pin_input=pin_input)
     real_k = (k1 .+ 2*k2 .+ 2*k3 .+ k4) ./ 6 * delta_t
-    sp.M = [renorm([origin_M[i][1] .+ real_k[1][i], origin_M[i][2]+real_k[2][i], origin_M[i][3]+real_k[3][i]]) for i in 1:length(sp.onsite)]
+    sp.M .= [normalize(Point(origin_M[i][1] .+ real_k[1][i], origin_M[i][2]+real_k[2][i], origin_M[i][3]+real_k[3][i])) for i in 1:length(sp.onsite)]
 end
 
-function runge_kutta_integrate!(sp::spinglassmodel, dt::Float64, T::Float64, Vtrans::Vector{Float64}; T_end = nothing, pin_input = true)
+function runge_kutta_integrate!(sp::SpinGlassModel, dt::Float64, T::Float64, Vtrans::Vector{Float64}; T_end = nothing, pin_input = true)
     t0 = 0.0
-    if T_end == nothing
+    if T_end === nothing
         T_end = T
     end
-    sp_print = Vector{Vector{Float64}}()
-    H_print = Vector{Vector{Float64}}()
+    sp_print = Vector{Point3D{Float64}}()
+    H_print = Vector{Point3D{Float64}}()
     while t0 < T_end
         delta_t = min(dt, T_end-t0)
         append!(sp_print, copy(sp.M))
         append!(H_print, instantaneous_field(sp, t0, T, Vtrans))
 
-        # @info "testing effective field"
-        # H_inst_directcalulate = instantaneous_field(sp, t0, T, Vtrans)
-        # H_inst_autodiff = instantaneous_field_autodiff(sp, t0, T, Vtrans)
-        # for i in 1:length(sp.onsite)
-        #     for j in 1:3
-        #         @info "inst = $(H_inst_directcalulate[i][j]), autodiff = $(H_inst_autodiff[i][j]), j=$j"
-        #         @assert abs(H_inst_directcalulate[i][j] - H_inst_autodiff[i][j]) < 1e-4
-        #     end
-        # end
-
         runge_kutta_singlejump!(sp, t0, delta_t, T, Vtrans; pin_input = pin_input)
         t0 += delta_t
     end
     return sp_print, H_print
-    # @info "total_error = $total_error"
 end
 
-function euclidean_integrate!(sp::spinglassmodel, dt, T, Vtrans::Vector{Float64})
+function euclidean_integrate!(sp::SpinGlassModel, dt, T, Vtrans::Vector{Float64})
     t=0
     while t<T
         delta_t = min(dt, T-t)
@@ -183,18 +137,12 @@ function euclidean_integrate!(sp::spinglassmodel, dt, T, Vtrans::Vector{Float64}
         d_Mx = Mxdot .* delta_t
         d_My = Mydot .* delta_t
         d_Mz = Mzdot .* delta_t
-        sp.M = [renorm([sp.M[i][1]+d_Mx[i], sp.M[i][2]+d_My[i], sp.M[i][3]+d_Mz[i]]) for i in 1:length(sp.onsite)]
+        sp.M .= [normalize(Point(sp.M[i][1]+d_Mx[i], sp.M[i][2]+d_My[i], sp.M[i][3]+d_Mz[i])) for i in 1:length(sp.onsite)]
         t += delta_t
-        # @info "t = $t, energy = $(sp_energy(sp, t, T, Vtrans))"
     end
 end
 
-function renorm(point)
-    norm = sqrt(sum(point .* point))
-    return point ./ norm
-end
-
-function sp_ground_state(sp::spinglassmodel)
+function sp_ground_state(sp::SpinGlassModel)
     hyperedges = [[t[1],t[2]] for t in sp.edges]
     hyperweights = [t[3] for t in sp.edges]
     for i in 1:length(sp.onsite)
@@ -207,7 +155,7 @@ function sp_ground_state(sp::spinglassmodel)
     return gs
 end
 
-function sp_sa_step!(sp::spinglassmodel, Temp, node)
+function sp_sa_step!(sp::SpinGlassModel, Temp, node)
     theta = round(rand() * π,digits=4)
     ori_M = copy(sp.M[node])
     pre_E = sp_energy(sp, 1, 1, zeros(length(sp.onsite)))
@@ -224,7 +172,7 @@ function sp_sa_step!(sp::spinglassmodel, Temp, node)
     end
 end
     
-function sp_groud_state_sa_single(sp::spinglassmodel)
+function sp_groud_state_sa_single(sp::SpinGlassModel)
     Temp = 15.0
     for i in 1:length(sp.onsite)
         theta = round(rand() * π, digits=4)
@@ -249,7 +197,7 @@ function sp_ground_state_sa(n, m)
     return minn
 end
 
-function sp_energy(sp::spinglassmodel, t, T, Vtrans)
+function sp_energy(sp::SpinGlassModel, t, T, Vtrans)
     ret = 0.0
     ret += sum([t[3] for t in sp.M] .* sp.onsite) * (t/T)
     ret += sum([t[1] for t in sp.M] .* Vtrans) * ((T-t)/T)
@@ -260,7 +208,7 @@ function sp_energy(sp::spinglassmodel, t, T, Vtrans)
     return ret
 end
 
-function sp_check_vaild(sp::spinglassmodel)
+function sp_check_vaild(rule::CellularAutomata1D, sp::SpinGlassModel)
     for i in 1:length(sp.onsite)
         if 1 - abs(sp.M[i][3]) > 1e-1
             @info "not satisfy reach equilibrium state"
@@ -270,13 +218,14 @@ function sp_check_vaild(sp::spinglassmodel)
     # spin > 0 means 0 in generictensorwork, mean 1 in rule110
     # spin < 0 means 1 in generictensorwork, mean 0 in rule110
     state = [sp.M[i][3] > 0 ? 1 : 0 for i in 1:length(sp.onsite)]
+    lis = LinearIndices((sp.n, sp.m))
     for j in 1:sp.m-1
         for i in 1:sp.n
-            pre_l = cartesian_to_linear(mod1(i-1, sp.n), j, sp.n)
-            mid_l = cartesian_to_linear(i, j, sp.n)
-            suf_l = cartesian_to_linear(mod1(i+1, sp.n), j, sp.n)
+            pre_l = lis[mod1(i-1, sp.n), j]
+            mid_l = lis[i, j]
+            suf_l = lis[mod1(i+1, sp.n), j]
             @info "i = $i, j = $j"
-            if rule110(state[pre_l], state[mid_l], state[suf_l]) != state[cartesian_to_linear(i, j+1, sp.n)]
+            if logic_gate(rule, state[pre_l], state[mid_l], state[suf_l]) != state[lis[i, j+1]]
                 return false
             end
         end
@@ -285,7 +234,7 @@ function sp_check_vaild(sp::spinglassmodel)
 end
 
 
-function sp_check_vaild_time(sp::spinglassmodel, T, Vtrans)
+function sp_check_vaild_time(rule::CellularAutomata1D, sp::SpinGlassModel, T, Vtrans)
     @info "begin running runge_kutta"
     runge_kutta_integrate!(sp, min(1e-2, T/1e5), T, Vtrans)
     # @info "sp.M = $(sp.M)"
@@ -295,19 +244,16 @@ function sp_check_vaild_time(sp::spinglassmodel, T, Vtrans)
         end
     end
     @info "successfully turn into final hamiltonian"
-    return sp_check_vaild(sp)
+    return sp_check_vaild(rule, sp)
 end
 
-function vectorgradient(vec, this_t; freeze=false)
+function vectorgradient(vec, this_t)
     n = Int(vec[end-2])
     m = Int(vec[end-1])
     gradient = Float64(vec[end])
     sp = spinglass_mapping(n, m;gradient=gradient)
     @assert length(vec) == 3*length(sp.onsite)+1+length(sp.onsite)+3
-    if freeze == true
-        freeze_input!(sp)
-    end
-    sp.M = [Vector(vec[i:i+2]) for i in 1:3:3*length(sp.onsite)]
+    sp.M .= [Point(vec[i], vec[i+1], vec[i+2]) for i in 1:3:3*length(sp.onsite)]
     Vtrans = Vector(vec[3*length(sp.onsite)+2:3*length(sp.onsite)+2+length(sp.onsite)-1])
     Tmax = Float64(vec[3*length(sp.onsite)+1])
     Mxdot, Mydot, Mzdot = integrator(sp, this_t, Tmax, Vtrans)
@@ -328,13 +274,12 @@ function vector2sp(vec)
     gradient = Float64(vec[end])
     sp = spinglass_mapping(n, m;gradient=gradient)
     @assert length(vec) == 3*length(sp.onsite)+1+length(sp.onsite)+3
-    sp.M = [vec[i:i+2] for i in 1:3:3*length(sp.onsite)]
+    sp.M .= [Point(vec[i], vec[i+1], vec[i+2]) for i in 1:3:3*length(sp.onsite)]
     return sp
 end
 
 function initialvector(Tmax, n, m; gradient = 1.0)
     sp = spinglass_mapping(n, m; gradient=gradient)
-    # printsp(sp)
     Vtrans = fill(1.0, length(sp.onsite))
     ret = Vector{Float64}()
     for i in 1:length(sp.onsite)
@@ -349,20 +294,16 @@ function initialvector(Tmax, n, m; gradient = 1.0)
 end
 
 function fcn(x, y, f)
-    g = vectorgradient(y, x;freeze=true)
-    for i in 1:length(g)
-        f[i] = g[i]
-    end
+    g = vectorgradient(y, x)
+    copyto!(f, g)
 end
 
 function spingls!(du, u, p, t)
-    g = vectorgradient(u, t;freeze=true)
-    for i in 1:length(g)
-        du[i] = g[i]
-    end
+    g = vectorgradient(u, t)
+    copyto!(du, g)
 end
 
-function printsp(sp::spinglassmodel)
+function printsp(sp::SpinGlassModel)
     for i in 1:length(sp.onsite)
         for j in 3:3
             print(sp.M[i][j]," ")

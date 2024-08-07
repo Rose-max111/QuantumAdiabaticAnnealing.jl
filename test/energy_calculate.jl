@@ -1,5 +1,5 @@
 using QuantumAdiabaticAnnealing, Test
-using QuantumAdiabaticAnnealing: get_low_energy_state, generate_some_graph, distance, get_low_energy_state_gpu
+using QuantumAdiabaticAnnealing.QuantumAnnealing: get_low_energy_state, get_low_energy_state_gpu
 using QuantumAdiabaticAnnealing: generate_random_lattice
 using Bloqade, KrylovKit
 using Bloqade: AtomList, rydberg_h

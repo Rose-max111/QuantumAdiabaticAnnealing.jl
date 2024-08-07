@@ -1,11 +1,6 @@
 using QuantumAdiabaticAnnealing, Test
 using QuantumAdiabaticAnnealing:generate_random_lattice
 
-@testset "count bits" begin
-    @test QuantumAdiabaticAnnealing.countbits(3) == 2
-    @test QuantumAdiabaticAnnealing.countbits(4) == 3
-end
-
 @testset "generate_random_lattice" begin
     nodes, weights = generate_random_lattice(5, 1.5, 0.8)
     for i in 1:length(nodes)
