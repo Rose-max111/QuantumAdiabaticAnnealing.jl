@@ -2,7 +2,7 @@ using Test
 using DormandPrince
 using DifferentialEquations
 using QuantumAdiabaticAnnealing
-using QuantumAdiabaticAnnealing: initialvector, spinglass_mapping, vector2sp, spingls!, runge_kutta_integrate!, euclidean_integrate!, fcn, freeze_input!
+using QuantumAdiabaticAnnealing: initialvector, spinglass_mapping, vector2sp, spingls!, runge_kutta_integrate!, euclidean_integrate!, fcn
 using QuantumAdiabaticAnnealing: printsp, sp_energy
 using QuantumAdiabaticAnnealing: instantaneous_field, instantaneous_field_autodiff
 
@@ -24,14 +24,6 @@ using QuantumAdiabaticAnnealing: instantaneous_field, instantaneous_field_autodi
     sp_this5 = vector2sp(get_current_state(solver5))
     sp_this8 = vector2sp(get_current_state(solver8))
     sp_de = vector2sp(sol[end])
-
-    # for i in 1:length(sp_this5.onsite)
-    #     for j in 1:3
-    #         @test abs(sp_this5.M[i][j] - sp_de.M[i][j]) <= 1e-1
-    #         @test abs(sp_this8.M[i][j] - sp_de.M[i][j]) <= 1e-1
-    #         @test abs(sp_this5.M[i][j] - sp_this8.M[i][j]) <= 1e-1
-    #     end
-    # end
 
     @info "dp5 solution"
     printsp(sp_this5)
@@ -55,7 +47,6 @@ end
     sp_dp8 = vector2sp(get_current_state(solver8))
 
     sp_rk = spinglass_mapping(n, m; gradient=gradient)
-    freeze_input!(sp_rk)
     Vtrans = fill(1.0, length(sp_rk.onsite))
     @time runge_kutta_integrate!(sp_rk, 1e-4, Tmax, Vtrans; T_end = Tmax)
 
@@ -166,11 +157,9 @@ end
     m=5
     sp = spinglass_mapping(3, 5)
     for edge in sp.edges
-        i, j, w = edge[1], edge[2], edge[3]
+        i, j, w = edge.src, edge.dst, edge.weight
         @test i <= n*m || j<=n*m # no ancilla connection
     end
-    sp = spinglass_mappint(1, 1)
-    sp_gs = sp_energy(sp)
 end
 
 using Random

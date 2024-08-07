@@ -1,17 +1,16 @@
 module QuantumAdiabaticAnnealing
 
-using UnitDiskMapping
+using BitBasis
+using CairoMakie
+using CUDA
+using DormandPrince
+using Enzyme
+using GenericTensorNetworks
 using Graphs
 using KrylovKit
-using CairoMakie
-using Random
-using CUDA
-using GenericTensorNetworks
-using SparseArrays
-using DormandPrince
 using LinearAlgebra
-using Enzyme
-using BitBasis
+using Random
+using SparseArrays
 
 export Point
 export generate_random_lattice
@@ -29,7 +28,6 @@ export spinglass_hamiltonian, instantaneous_field_autodiff, runge_kutta_integrat
 
 include("point.jl")
 include("ca1d.jl")
-include("quantum/energy_calculate.jl")
 include("gadgets/gadgets.jl")
 include("toy_model.jl")
 include("cusa.jl")

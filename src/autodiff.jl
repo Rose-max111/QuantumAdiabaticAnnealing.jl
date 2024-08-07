@@ -14,7 +14,7 @@ function spinglass_hamiltonian(spin_M, Vtrans, gradient, n, m, t, Tmax)
 
     # calculate the interaction term
     for edge in sp.edges
-        u, v, w = edge[1], edge[2], edge[3]
+        u, v, w = edge.src, edge.dst, edge.weight
         ret += 1.0 * w * spin_M[3*(u-1) + 3] * spin_M[3*(v-1) + 3] * (t/Tmax)
     end
     return ret

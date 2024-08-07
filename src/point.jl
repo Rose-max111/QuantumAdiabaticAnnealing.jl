@@ -35,3 +35,6 @@ Base.iterate(p::Point, args...) = iterate(p.data, args...)
 Base.zero(::Type{Point{D, T}}) where {D, T} = Point(ntuple(i->zero(T), D))
 Base.zero(::Point{D, T}) where {D, T} = Point(ntuple(i->zero(T), D))
 distance(p::Point, q::Point) = sqrt(sum((p - q) .^ 2))
+function LinearAlgebra.cross(A::Point3D{T}, B::Point3D{T}) where T
+    return Point(A[2]*B[3] - A[3]*B[2], A[3]*B[1] - A[1]*B[3], A[1]*B[2] - A[2]*B[1])
+end
