@@ -62,14 +62,14 @@ function child_nodes(sa::SimulatedAnnealingHamiltonian, node::Integer)
     )
 end
 
-function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, Temp::Float64)
+function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, Temp)
     for ibatch in 1:size(state, 2)
         step_kernel!(rule, sa, state, energy_gradient, Temp, ibatch)
     end
     state
 end
-function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::CuMatrix, energy_gradient::AbstractArray, Temp::Float64)
-    @inline function kernel(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, Temp::Float64)
+function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::CuMatrix, energy_gradient::AbstractArray, Temp)
+    @inline function kernel(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, Temp)
         ibatch = (blockIdx().x - Int32(1)) * blockDim().x + threadIdx().x
         if ibatch <= size(state, 2)
             step_kernel!(rule, sa, state, energy_gradient, Temp, ibatch)
@@ -84,29 +84,38 @@ function step!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state::C
     state
 end
 
-@inline function step_kernel!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state, energy_gradient::AbstractArray, Temp::Float64, ibatch::Integer)
-    ΔE = 0
+@inline function step_kernel!(rule::TransitionRule, sa::SimulatedAnnealingHamiltonian, state, energy_gradient::AbstractArray, Temp, ibatch::Integer)
+    ΔE_with_next_layer = 0
+    ΔE_with_previous_layer = 0
     node = rand(atoms(sa))
 
     i, j = CartesianIndices((sa.n, sa.m))[node].I
     if j > 1 # not the first layer
-        ΔE += energy_gradient[ibatch]^(sa.m - j) - 2 * evaluate_parent(sa, state, energy_gradient, node, ibatch)
+        # ΔE += energy_gradient[ibatch]^(sa.m - j) - 2 * evaluate_parent(sa, state, energy_gradient, node, ibatch)
+        ΔE_with_previous_layer += energy_gradient[ibatch]^(sa.m - j) - 2 * evaluate_parent(sa, state, energy_gradient, node, ibatch)
     end
     if j < sa.m # not the last layer
         cnodes = child_nodes(sa, node)
         for node in cnodes
-            ΔE -= evaluate_parent(sa, state, energy_gradient, node, ibatch)
+            ΔE_with_next_layer -= evaluate_parent(sa, state, energy_gradient, node, ibatch)
         end
         # flip the node@
         @inbounds state[node, ibatch] ⊻= true
         for node in cnodes
-            ΔE += evaluate_parent(sa, state, energy_gradient, node, ibatch)
+            ΔE_with_next_layer += evaluate_parent(sa, state, energy_gradient, node, ibatch)
         end
         @inbounds state[node, ibatch] ⊻= true
     end
-    if rand() < prob_accept(rule, Temp, ΔE)
+    flip_max_prob = 1
+    if j < sa.m
+        flip_max_prob *= prob_accept(rule, Temp[ibatch][j], ΔE_with_next_layer)
+    end
+    if j > 1
+        flip_max_prob *= prob_accept(rule, Temp[ibatch][j-1], ΔE_with_previous_layer)
+    end
+    if rand() < flip_max_prob
         @inbounds state[node, ibatch] ⊻= true
-        ΔE
+        ΔE_with_next_layer
     else
         0
     end
@@ -122,6 +131,68 @@ function track_equilibration!(rule::TransitionRule, sa::SimulatedAnnealingHamilt
         # for node in shuffle!(Vector(1:natom(sa)))
             step!(rule, sa, state, energy_gradient, Temp)
         end
+    end
+    return sa
+end
+
+function toymodel_gausspulse(sa::SimulatedAnnealingHamiltonian,
+                            gausspulse_amplitude::Float64,
+                            gausspulse_width::Float64,
+                            middle_position::Float64,
+                            gradient::Float64)
+    # amplitude * e^(- (1 /width) * (x-middle_position)^2)
+    eachposition = Tuple([gausspulse_amplitude * gradient^(- (1.0/gausspulse_width) * (i-middle_position)^2) + 1e-4 for i in 1:sa.m-1])
+    return eachposition
+end
+
+function track_equilibration_gausspulse_cpu!(rule::TransitionRule,
+                                        sa::SimulatedAnnealingHamiltonian, 
+                                        state::AbstractMatrix, 
+                                        energy_gradient::AbstractArray, 
+                                        gausspulse_amplitude::Float64,
+                                        gausspulse_width::Float64,
+                                        annealing_time
+                                        )
+    midposition = 1.0 - sqrt(-(gausspulse_width) * log(1e-5/gausspulse_amplitude)) / log(energy_gradient[1])
+    each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
+    # @info "midposition = $midposition"
+    # @info "each_movement = $each_movement"
+
+    # NOTE: do we really need niters? or just set it to 1?
+    for t in 1:annealing_time
+        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient[1])
+        Temp = fill(singlebatch_temp, size(state, 2))
+        for _ in 1:natom(sa)
+            step!(rule, sa, state, energy_gradient, Temp)
+        end
+        midposition += each_movement
+        # if t == annealing_time / 2
+        #     @info "medium process temp = $singlebatch_temp"
+        # end
+    end
+    return sa
+end
+
+function track_equilibration_gausspulse_gpu!(rule::TransitionRule,
+                                        sa::SimulatedAnnealingHamiltonian, 
+                                        state::AbstractMatrix, 
+                                        energy_gradient::AbstractArray, 
+                                        gausspulse_amplitude::Float32,
+                                        gausspulse_width::Float32,
+                                        annealing_time
+                                        )
+    midposition = 1.0 - sqrt(-(gausspulse_width) * log(1e-5/gausspulse_amplitude)) / log(energy_gradient[1])
+    each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
+    @info "each_movement = $each_movement"
+
+    # NOTE: do we really need niters? or just set it to 1?
+    for t in 1:annealing_time
+        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient[1])
+        Temp = CuArray(fill(Float32.(singlebatch_temp), size(state, 2)))
+        for _ in 1:natom(sa)
+            step!(rule, sa, state, energy_gradient, Temp)
+        end
+        midposition += each_movement
     end
     return sa
 end

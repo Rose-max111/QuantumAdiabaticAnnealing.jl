@@ -26,6 +26,7 @@ export sp_check_vaild, spinglass_adiabatic_dp8, sp_ground_state_sa, sp_ground_st
 export spinglassmodel, spinglass_mapping, instantaneous_field, spinglass_random_mapping
 
 export spinglass_hamiltonian, instantaneous_field_autodiff, runge_kutta_integrate!
+export track_equilibration_gausspulse_cpu!, SimulatedAnnealingHamiltonian, track_equilibration_gausspulse_gpu!
 
 include("point.jl")
 include("ca1d.jl")
