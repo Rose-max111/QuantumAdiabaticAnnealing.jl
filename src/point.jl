@@ -27,6 +27,7 @@ Base.:*(x::Point, y::Real) = Point(x.data .* y)
 Base.:/(y::Point, x::Real) = Point(y.data ./ x)
 Base.:+(x::Point, y::Point) = Point(x.data .+ y.data)
 Base.:-(x::Point, y::Point) = Point(x.data .- y.data)
+Base.:-(x::Point) = Point((-).(x.data))
 Base.isapprox(x::Point, y::Point; kwargs...) = all(isapprox.(x.data, y.data; kwargs...))
 Base.getindex(p::Point, i::Int) = p.data[i]
 Base.length(p::Point) = length(p.data)

@@ -21,10 +21,10 @@ export track_equilibration!, SimulatedAnnealingMIS
 export toy_model_state_energy, toy_model_transition_matrix
 export TransitionRule, calculate_energy, local_energy, Metropolis, HeatBath
 
-export sp_check_vaild, spinglass_adiabatic_dp8, sp_ground_state_sa, sp_ground_state, spinglass_mapping, sp_energy
+export sp_check_valid, spinglass_adiabatic_dp8, sp_ground_state_sa, sp_ground_state, spinglass_mapping, sp_energy
 export spinglassmodel, spinglass_mapping, instantaneous_field, spinglass_random_mapping
 
-export spinglass_hamiltonian, instantaneous_field_autodiff, runge_kutta_integrate!
+export spinglass_hamiltonian, instantaneous_field_autodiff, runge_kutta_integrate
 
 include("point.jl")
 include("ca1d.jl")
