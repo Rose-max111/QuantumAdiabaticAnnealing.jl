@@ -148,27 +148,27 @@ end
 function track_equilibration_gausspulse_cpu!(rule::TransitionRule,
                                         sa::SimulatedAnnealingHamiltonian, 
                                         state::AbstractMatrix, 
-                                        energy_gradient::AbstractArray, 
+                                        energy_gradient, 
                                         gausspulse_amplitude::Float64,
                                         gausspulse_width::Float64,
                                         annealing_time
                                         )
-    midposition = 1.0 - sqrt(-(gausspulse_width) * log(1e-5/gausspulse_amplitude)) / log(energy_gradient[1])
+    midposition = 1.0 - sqrt(-(gausspulse_width) * log(1e-5/gausspulse_amplitude)) / log(energy_gradient)
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
     # @info "midposition = $midposition"
     # @info "each_movement = $each_movement"
 
     # NOTE: do we really need niters? or just set it to 1?
     for t in 1:annealing_time
-        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient[1])
+        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient)
         Temp = fill(singlebatch_temp, size(state, 2))
         for _ in 1:natom(sa)
-            step!(rule, sa, state, energy_gradient, Temp)
+            step!(rule, sa, state, fill(1.0, size(state, 2)), Temp)
         end
         midposition += each_movement
-        # if t == annealing_time / 2
-        #     @info "medium process temp = $singlebatch_temp"
-        # end
+        if t == annealing_time / 2
+            @info "medium process temp = $singlebatch_temp"
+        end
     end
     return sa
 end
