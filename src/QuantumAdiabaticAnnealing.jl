@@ -29,10 +29,8 @@ export spinglass_hamiltonian, instantaneous_field_autodiff, runge_kutta_integrat
 
 include("point.jl")
 include("ca1d.jl")
-include("generate_graph.jl")
 include("quantum/energy_calculate.jl")
 include("gadgets/gadgets.jl")
-include("mis_sa.jl")
 include("toy_model.jl")
 include("cusa.jl")
 include("autodiff.jl")

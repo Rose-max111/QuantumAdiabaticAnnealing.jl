@@ -54,15 +54,6 @@ function spinglass_mapping(n::Int, m::Int; gradient = 1.0)
     return SpinGlassModel(n, m, gradient, edges, onsites)
 end
 
-function freeze_input!(sp::SpinGlassModel)
-    # for i in 1:sp.n
-    #     sp.onsite[i] += 50.0
-    # end
-    # sp.onsite[1] += 50.0
-    # sp.onsite[2] -= 50.0
-    # sp.onsite[3] += 50.0
-end
-
 # H(i) = -hx̂ + ∑_j J_{i,j} M_j^z ẑ + onsite ẑ
 # ̇M = H \cross M
 function crossdot(A::Point3D{Float64}, B::Point3D{Float64})
@@ -256,15 +247,12 @@ function sp_check_vaild_time(rule::CellularAutomata1D, sp::SpinGlassModel, T, Vt
     return sp_check_vaild(rule, sp)
 end
 
-function vectorgradient(vec, this_t; freeze=false)
+function vectorgradient(vec, this_t)
     n = Int(vec[end-2])
     m = Int(vec[end-1])
     gradient = Float64(vec[end])
     sp = spinglass_mapping(n, m;gradient=gradient)
     @assert length(vec) == 3*length(sp.onsite)+1+length(sp.onsite)+3
-    if freeze == true
-        freeze_input!(sp)
-    end
     sp.M .= [Point(vec[i], vec[i+1], vec[i+2]) for i in 1:3:3*length(sp.onsite)]
     Vtrans = Vector(vec[3*length(sp.onsite)+2:3*length(sp.onsite)+2+length(sp.onsite)-1])
     Tmax = Float64(vec[3*length(sp.onsite)+1])
@@ -306,12 +294,12 @@ function initialvector(Tmax, n, m; gradient = 1.0)
 end
 
 function fcn(x, y, f)
-    g = vectorgradient(y, x; freeze=true)
+    g = vectorgradient(y, x)
     copyto!(f, g)
 end
 
 function spingls!(du, u, p, t)
-    g = vectorgradient(u, t;freeze=true)
+    g = vectorgradient(u, t)
     copyto!(du, g)
 end
 
