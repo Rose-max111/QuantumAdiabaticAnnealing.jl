@@ -12,6 +12,7 @@ using DormandPrince
 using LinearAlgebra
 using Enzyme
 using BitBasis
+using LogarithmicNumbers
 
 export Point
 export generate_random_lattice

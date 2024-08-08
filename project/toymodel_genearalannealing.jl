@@ -1,6 +1,6 @@
 using QuantumAdiabaticAnnealing
 using QuantumAdiabaticAnnealing: random_state, calculate_energy
-using QuantumAdiabaticAnnealing: track_equilibration_gausspulse_gpu!
+using QuantumAdiabaticAnnealing: track_equilibration_gausspulse_gpu!, track_equilibration_gausspulse_reverse_cpu!
 using CUDA
 
 function evaluate_50percent_time_cpu(width::Integer, depth::Integer, gauss_width, energy_gradient)
@@ -111,15 +111,29 @@ function evaluate_50percent_time_gpu(width::Integer, depth::Integer, gauss_width
 end
 
 
-sa = SimulatedAnnealingHamiltonian(8, 8)
+sa = SimulatedAnnealingHamiltonian(5, 5)
 nbatch = 1000
-energy_gradient = 1.5
+energy_gradient = 1.1
 state = random_state(sa, nbatch)
-# state_energy = [calculate_energy(sa, state, energy_gradient_sa, i) for i in 1:nbatch]
+state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
 
-# track_equilibration_gausspulse_reverse_cpu!(HeatBath(), sa, state, energy_gradient_sa, 10.0, 2.0, 500)
+# single_layer_temp = track_equilibration_gausspulse_reverse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 2000)
 
-track_equilibration_gausspulse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, 10.0, 1800)
+single_layer_temp = track_equilibration_gausspulse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 500)
 
 state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
 success = count(x -> x == 0, state_energy)
+
+using LogarithmicNumbers
+p1 = 1.0f0 / (1.0f0 + exp(ULogarithmic, -1.0f0/0.026f0))
+p2 = 1.0f0 / (1.0f0 + exp(ULogarithmic, 2.0f0/0.029f0))
+(1 - p1) * (1 - p2) / (p1 * p2)
+
+-1 / 0.0015 + 1 / 0.0014
+
+for i in 5:-1:1
+    for j in 1:5
+        print(state[j + (i-1) * 5, 1] == true ? 1 : 0)
+    end
+    println("")
+end

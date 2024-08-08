@@ -107,11 +107,28 @@ end
         @inbounds state[node, ibatch] ⊻= true
     end
     flip_max_prob = 1
-    if j < sa.m
-        flip_max_prob *= prob_accept(rule, Temp[ibatch][j], ΔE_with_next_layer)
-    end
-    if j > 1
+    if j == sa.m
         flip_max_prob *= prob_accept(rule, Temp[ibatch][j-1], ΔE_with_previous_layer)
+        # flip_max_prob = prob_accept(HeatBath(), Temp[ibatch][j-1], ΔE_with_previous_layer)
+    elseif j == 1
+        flip_max_prob *= prob_accept(rule, Temp[ibatch][j], ΔE_with_next_layer)
+        # flip_max_prob *= prob_accept(HeatBath(), Temp[ibatch][j], ΔE_with_next_layer)
+    else
+        # p1 = 1.0f0 / (1.0f0 + exp(ULogarithmic, ΔE_with_previous_layer / Temp[ibatch][j-1]))
+        # p2 = 1.0f0 / (1.0f0 + exp(ULogarithmic, ΔE_with_next_layer / Temp[ibatch][j]))
+        # ΔE_norm = ΔE_with_previous_layer / Temp[ibatch][j-1] + ΔE_with_next_layer / Temp[ibatch][j]
+        # flip_max_prob = ΔE_norm < 0 ? 1.0 : exp(-ΔE_norm)
+
+        true_prob = 1.0 / (1.0 + exp(ΔE_with_previous_layer / Temp[ibatch][j-1] + ΔE_with_next_layer / Temp[ibatch][j]))
+        # flip_max_prob = float(flip_max_prob)
+        flip_max_prob = 1.0 / (1 + (1 / prob_accept(rule, Float64(Temp[ibatch][j-1]), Float64(ΔE_with_previous_layer)) - 1) * (1 / prob_accept(rule, Float64(Temp[ibatch][j]), Float64(ΔE_with_next_layer)) - 1))
+        # @info "flip_max_prob = $flip_max_prob, double_flip = $double_flip, p1 = $p1, p2 = $p2, Temp1 = $(Temp[ibatch][j-1]), Temp2 = $(Temp[ibatch][j]), ΔE1 = $ΔE_with_previous_layer, ΔE2 = $ΔE_with_next_layer"
+        if abs(flip_max_prob - true_prob) >= 0.05
+            @info "flip_max_prob = $flip_max_prob, true_prob = $true_prob"
+            @info "Temp[j-1] = $(Temp[ibatch][j-1]), Temp[j] = $(Temp[ibatch][j]), ΔE1 = $ΔE_with_previous_layer, ΔE2 = $ΔE_with_next_layer"
+            @assert flip_max_prob == 1 && true_prob <= 0.1
+        end
+        # flip_max_prob = inv(1 + exp(ΔE_with_previous_layer / Temp[ibatch][j-1] + ΔE_with_next_layer / Temp[ibatch][j]))
     end
     if rand() < flip_max_prob
         @inbounds state[node, ibatch] ⊻= true
@@ -141,7 +158,7 @@ function toymodel_gausspulse(sa::SimulatedAnnealingHamiltonian,
                             middle_position::Float64,
                             gradient::Float64)
     # amplitude * e^(- (1 /width) * (x-middle_position)^2)
-    eachposition = Tuple([gausspulse_amplitude * gradient^(- (1.0/gausspulse_width) * (i-middle_position)^2) + 1e-5 for i in 1:sa.m-1])
+    eachposition = Tuple([gausspulse_amplitude * gradient^(- (1.0/gausspulse_width) * abs(i-middle_position)) + 1e-5 for i in 1:sa.m-1])
     return eachposition
 end
 
@@ -153,24 +170,24 @@ function track_equilibration_gausspulse_cpu!(rule::TransitionRule,
                                         gausspulse_width::Float64,
                                         annealing_time
                                         )
-    midposition = 1.0 - sqrt(-(gausspulse_width) * log(1e-5/gausspulse_amplitude)) / log(energy_gradient)
+    midposition = 1.0 - (-(gausspulse_width) * log(1e-5/gausspulse_amplitude) / log(energy_gradient))
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
     # @info "midposition = $midposition"
     # @info "each_movement = $each_movement"
 
     # NOTE: do we really need niters? or just set it to 1?
+    single_layer_temp = []
     for t in 1:annealing_time
+        @info "midposition = $midposition"
         singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient)
-        Temp = fill(singlebatch_temp, size(state, 2))
+        Temp = fill((singlebatch_temp), size(state, 2))
         for _ in 1:natom(sa)
             step!(rule, sa, state, fill(1.0, size(state, 2)), Temp)
         end
         midposition += each_movement
-        if t == annealing_time / 2
-            @info "medium process temp = $singlebatch_temp"
-        end
+        push!(single_layer_temp, singlebatch_temp[1])
     end
-    return sa
+    return single_layer_temp
 end
 
 function track_equilibration_gausspulse_gpu!(rule::TransitionRule,
@@ -181,7 +198,7 @@ function track_equilibration_gausspulse_gpu!(rule::TransitionRule,
                                         gausspulse_width,
                                         annealing_time
                                         )
-    midposition = 1.0 - sqrt(-(gausspulse_width) * log(1e-5/gausspulse_amplitude)) / log(energy_gradient)
+    midposition = 1.0 - (-(gausspulse_width) * log(1e-5/gausspulse_amplitude) / log(energy_gradient))
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
     @info "each_movement = $each_movement"
 
@@ -195,4 +212,31 @@ function track_equilibration_gausspulse_gpu!(rule::TransitionRule,
         midposition += each_movement
     end
     return sa
+end
+
+
+function track_equilibration_gausspulse_reverse_cpu!(rule::TransitionRule,
+                                        sa::SimulatedAnnealingHamiltonian, 
+                                        state::AbstractMatrix, 
+                                        energy_gradient, 
+                                        gausspulse_amplitude::Float64,
+                                        gausspulse_width::Float64,
+                                        annealing_time
+                                        )
+    midposition = 1.0 - (-(gausspulse_width) * log(1e-5/gausspulse_amplitude) / log(energy_gradient))
+    each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
+    midposition = sa.m - 1.0 + 1.0 - midposition
+
+    single_layer_temp = []
+    for t in 1:annealing_time
+        @info "midposition = $midposition"
+        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient)
+        Temp = fill(singlebatch_temp, size(state, 2))
+        for _ in 1:natom(sa)
+            step!(rule, sa, state, fill(1.0, size(state, 2)), Temp)
+        end
+        midposition -= each_movement
+        push!(single_layer_temp, singlebatch_temp[1])
+    end
+    return single_layer_temp
 end
