@@ -10,24 +10,32 @@ struct SpinGlassModel{T<:Real}
     gradient::T
     edges::Vector{WeightedEdge{T}}
     onsite::Vector{T}
-    function SpinGlassModel(n::Int, m::Int, gradient::T, edges::Vector{WeightedEdge{T}}, onsite::Vector{T}) where T
+    pin_input::Bool
+    function SpinGlassModel(n::Int, m::Int, gradient::T, edges::Vector{WeightedEdge{T}}, onsite::Vector{T}; pin_input::Bool=true) where T
         @assert length(onsite) == 2*n*m-n "onsite energy length should be $(2*m*n-n), but got $(length(onsite))"
-        new{T}(n, m, gradient, edges, onsite)
+        new{T}(n, m, gradient, edges, onsite, pin_input)
     end
 end
 
 nspin(sp::SpinGlassModel) = 2 * sp.n * sp.m - sp.n
 
 struct SpinGlassModelCache{T<:Real}
-    M::Vector{Point3D{T}}  # magnetic momentum for each site
-    Mc::Vector{Point3D{T}}  # cache for magnetic momentum
-    inst_H::Vector{Point3D{T}}   # instantaneous field for each site
-    ks::Vector{Vector{Point3D{T}}}  # ODE cache, e.g. k1, k2, k3, k4 for Runge-Kutta
+    nspin::Int
+    states::Dict{Symbol, Vector{Point3D{T}}}  # ODE cache, e.g. k1, k2, k3, k4 for Runge-Kutta
+    function SpinGlassModelCache(::Type{T}, nspin::Int) where T
+        new{T}(nspin, Dict{Symbol, Vector{Point3D{T}}}())
+    end
 end
+SpinGlassModelCache(nspin::Int) = SpinGlassModelCache(Float64, nspin)
 
-function init_cache(sp::SpinGlassModel, nk::Int)
-    M = vcat([Point(0.0, 0.0, 1.0) for i in 1:sp.n], [Point(-1.0, 0.0, 0.0) for i in 1:nspin(sp)-sp.n])
-    return SpinGlassModelCache(M, similar(M), similar(M), [similar(M) for i in 1:nk])
+function init_state(sp::SpinGlassModel{T}) where T
+    return vcat([Point(zero(T), zero(T), one(T)) for i in 1:sp.n], [Point(T(-1), zero(T), zero(T)) for i in 1:nspin(sp)-sp.n])
+end
+function fetch!(cache::SpinGlassModelCache, key::Symbol)
+    if !haskey(cache.states, key)
+        cache.states[key] = Vector{Point{Float64}}(undef, cache.nspin)
+    end
+    return cache.states[key]
 end
 
 function spinglass_random_mapping(n::Int, interaction_part::Vector{Tuple{Int, Int}}, interaction_weight::Vector{T}, onsite_part=fill(0.0, n)) where T
@@ -70,78 +78,80 @@ function spinglass_mapping(n::Int, m::Int; gradient = 1.0)
     return SpinGlassModel(n, m, gradient, edges, onsites)
 end
 
-function field!(out::AbstractVector{Point3D{T}}, M::Vector{Point3D{T}}, H::Vector{Point3D{T}}) where T
+function instantaneous_field!(H::AbstractVector{Point3D{ET}}, sp::SpinGlassModel, M, t, tmax, Vtrans::Vector{ET}) where ET
+    H .= Point.(Vtrans .* (-(tmax-t)/tmax), 0.0, sp.onsite .* (-t/tmax))  # onsite field
+    for edge in sp.edges
+        H[edge.src] += Point(0.0, 0.0, -edge.weight * M[edge.dst][3] * (t/tmax))
+        H[edge.dst] += Point(0.0, 0.0, -edge.weight * M[edge.src][3] * (t/tmax))
+    end
+end
+
+function field!(Mdot::Vector{Point3D{ET}}, sp::SpinGlassModel, M::Vector{Point3D{ET}}, inst_H_cache::Vector{Point3D{ET}}, t, tmax, Vtrans::Vector{Float64}) where ET # evaluate F(t, y)
+    sp.pin_input && fill!(view(M, Base.OneTo(sp.n)), Point(0.0, 0.0, 1.0))
+
+    instantaneous_field!(inst_H_cache, sp, M, t, tmax, Vtrans)
     # H(i) = -hx̂ + ∑_j J_{i,j} M_j^z ẑ + onsite ẑ
     # ̇Ṁ = H \cross M
-    out .= cross.(M, H)
-end
+    Mdot .= cross.(M, inst_H_cache)
 
-function instantaneous_field!(H::AbstractVector{Point3D{ET}}, sp::SpinGlassModel, M, t, T, Vtrans::Vector{ET}) where ET
-    H .= Point.(Vtrans .* (-(T-t)/T), 0.0, sp.onsite .* (-t/T))  # onsite field
-    for edge in sp.edges
-        H[edge.src] += Point(0.0, 0.0, -edge.weight * M[edge.dst][3] * (t/T))
-        H[edge.dst] += Point(0.0, 0.0, -edge.weight * M[edge.src][3] * (t/T))
-    end
-    return H
-end
-
-function field!(Mdot::AbstractVector{Point3D{ET}}, sp::SpinGlassModel, cache::SpinGlassModelCache, t, T, Vtrans::Vector{Float64}; pin_input::Bool = true) where ET # evaluate F(t, y)
-    pin_input && fill!(view(cache.M, Base.OneTo(sp.n)), Point(0.0, 0.0, 1.0))
-
-    instantaneous_field!(cache.inst_H, sp, cache.M, t, T, Vtrans)
-    field!(Mdot, cache.M, cache.inst_H)
-
-    if pin_input == true   # ??? why 0, 0, 0?
+    if sp.pin_input == true   # ??? why 0, 0, 0?
         Mdot[1:sp.n] .= Ref(Point(0.0, 0.0, 0.0))
     end
 
     return Mdot
 end
 
-function runge_kutta_singlejump!(sp::SpinGlassModel, cache::SpinGlassModelCache, t0, delta_t, T, Vtrans::Vector{Float64}; pin_input = true)
-    cache.Mc .= cache.M
-    field!(cache.ks[1], sp, cache, t0, T, Vtrans; pin_input)
-    cache.Mc .= normalize.(cache.M .+ cache.ks[1] .* (delta_t / 2))
-    field!(cache.ks[2], sp, cache, t0 + delta_t / 2, T, Vtrans; pin_input)
-    cache.Mc .= normalize.(cache.M .+ cache.ks[2] .* (delta_t / 2))
-    field!(cache.ks[3], sp, cache, t0 + delta_t / 2, T, Vtrans; pin_input)
-    cache.Mc .= normalize.(cache.M .+ cache.ks[3] .* delta_t)
-    field!(cache.ks[4], sp, cache, t0 + delta_t, T, Vtrans; pin_input)
-    cache.M .= normalize.(cache.M .+ (cache.ks[1] .+ 2 .* cache.ks[2] .+ 2 .* cache.ks[3] .+ cache.ks[4]) .* (delta_t / 6))
+function runge_kutta_singlejump!(sp::SpinGlassModel, M::Vector{<:Point3D}, cache::SpinGlassModelCache, t0, delta_t, tmax, Vtrans::Vector{Float64})
+    Mc, inst_H, k1, k2, k3, k4 = fetch!.(Ref(cache), (:Mc, :inst_H, :k1, :k2, :k3, :k4))
+    Mc .= M
+    field!(k1, sp, Mc, inst_H, t0, tmax, Vtrans)
+    Mc .= normalize.(M .+ k1 .* (delta_t / 2))
+    field!(k2, sp, Mc, inst_H, t0 + delta_t / 2, tmax, Vtrans)
+    Mc .= normalize.(M .+ k2 .* (delta_t / 2))
+    field!(k3, sp, Mc, inst_H, t0 + delta_t / 2, tmax, Vtrans)
+    Mc .= normalize.(M .+ k3 .* delta_t)
+    field!(k4, sp, Mc, inst_H, t0 + delta_t, tmax, Vtrans)
+    M .= normalize.(M .+ (k1 .+ 2 .* k2 .+ 2 .* k3 .+ k4) .* (delta_t / 6))
 end
 
-function runge_kutta_integrate(sp::SpinGlassModel, dt::Float64, T::Float64, Vtrans::Vector{Float64}; T_end = nothing, pin_input = true)
+function runge_kutta_integrate(sp::SpinGlassModel{T}, dt::Float64, tmax::Float64, Vtrans::Vector{Float64}; T_end = nothing) where T
     t0 = 0.0
     if T_end === nothing
-        T_end = T
+        T_end = tmax
     end
-    sp_print = Vector{Point3D{Float64}}[]
-    H_print = Vector{Point3D{Float64}}[]
-    cache = init_cache(sp, 4)
+    sp_print = Vector{Point3D{T}}[]
+    H_print = Vector{Point3D{T}}[]
+    M = init_state(sp)
+    cache = SpinGlassModelCache(T, nspin(sp))
     while t0 < T_end
         delta_t = min(dt, T_end-t0)
         # save data
-        push!(sp_print, copy(cache.M))
-        instantaneous_field!(cache.inst_H, sp, cache.M, t0, T, Vtrans)
-        push!(H_print, copy(cache.inst_H))
+        push!(sp_print, copy(M))
+        inst_H = fetch!(cache, :inst_H)
+        instantaneous_field!(inst_H, sp, M, t0, tmax, Vtrans)
+        push!(H_print, copy(inst_H))
 
         # evolve
-        runge_kutta_singlejump!(sp, cache, t0, delta_t, T, Vtrans; pin_input)
+        runge_kutta_singlejump!(sp, M, cache, t0, delta_t, tmax, Vtrans)
         t0 += delta_t
     end
+    push!(sp_print, M)
     return sp_print, H_print
 end
 
-function euclidean_integrate(sp::SpinGlassModel, dt, T, Vtrans::Vector{Float64}; pin_input = true)
+function euclidean_integrate(sp::SpinGlassModel, dt, tmax, Vtrans::Vector{Float64})
     t=0
-    cache = init_cache(sp, 0)
-    while t<T
-        delta_t = min(dt, T-t)
-        field!(cache.Mc, sp, cache, t, T, Vtrans; pin_input)
-        cache.M .+= cache.Mc .* delta_t
+    M = init_state(sp)
+    # caches
+    Mdot = Vector{Point3D{Float64}}(undef, nspin(sp))
+    inst_H = Vector{Point3D{Float64}}(undef, nspin(sp))
+    while t<tmax
+        delta_t = min(dt, tmax-t)
+        field!(Mdot, sp, M, inst_H, t, tmax, Vtrans)
+        M .+= Mdot .* delta_t
         t += delta_t
     end
-    return cache.M
+    return M
 end
 
 function sp_ground_state(sp::SpinGlassModel)
@@ -199,12 +209,12 @@ function sp_ground_state_sa(n, m)
     return minn
 end
 
-function sp_energy(sp::SpinGlassModel, M::AbstractVector{Point3D{ET}}, t, T, Vtrans) where ET
+function sp_energy(sp::SpinGlassModel, M::AbstractVector{Point3D{ET}}, t, tmax, Vtrans) where ET
     ret = zero(ET)
-    ret += sum([t[3] for t in M] .* sp.onsite) * (t/T)
-    ret += sum([t[1] for t in M] .* Vtrans) * ((T-t)/T)
+    ret += sum([t[3] for t in M] .* sp.onsite) * (t/tmax)
+    ret += sum([t[1] for t in M] .* Vtrans) * ((tmax-t)/tmax)
     for edge in sp.edges
-        ret += edge.weight * M[edge.src][3] * M[edge.dst][3] * (t/T)
+        ret += edge.weight * M[edge.src][3] * M[edge.dst][3] * (t/tmax)
     end
     return ret
 end
@@ -251,18 +261,20 @@ function unwrap_data!(vec::AbstractVector{T}, M::Vector{Point3D{T}}) where T
     return vec
 end
 
-function spinglass_adiabatic_dp8(sg::SpinGlassModel, Tmax; pin_input = true)
-    cache = init_cache(sg, 0)
-    init_dp8 = unwrap_data(cache.M)
-    solver8 = DP8Solver(0.0, init_dp8; atol=1e-10, rtol=1e-10, maximum_allowed_steps=5000000) do t, y, field
-        vectorgradient!(field, sg, cache, y, t; pin_input, Tmax)
+function spinglass_adiabatic_dp8(sg::SpinGlassModel, Tmax)
+    M = init_state(sg)
+    cache = init_cache(sg)
+    init_dp8 = unwrap_data(M)
+    solver8 = DP8Solver(0.0, init_dp8; atol=1e-10, rtol=1e-10, maximum_allowed_steps=5000000) do t, y, result
+        vectorgradient!(result, sg, M, cache, y, t; Tmax)
     end
     integrate!(solver8, Tmax)
     return wrap_data(get_current_state(solver8))
 end
 
-function vectorgradient!(out::AbstractVector, sp::SpinGlassModel, cache::SpinGlassModelCache, vec::AbstractVector{T}, this_t; pin_input, Tmax) where T
-    wrap_data!(cache.M, vec)
-    field!(cache.Mc, sp, cache, this_t, Tmax, sp.onsite; pin_input)
-    return unwrap_data!(out, cache.Mc)
+function vectorgradient!(out::AbstractVector, M::Vector{<:Point3D}, sp::SpinGlassModel, cache::SpinGlassModelCache, vec::AbstractVector{T}, this_t; Tmax) where T
+    wrap_data!(M, vec)
+    Mc, inst_H = fetch!(cache, :Mc), fetch!(cache, :inst_H)
+    field!(Mc, sp, M, inst_H, this_t, Tmax, sp.onsite)
+    return unwrap_data!(out, Mc)
 end

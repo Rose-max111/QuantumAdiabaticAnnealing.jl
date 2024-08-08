@@ -4,32 +4,35 @@ using DifferentialEquations
 using QuantumAdiabaticAnnealing
 using QuantumAdiabaticAnnealing: spinglass_mapping, runge_kutta_integrate, euclidean_integrate, Point3D
 using QuantumAdiabaticAnnealing: sp_energy
-using QuantumAdiabaticAnnealing: instantaneous_field!, instantaneous_field_autodiff, wrap_data, unwrap_data, vectorgradient!
+using QuantumAdiabaticAnnealing: instantaneous_field!, instantaneous_field_autodiff, wrap_data, unwrap_data, vectorgradient!, nspin
 using Random
 
 @testset "integrater_double_check" begin
     Tmax = 1000.0
     sg = spinglass_mapping(3, 4)
-    cache = QuantumAdiabaticAnnealing.init_cache(sg, 0)
-    init_dp5 = unwrap_data(cache.M)
+    M = QuantumAdiabaticAnnealing.init_state(sg)
+    cache = QuantumAdiabaticAnnealing.SpinGlassModelCache(nspin(sg))
+    init_dp5 = unwrap_data(M)
     solver5 = DP5Solver(0.0, init_dp5; atol=1e-12, rtol=1e-12, maximum_allowed_steps=20000000) do t, y, field
-        vectorgradient!(field, sg, cache, y, t; pin_input=true, Tmax)
+        vectorgradient!(field, M, sg, cache, y, t; Tmax)
     end
     @time integrate!(solver5, Tmax)
 
-    cache = QuantumAdiabaticAnnealing.init_cache(sg, 0)
-    init_dp8 = unwrap_data(cache.M)
+    M = QuantumAdiabaticAnnealing.init_state(sg)
+    cache = QuantumAdiabaticAnnealing.SpinGlassModelCache(nspin(sg))
+    init_dp8 = unwrap_data(M)
     solver8 = DP8Solver(0.0, init_dp8; atol=1e-12, rtol=1e-12, maximum_allowed_steps=5000000) do t, y, field
-        vectorgradient!(field, sg, cache, y, t; pin_input=true, Tmax)
+        vectorgradient!(field, M, sg, cache, y, t; Tmax)
     end
     @time integrate!(solver8, Tmax)
 
-    cache = QuantumAdiabaticAnnealing.init_cache(sg, 0)
-    init_de = unwrap_data(cache.M)
+    M = QuantumAdiabaticAnnealing.init_state(sg)
+    cache = QuantumAdiabaticAnnealing.SpinGlassModelCache(nspin(sg))
+    init_de = unwrap_data(M)
     # cb = ManifoldProjection(gproject)
     tspan = (0.0, Tmax)
     prob = ODEProblem(init_de, tspan) do du, u, p, t
-        vectorgradient!(du, sg, cache, u, t; pin_input=true, Tmax)
+        vectorgradient!(du, M, sg, cache, u, t; Tmax)
     end
 
     @time sol = DifferentialEquations.solve(prob, Vern7(), reltol = 1e-12, abstol=1e-12)
@@ -52,11 +55,11 @@ end
     m=3
     gradient = 1.0
     sp_rk = spinglass_mapping(n, m; gradient=gradient)
-    cache = QuantumAdiabaticAnnealing.init_cache(sp_rk, 0)
-    init_dp8 = unwrap_data(cache.M)
-    #initialvector(Tmax, n, m;gradient=gradient)
+    M = QuantumAdiabaticAnnealing.init_state(sp_rk)
+    cache = QuantumAdiabaticAnnealing.SpinGlassModelCache(nspin(sp_rk))
+    init_dp8 = unwrap_data(M)
     solver8 = DP8Solver(0.0, init_dp8; atol=1e-10, rtol=1e-10, maximum_allowed_steps=5000000) do t, y, field
-        vectorgradient!(field, sp_rk, cache, y, t; pin_input=true, Tmax)
+        vectorgradient!(field, M, sp_rk, cache, y, t; Tmax)
     end
     @time integrate!(solver8, Tmax)
     sp_dp8 = QuantumAdiabaticAnnealing.wrap_data(get_current_state(solver8))
@@ -179,7 +182,7 @@ end
 @testset "autodiff vs exact" begin
     sp=spinglass_mapping(3, 4)
     M = [Point(rand()*2-1, rand()*2-1, rand()*2-1) for i in 1:length(sp.onsite)]
-    @info "sp.M[1] = $(sp.M[1])"
+    @info "M[1] = $(M[1])"
     Vtrans = fill(1.0, length(sp.onsite))
     Tmax = 10.0
     this_t = 3.0
