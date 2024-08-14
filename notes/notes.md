@@ -194,6 +194,7 @@ Time per computation scales as $E \sim \log^2 \frac{m}{W}$.
 ### Numerical result
 
 To determine large-scale effect, we mainly focus on a simple toy model
+
 $$
 H = \sum_{\text{each gadget}} [\text{gadget is not satisfied}]
 $$
