@@ -312,10 +312,15 @@ The result is that our toy model can be successfully mapped into a 5-atoms spin-
 </div>
 
 Diagonal term represent onsite energy, and off-diagonal term represent interaction energy. We list the 8 input-output relationship correspondence as follows.
+
+<div align="center">
+
 | | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
 | --- |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | input-output | 0000 | 0011 | 0101 | 0111 | 1000 | 1011 | 1101 | 1110 |
 | spin-glass | 11110 | 11001 | 10101 | 10001 | 01110 | 01001 | 00101 | 00011 |
+
+</div>
 
 Where in the second line (spin-glass model), $1$ means $s_i=-1$, $0$ means $s_i=1$. Ground state energy is $-11$
 
