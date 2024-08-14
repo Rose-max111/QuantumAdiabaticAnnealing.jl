@@ -271,6 +271,7 @@ $ to spin-glass model, we used Linear Programming algorithm.
 ### Use linear programming to map model
 
 Linear problems are problems that can be express in standard form as
+
 $$
 \min_{x \in \mathbb{R}^n} \sum_{i=1}^n c_ix_i\\
 \text{s.t. } l_j \leq \sum_{i=1}^n a_{i,j}x_i \leq u_j, j=1...m\\
@@ -282,12 +283,14 @@ Here with a spin-glass consists $N$ atoms, we choose $n$ to be $\frac{N(N-1)}{2}
 Then we assign a corresponding spin state to each input-output relationship. Let these states be $st[1...8]$ and the others be $st[9...2^N]$. We need to construct constraints that $E(st[1])=E(st[2])=...=E(st[8])$ and $E(st[1])<E(st[9]),E(st[10]), ..., E(st[2^N])$, where $E(st[i])$ represents the energy of state $st[i]$.
 
 For $E(st[1])=E(st[2])$, we could add one constraint that 
+
 $$
 \sum_{u,v}x_{u, v} st[1,u]st[1,v] + \sum_{u}x_ust[1,u]\leq \sum_{u,v}x_{u, v} st[2,u]st[2,v] + \sum_{u}x_ust[2,u] \\
 \sum_{u,v}x_{u, v} st[2,u]st[2,v] + \sum_{u}x_ust[2,u]\leq \sum_{u,v}x_{u, v} st[1,u]st[1,v] + \sum_{u}x_ust[1,u] 
 $$
 
 As for $E(st[1])< E(st[j>8])$, the constraint should be
+
 $$
 \sum_{u,v}x_{u, v} st[1,u]st[1,v] + \sum_{u}x_ust[1,u]\leq \sum_{u,v}x_{u, v} st[j,u]st[j,v] + \sum_{u}x_ust[j,u] +\delta \\
 $$
