@@ -297,8 +297,29 @@ $$
 
 These constraints can be easily change into standard form. Also, one should notice that we add a small term $\delta$ in the second type of constraints since LP can't handle inequalities without equality constraints. 
 
-The result is that our toy model can be successfully mapped into a 5-atoms spin-glass model, one of which is ancilla. And there is no solution with 4-atoms spin-glass mapping.
+The result is that our toy model can be successfully mapped into a 5-atoms spin-glass model, one of which is ancilla (the last one). 
 
+<div align="center">
+
+|   | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| **1** | 1 | 1 | 1 | 2 | 3 |
+| **2** | 1 | 2 | 2 | 2 | 5 |
+| **3** | 1 | 2 | 2 | 2 | 5 |
+| **4** | 2 | 2 | 2 | 2 | 6 |
+| **5** | 3 | 5 | 5 | 6 | 5 |
+
+</div>
+
+Diagonal term represent onsite energy, and off-diagonal term represent interaction energy. We list the 8 input-output relationship correspondence as follows.
+| | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+| --- |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| input-output | 0000 | 0011 | 0101 | 0111 | 1000 | 1011 | 1101 | 1110 |
+| spin-glass | 11110 | 11001 | 10101 | 10001 | 01110 | 01001 | 00101 | 00011 |
+
+Where in the second line (spin-glass model), $1$ means $s_i=-1$, $0$ means $s_i=1$. Ground state energy is $-11$
+
+What's more, there is no solution with 4-atoms spin-glass mapping.
 ### Numerical result
 
 We firstly tried classical adiabatic annealing with the classical-spin mapping method[^Wang2013]. Here the quantum spin $s_i$ are replaced by a classical unit magnetic vector $\vec{M_i}$, with the equation of motion
