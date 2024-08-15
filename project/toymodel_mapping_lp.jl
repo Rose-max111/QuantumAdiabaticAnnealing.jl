@@ -96,13 +96,47 @@ hyperproblem = GenericTensorNetwork(hyperspinglass)
 counting_min_eneregy = GenericTensorNetworks.solve(hyperproblem, CountingMin())[]
 msk = 17
 cnt = 0
+output1 = []
+output2 = []
 for p in [0,1]
     for q in [0,1] 
         for r in [0,1]
             cnt += 1
             st = StaticBitVector([p, q, r, rule110(p, q, r), (msk>>(cnt-1))&1])
+            @info st
             st = map(x->x⊻1, st)
-            println(st, " ", spinglass_energy(hyperspinglass, st))
+            st = Int.(st)
+            push!(output1, "$p$q$r$(rule110(p, q, r))")
+            push!(output2, "$(st[1])$(st[2])$(st[3])$(st[4])$(st[5])")
         end
     end
+end
+for i in output1
+    print(i, " | ")
+end
+# println("")
+for i in output2
+    print(i, " | ")
+end
+
+
+output_weights = zeros(Int, 5, 5)
+
+for i in 1:10
+    output_weights[hyperedges[i][1], hyperedges[i][2]] = weights[i]
+end
+for i in 11:15
+    output_weights[hyperedges[i][1], hyperedges[i][1]] = weights[i]
+end
+for i in 1:5
+    for j in 1:i-1
+        output_weights[i, j] = output_weights[j, i]
+    end
+end
+
+for i in 1:5
+    for j in 1:5
+        print(output_weights[i, j], " ")
+    end
+    println("")
 end
