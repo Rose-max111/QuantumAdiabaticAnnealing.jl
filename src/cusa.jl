@@ -8,7 +8,6 @@ function random_state(sa::SimulatedAnnealingHamiltonian, nbatch::Integer)
     return rand(Bool, natom(sa), nbatch)
 end
 hasparent(sa::SimulatedAnnealingHamiltonian, node::Integer) = node > sa.n
-cartesian_to_linear(sa::SimulatedAnnealingHamiltonian, i::Integer, j::Integer) = i + (j - 1) * sa.n
 
 # evaluate the energy of the i-th gadget (involving atoms i and its parents)
 function evaluate_parent(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, inode::Integer, ibatch::Integer)

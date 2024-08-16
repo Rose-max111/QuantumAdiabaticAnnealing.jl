@@ -1,0 +1,19 @@
+name = "QuantumAnnealer"
+uuid = "37103711-19a1-4bd6-a370-432f0f004f8c"
+authors = ["GiggleLiu <cacate0129@gmail.com> and contributors"]
+version = "1.0.0-DEV"
+
+[deps]
+BloqadeExpr = "bd27d05e-4ce1-5e79-84dd-c5d7d508abe2"
+BloqadeLattices = "bd27d05e-4ce1-5e79-84dd-c5d7d508bbe4"
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
+KrylovKit = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
+
+[compat]
+julia = "1.10"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

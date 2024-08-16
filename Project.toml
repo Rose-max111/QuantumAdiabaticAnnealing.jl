@@ -4,7 +4,6 @@ authors = ["Rose-max111 <luyimingboy@163.com> and contributors"]
 version = "1.0.0-DEV"
 
 [deps]
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 BitBasis = "50ba71b6-fa0f-514d-ae9a-0916efc90dcf"
 BloqadeExpr = "bd27d05e-4ce1-5e79-84dd-c5d7d508abe2"
 BloqadeLattices = "bd27d05e-4ce1-5e79-84dd-c5d7d508bbe4"
@@ -13,25 +12,14 @@ BloqadeWaveforms = "bd27d05e-4ce1-5e79-84dd-c5d7d508bbe7"
 COPT = "227a2e2d-e949-4d8e-a1da-7384fe6f0b9f"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-CurveFit = "5a033b19-8c74-5913-a970-47c3779ef25c"
-DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 DormandPrince = "5e45e72d-22b8-4dd0-9c8b-f96714864bcd"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
-GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 GenericTensorNetworks = "3521c873-ad32-4bb4-b63d-f4f178f42b49"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
-HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
-ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
-JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 KrylovKit = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-LogarithmicNumbers = "aa2f6b4e-9042-5d33-9679-40d3a6b85899"
-LuxorGraphPlot = "1f49bdf2-22a7-4bc4-978b-948dc219fbbc"
-OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-Profile = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-Suppressor = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
 UnitDiskMapping = "1b61a8d9-79ed-4491-8266-ef37f39e1727"
 YaoAPI = "0843a435-28de-4971-9e8b-a9641b2983a8"
 YaoBlocks = "418bc28f-b43b-5e0b-a6e7-61bbc1a2c1df"
@@ -41,7 +29,8 @@ YaoSubspaceArrayReg = "bd27d05e-4ce1-5e79-84dd-c5d7d508ade2"
 julia = "1"
 
 [extras]
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Test", "DifferentialEquations"]
