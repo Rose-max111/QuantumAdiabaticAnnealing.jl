@@ -20,7 +20,7 @@ Ground state energy = -7.0, Ground state degenerate = 8.0
 
 The 8 degenerate ground states are:
 [-1, -1, -1, -1, -1]
-[-1, -1, 1, 1, -1]
+[-1, -1, 1, 1, 1]
 [-1, 1, -1, -1, -1]
 [-1, 1, 1, -1, -1]
 [1, -1, -1, 1, -1]

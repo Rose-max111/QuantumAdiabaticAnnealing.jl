@@ -147,6 +147,18 @@ function check_vaild(total_atoms, weights, ruleid, msk)
                 this_energy = spinglass_energy(spgls, stbit)
                 # @info "state = $(state.⊻1), energy = $this_energy"
                 @assert this_energy == gs.n
+                my_energy = 0.0
+                iiid = 0
+                for i in 1:total_atoms
+                    for j in i+1:total_atoms
+                        iiid += 1
+                        my_energy += weights[iiid] * (state[i] == 1 ? -1 : 1) * (state[j] == 1 ? -1 : 1)
+                    end
+                end
+                for i in 1:total_atoms
+                    my_energy += weights[iiid+i] * (state[i] == 1 ? -1 : 1)
+                end
+                @assert my_energy == gs.n
             end
         end
     end
@@ -196,6 +208,7 @@ function write_data(total_atoms, weights, ruleid, msk)
         for p in [0,1]
             for q in [0,1]
                 for r in [0,1]
+                    cnt = cnt + 1
                     state = [p, q, r, generic_logic_grate(p, q, r, ruleid)]
                     for i in 1:total_atoms-4
                         push!(state, (msk[i]>>(cnt-1))&1)
@@ -230,34 +243,3 @@ function __main__()
 end
 
 __main__()
-
-
-
-
-    # solution_summary(model)
-
-    # hyperedges = [[i,j] for i in 1:5 for j in i+1:5]
-    # for i in 1:5
-    #     push!(hyperedges, [i])
-    # end
-    # hyperspinglass = SpinGlass(5, hyperedges, weights)
-    # hyperproblem = GenericTensorNetwork(hyperspinglass)
-
-    # counting_min_eneregy = GenericTensorNetworks.solve(hyperproblem, CountingMin())[]
-    # msk = 17
-    # cnt = 0
-    # output1 = []
-    # output2 = []
-    # for p in [0,1]
-    #     for q in [0,1] 
-    #         for r in [0,1]
-    #             cnt += 1
-    #             st = StaticBitVector([p, q, r, generic_logic_grate(p, q, r, ruleid), (msk>>(cnt-1))&1])
-    #             @info st
-    #             st = map(x->x⊻1, st)
-    #             st = Int.(st)
-    #             push!(output1, "$p$q$r$(generic_logic_grate(p, q, r, ruleid))")
-    #             push!(output2, "$(st[1])$(st[2])$(st[3])$(st[4])$(st[5])")
-    #         end
-    #     end
-    # end
