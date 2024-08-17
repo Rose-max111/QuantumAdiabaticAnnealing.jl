@@ -111,17 +111,17 @@ function evaluate_50percent_time_gpu(width::Integer, depth::Integer, gauss_width
     return anneal_time + 1
 end
 
-evaluate_50percent_time_cpu(12, 8, 1.0, 1.5)
+# evaluate_50percent_time_cpu(12, 8, 1.0, 1.5)
 
-# sa = SimulatedAnnealingHamiltonian(7, 5)
-# nbatch = 1000
-# energy_gradient = 1.1
-# state = random_state(sa, nbatch)
+sa = SimulatedAnnealingHamiltonian(10, 10)
+nbatch = 1000
+energy_gradient = 1.4
+state = random_state(sa, nbatch)
 # state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
 
-# # single_layer_temp = track_equilibration_gausspulse_reverse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 2000)
+# single_layer_temp = track_equilibration_gausspulse_reverse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 800; accelerate_flip = true)
 
-# single_layer_temp = track_equilibration_gausspulse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 500; accelerate_flip = true)
+single_layer_temp = track_equilibration_gausspulse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 800; accelerate_flip = true)
 
-# state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
-# success = count(x -> x == 0, state_energy)
+state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
+success = count(x -> x == 0, state_energy)
