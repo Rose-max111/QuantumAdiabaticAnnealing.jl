@@ -19,6 +19,7 @@
 \usepackage{algpseudocode}  
 \usepackage{balance}
 \usepackage{flushend}
+\usepackage{cleveref}
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}  % Use Input in the format of Algorithm  
 \renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm  
 
@@ -83,10 +84,10 @@ New Center Cell & 0 & 1 & 1 & 0 & 1 & 1 & 1 & 0 \\
 Rule 110 has been shown to be Turing Complete~\cite{Cook2009}, and thus capable of universal
 computation.
 
-\subsection{Energy Model}\label{a-2d-surface-programmable-material}
+\subsection{Energy model}\label{a-2d-surface-programmable-material}
 
 Let us define a model Hamiltonian on a 2D lattice as
-\begin{equation}
+\begin{equation}\label{eq:toy-hamiltonian}
 H = \sum_{\text{each gadget}} (n_{i+1, t} \land \neg(n_{i, t} \land \neg n_{i-1, t})) \veebar n_{i,t+1},
 \end{equation}
 where $n_{i, t} \in \{0, 1\}$ is the state of the cell at row $i$ and column $t$.
@@ -103,7 +104,7 @@ One can easily verify that with this lattice-like structure, we can
 build infinitely large gadgets capable of universal computing in a
 surface. Thus we call it Surface Programmable Material.
 
-\subsection{The direction of computation}\label{deterministic-and-non-deterministic-computation}
+\subsection{The direction of computation}\label{sec:direction}
 
 Definitions: * \emph{in-surface/out-suface}: The surface of a surface
 programmable material that associated with the input/output of the logic
@@ -122,7 +123,7 @@ $\alpha$ is a constant.
 
 Solving the ground state of the Hamiltonian of the Surface Programmable Material from the non-deterministic direction is at least as hard as solving the circuit satisfiability problem, which is NP-complete~\cite{Moore2011}.
 
-\subsection{Local cooling}\label{local-cooling}
+\subsection{Computing by cooling}\label{local-cooling}
 
 We test the hypothesis: Cooling is easy if the process is from the
 deterministic direction, hard if the process is from the
@@ -237,7 +238,9 @@ Temperature gradient and energy gradient is indeed equal. One can simply
 make the following modification to the transition probability in the
 markov process and find the equality.
 
-\[e^{-\frac{\Delta E_k}{T\lambda^{ct+k}}} = e^{-\frac{\Delta E_k(\frac{1}{\lambda})^k}{T\lambda^{ct}}} = e^{-\frac{\Delta E_k \Lambda^k}{T(t)}}\]
+\begin{equation}
+e^{-\frac{\Delta E_k}{T\lambda^{ct+k}}} = e^{-\frac{\Delta E_k(\frac{1}{\lambda})^k}{T\lambda^{ct}}} = e^{-\frac{\Delta E_k \Lambda^k}{T(t)}}
+\end{equation}
 
 The time complexity in $\Lambda$ form is apparently
 $T_{total} \sim \frac{m}{W}\log^2(\frac{m}{W})e^{(\Lambda-1)^{-1}}$
@@ -247,24 +250,6 @@ annealing could only generate heat-equilibrilium Boltzmann Distribution,
 where the temperature must remain invariant across space.
 
 Time per computation scales as $E \sim \log^2 \frac{m}{W}$.
-
-\subsubsection{Numerical result}\label{numerical-result}
-
-To determine large-scale effect, we mainly focus on a simple toy model
-
-We conducted numerical experiments under the condition
-$\Lambda = 1.3, n = 15$, and fitted each sweep time against
-$m \log^2(m)$. Where $m$ represents the number of the single layers,
-$n$ represents the width per single layer.
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{../notes/images/toy_model_gradient_time_vs_depth_1_3.png}
-\caption{Alt text}
-\end{figure}
-
-\subsubsection{Discussion about the
-model}\label{discussion-about-the-model}
 
 One should notice that we used a important hypothesis that
 $(1-\frac{\lambda_2}{\lambda_1}) \sim e^{-W}$, which means that the
@@ -371,7 +356,23 @@ It is easily to observe that when the system returns to
 heat-equilibrium, the probability reverts to the classical HeatBath
 acceptance probability.
 
-\subsection{Classical Dynamics}\label{classical-dynamics}
+\section{Numerical result}\label{sec:numerical-result}
+To determine large-scale effect, we mainly focus on the simple toy model in \Cref{eq:toy-hamiltonian}.
+
+We conducted numerical experiments under the condition
+$\Lambda = 1.3, n = 15$, and fitted each sweep time against
+$m \log^2(m)$. Where $m$ represents the number of the single layers,
+$n$ represents the width per single layer.
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{../notes/images/toy_model_gradient_time_vs_depth_1_3.png}
+\caption{Alt text}
+\end{figure}
+
+
+
+\section{Physical implementation on Ising machine}\label{spin-glass}
 
 To examine whether this model could achieve a better performance when
 using adiabatic methods, we need to generalize this energy function to
@@ -392,13 +393,9 @@ $s_i \in \{-1, 1\}$ is local spin. The mapped spin-glass model should
 possess propertys that it has exactly 8 ground states, each correspond
 to one input-output relation in Cellular Automata.
 
-To map our toy model
-$H = \sum_{\text{each gadget}} [\text{gadget is not satisfied}]$ to
+\subsection{Ising machine gadget design}\label{sec:gadget-design}
+To map our toy model in \Cref{eq:toy-hamiltonian} to
 spin-glass model, we used Linear Programming algorithm.
-
-\subsubsection{Use linear programming to map
-model}\label{use-linear-programming-to-map-model}
-
 Linear problems are problems that can be express in standard form as
 
 \begin{equation}
@@ -438,6 +435,8 @@ There is no solution with 4-atoms spin-glass that can satisfy the
 constraints. The minimum number of atoms required to satisfy the
 constraints is 5. We set the target states to
 
+\begin{table}
+    \centering
 \begin{tabular}{|c|c|c|c|c|}
 \hline
 input 1 & input 2 & input 3 & output & ancilla \\
@@ -452,6 +451,8 @@ $\uparrow$ & $\uparrow$ & $\downarrow$ & $\uparrow$ & $?$ \\
 $\uparrow$ & $\uparrow$ & $\uparrow$ & $\downarrow$ & $?$ \\
 \hline
 \end{tabular}
+\caption{The eight degenerate ground states of the spin-glass model to implement the $110$ rule.}
+\end{table}
 
 where the ancilla bit in each row can be either $\uparrow$ or
 $\downarrow$ (256 total possibilities). One of the solutions
@@ -459,13 +460,13 @@ satisfying the constraints is
 
 \begin{equation}
 J = \begin{pmatrix}
-\cdot & 1 & 1 & 2 & 3\\
+~\cdot~ & ~1~ & ~1~ & ~2~ & ~3~\\
 \cdot & \cdot & 2 & 2 & 5\\
 \cdot & \cdot & \cdot & 2 & 5\\
 \cdot & \cdot & \cdot & \cdot & 6\\
 \cdot & \cdot & \cdot & \cdot & \cdot
 \end{pmatrix}, h = \begin{pmatrix}
-1\\
+~1~\\
 2\\
 2\\
 2\\
@@ -474,42 +475,6 @@ J = \begin{pmatrix}
 \end{equation}
 
 \subsubsection{Numerical result}\label{numerical-result-1}
-
-We firstly tried classical adiabatic annealing with the classical-spin
-mapping method~\cite{Wang2013}
-\begin{equation}
-\frac{\partial \vec M_i}{\partial t} = \vec M_{i} \times \vec H_{i}(t)
-\end{equation}
-
-where
-
-\begin{equation}
-\vec H_i(t) = -\frac{\partial H(t)}{\partial \vec M_i} 
-\end{equation}
-
-Here the hamiltonian of the system is
-
-\begin{equation}
-H(t) = \frac{t}{T}(\sum_{u,v}J_{u,v} M_{u,z}M_{v,z} + \sum_{u} h_u M_{u, z}) + (1-\frac{t}{T})(I\sum_{u}M_{u,x})
-\end{equation}
-
-The former term is the generally increasing target hamiltonian, the
-latter term is a generally decreasing known Ising-transverse field. We
-can explicitly write out the effective magnetic field.
-
-\[
-\vec H_{i}(t) = -\frac{t}{T}(\sum_{v}J_{i, v}M_{v,z} + h_i)\hat e_z - (1-\frac{t}{T})I\hat e_x
-\]
-
-Integrate the ordinary differential equation then we get the classical
-dynamics of this spin-glass model. However, result shows that it is
-extremely hard to find the solution when the number of layers exceed
-$4$ (input layer is pinned).
-
-The reason maybe that the mapped spin-glass model lies in the hard
-region in ~\cite{Wang2013}. Because every interaction energy is positive, which
-gives rise to strong frustration. Results in this reference also shows that even in
-random spin-glass model, there exist hard instance that can't be solve.
 
 \section{Discussion and Outlook}
 Connect real-world thermalization time and the simulated annealing time to explore the connection between time and energy cost per computation.
@@ -700,6 +665,44 @@ small.}
 \includegraphics[width=\columnwidth]{../notes/images/energy_gap_1_gadget.png}
 \caption{Alt text}
 \end{figure}
+
+\section{Classical Dynamics}\label{classical-dynamics-1}
+We firstly tried classical adiabatic annealing with the classical-spin
+mapping method~\cite{Wang2013}
+\begin{equation}
+\frac{\partial \vec M_i}{\partial t} = \vec M_{i} \times \vec H_{i}(t)
+\end{equation}
+
+where
+
+\begin{equation}
+\vec H_i(t) = -\frac{\partial H(t)}{\partial \vec M_i} 
+\end{equation}
+
+Here the hamiltonian of the system is
+
+\begin{equation}
+H(t) = \frac{t}{T}(\sum_{u,v}J_{u,v} M_{u,z}M_{v,z} + \sum_{u} h_u M_{u, z}) + (1-\frac{t}{T})(I\sum_{u}M_{u,x})
+\end{equation}
+
+The former term is the generally increasing target hamiltonian, the
+latter term is a generally decreasing known Ising-transverse field. We
+can explicitly write out the effective magnetic field.
+
+\[
+\vec H_{i}(t) = -\frac{t}{T}(\sum_{v}J_{i, v}M_{v,z} + h_i)\hat e_z - (1-\frac{t}{T})I\hat e_x
+\]
+
+Integrate the ordinary differential equation then we get the classical
+dynamics of this spin-glass model. However, result shows that it is
+extremely hard to find the solution when the number of layers exceed
+$4$ (input layer is pinned).
+
+The reason maybe that the mapped spin-glass model lies in the hard
+region in ~\cite{Wang2013}. Because every interaction energy is positive, which
+gives rise to strong frustration. Results in this reference also shows that even in
+random spin-glass model, there exist hard instance that can't be solve.
+
 
 
 \end{document}
