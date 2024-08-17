@@ -47,11 +47,6 @@
 
 \section{Introduction}
 
-\section{Surface Programmable Materials}\label{surface-programmable-materials}
-
-\subsection{Surface Programmable
-Material}\label{surface-programmable-material}
-
 \textbf{Definition: (Surface programmable material)}: a lattice (with
 translational invariance) model that can be programmed on its surfaces
 to perform universal computation.
@@ -78,117 +73,51 @@ translation rule:
 
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
 \hline
-Current Pattern (L, C, R) & 111 & 110 & 101 & 100 & 011 & 010 & 001 & 000 \\
+Current Pattern & 111 & 110 & 101 & 100 & 011 & 010 & 001 & 000 \\
 \hline
-New State For Center Cell & 0 & 1 & 1 & 0 & 1 & 1 & 1 & 0 \\
+New Center Cell & 0 & 1 & 1 & 0 & 1 & 1 & 1 & 0 \\
 \hline
 \end{tabular}
 
 Rule 110 has been shown to be Turing Complete~\cite{Cook2009}, and thus capable of universal
 computation.
 
-\subsubsection{The Rule 110 Gadget}\label{the-rule-110-gadget}
+\subsubsection{A 2D Surface Programmable Material}\label{a-2d-surface-programmable-material}
 
-We can encode the Rule 110 cellular automaton into a Weighted Maximum
-Independent Set Problem, with blue vertices assigned a weight of 1 and
-red vertices assigned a weight of 2, as follows.
-\includegraphics[width=\columnwidth]{../notes/images/image.png}
-
-This graph can be embedded into a grid graph, where two vertices are
-connected if and only if their Euclidean distance is no more than $2$.
-\includegraphics[width=\columnwidth]{../notes/images/image-1.png}
-
-The correspondence between the Maximum Weighted Independent Set (MWIS)
-Solution and Rule 110 is as follows:
-
-The states of vertex \textbf{1}, vertex \textbf{3}, and vertex
-\textbf{8} represent the states of the \textbf{middle}, \textbf{left},
-and \textbf{right} cells of the automaton's \textbf{input},
-respectively. If the input value of a cell is 1, then the corresponding
-vertex must be in the MWIS solution; otherwise, it is not. Vertex
-\textbf{12} corresponds to the automaton's \textbf{output}. If the
-automaton output is 1, then vertex 12 is in the MWIS solution;
-otherwise, it is not.
-
-In the automaton diagram, the above gadget is equivalent to:
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{../notes/images/rule110.png}
-\caption{Alt text}
-\end{figure}
-
-There are exactly \textbf{8} different MWIS solutions in this graph (the
-weighted size of each MWIS solution is 7), each corresponding to one of
-the \textbf{8} possible outputs of the automaton. We list them as
-follows.
-\includegraphics[width=\columnwidth]{../notes/images/gadget110.png}
-
-\subsubsection{A 2D Surface Programmable
-Material}\label{a-2d-surface-programmable-material}
+Let us define a model Hamiltonian on a 2D lattice as
+\begin{equation}
+H = \sum_{\text{each gadget}} (n_{i+1, t} \land \neg(n_{i, t} \land \neg n_{i-1, t})) \veebar n_{i,t+1},
+\end{equation}
+where $n_{i, t} \in \{0, 1\}$ is the state of the cell at row $i$ and column $t$.
+Its ground state with energy $0$ encodes a $110$ cellular automaton, where the direction of computation is from the left to right.
 
 The gadget we constructed based on the Rule 110 cellular automaton
 naturally possesses Turing completeness. Therefore, it can be tiled in a
 two-dimensional plane to create a computational material with logical
-operation capabilities. Utilizing copy gadget and cross
-gadget~\cite{Nguyen2023}, we construct a
-\textbf{Surface Programmable Material} with open boundary conditions as
-follows.
+operation capabilities.
 
-\begin{figure}
-\centering
-%\includesvg{../notes/images/rule110\_transvarient.svg}
-\caption{Alt text}
-\end{figure}
-
-The above gadget depicts a two-layer cellular automaton. The vertices in
-blue, red, green and black have weights of 1, 2, 3 and 4, respectively.
-In the automaton diagram, the above gadget is equivalent to:
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{../notes/images/rule110_2-2_automaton.png}
-\caption{Alt text}
-\end{figure}
+\jgl{We need a main figure to show the tiling and cooling.}
 
 One can easily verify that with this lattice-like structure, we can
 build infinitely large gadgets capable of universal computing in a
 surface. Thus we call it Surface Programmable Material.
 
-\subsection{Deterministic and non-deterministic
-computation}\label{deterministic-and-non-deterministic-computation}
+\subsection{The direction of computation}\label{deterministic-and-non-deterministic-computation}
 
 Definitions: * \emph{in-surface/out-suface}: The surface of a surface
 programmable material that associated with the input/output of the logic
-circuit. \#\#\# Deterministic direction The computation contains the
-following steps: 1. Initialize the in-surface configuration. By removing
-some atoms on the in-surface. 2. Connect the in-surface/out-surface to
+circuit.
+
+The computation contains the following steps: (1). Initialize the in-surface configuration. By removing
+some atoms on the in-surface. (2). Connect the in-surface/out-surface to
 external heat sources at temperature $T_1 < T_2$, respectively. We
 also require that the energy gap between the ground state and the first
-excited state of the Hamiltonian to be $\Delta E< T_1$. 3. Lower the
+excited state of the Hamiltonian to be $\Delta E< T_1$. (3). Lower the
 temperature of the heat sources ``slowly'' to cool the system to the
 ground state of the Hamiltonian. The temperature of the heat sources at
 time $t$ is $T_{1/2}(t) = T_{1/2}(0)\lambda^{-c t}$, where
 $T_{1/2}(0)$ is the initial temperature of the heat sources, and
 $\alpha$ is a constant.
-
-\subsection{Speed and work}\label{speed-and-work}
-
-The trade-off between the energy consumption and the speed of
-computation~\cite{Feynman2018}. To avoid confusion, we emphasize the
-``energy consumption'' is defined as the work done in a computational
-process, which is the same as the amount of heat dissipated to the
-environment. This quantity has a lower bound given by the Landauer
-principle, which states that the work done in a computation is at least
-$kT\ln 2$ per bit erased\cite{Reeb2014}.
-
-Information erasure in the surface programmable material is proportional
-to the volume of the material, which is $O(tS)$, where $t$ is the
-time of computation, and $S$ is memory (proportional to the surface
-area) of the material.
-
-From the chemical reaction perspective, the speed of computation is
-determined by the parameter $\lambda$.
 
 \subsubsection{Non-deterministic
 direction}\label{non-deterministic-direction}
@@ -196,9 +125,6 @@ direction}\label{non-deterministic-direction}
 Solving the ground state of the Hamiltonian of the Surface Programmable
 Material is at least as hard as solving the circuit satisfiability
 problem, which is NP-complete~\cite{Moore2011}.
-
-\subsection{Outlook: The emergence of
-wisdom}\label{outlook-the-emergence-of-wisdom}
 
 \subsection{Local cooling}\label{local-cooling}
 
@@ -210,57 +136,7 @@ In our gadget, cooling from deterministic direction is from input to
 output, non-deterministic direction is from output to input. The latter
 one must be non-deterministic because this gadget is Turing-Complete.
 
-The gadget is dominated by such hamiltonian, correspond to the classical
-part of Rydberg atoms.
-
-\[
-H = -\Delta \sum_i w_i \hat n_i + \sum_{|\vec r_i - \vec r_j|\leq 2} U \hat n_i \hat n_j
-\]
-
-Our target is to calculate the \textbf{state} with lowest energy under
-the above hamiltonian as quickly as possible, while some positions are
-set to be 1 or 0 in the \textbf{state}.
-
-\subsubsection{Quantum adiabatic annealing energy
-gap}\label{quantum-adiabatic-annealing-energy-gap}
-
-One possible way is to use quantum adiabatic annealing: start from a
-simple hamiltonian $H(0)$ and its simple ground state
-$|\psi(0)\rangle$, then gradually change the parameters until reaching
-the desire hamiltonian $H(t)$.
-
-More specifically, set $\Delta(t=0) <0$ and $\Omega(t=0) =0$
-initially, then first turning on $\Omega(t)$ to a non-zero value,
-sweeping $\Delta(t)$ to final value, and finally turning off
-$\Omega(t)$.
-
-\[
-H_{QAA}(t) = \sum_{v\in V} (-\Delta(t)w_v \hat n_v + \Omega(t)\sigma_{v}^x) + \sum_{(u,w) \in E} U\hat n_u \hat n_w
-\]
-
-If the time evolution is sufficiently slow, then by the adiabatic
-theorem, the system follows the instantaneous ground state, ending up in
-the solution to the MWIS problem~\cite{Pichler2018}.
-Then we only need to evalute
-the minimum energy gap $\Delta_{QAA}$ between the ground and
-first-excited states of instantaneous hamiltonian.
-
-We set $\Omega = 1 \times 2\pi$ and sweep the $\Delta$ from $3
-\times 2\pi$ to $40 \times 2\pi$ with 1*1 gadget. For deterministic
-direction, we simply set the weight of the input vertices to $50$; as
-for non-deterministic direction, we set the weight of the output vertice
-to $50$.
-
-Result listed as follows. \textbf{However, we didn't see cooling from
-deterministic direction would give a smaller energy gap than the other
-direction. We think that's because the size of this gadget is too
-small.}
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{../notes/images/energy_gap_1_gadget.png}
-\caption{Alt text}
-\end{figure}
+The goal is to drive the the \textbf{state} to the one with lowest energy as fast as possible, while some bits set to be 1 or 0 in the \textbf{state}.
 
 \subsubsection{Local cooling test through simulated
 annealing}\label{local-cooling-test-through-simulated-annealing}
@@ -380,10 +256,6 @@ Time per computation scales as $E \sim \log^2 \frac{m}{W}$.
 \subsubsection{Numerical result}\label{numerical-result}
 
 To determine large-scale effect, we mainly focus on a simple toy model
-
-\[
-H = \sum_{\text{each gadget}} [\text{gadget is not satisfied}]
-\]
 
 We conducted numerical experiments under the condition
 $\Lambda = 1.3, n = 15$, and fitted each sweep time against
@@ -521,7 +393,7 @@ H = \sum_{u,v \in E} J_{u,v}s_us_v + \sum_{i\in V}h_i s_i
 \end{equation}
 
 where $h_i$ is onsite energy, $J_{u,v}$ is interaction energy and
-$s_i \in {-1, 1}$ is local spin. The mapped spin-glass model should
+$s_i \in \{-1, 1\}$ is local spin. The mapped spin-glass model should
 possess propertys that it has exactly 8 ground states, each correspond
 to one input-output relation in Cellular Automata.
 
@@ -644,6 +516,10 @@ region in ~\cite{Wang2013}. Because every interaction energy is positive, which
 gives rise to strong frustration. Results in this reference also shows that even in
 random spin-glass model, there exist hard instance that can't be solve.
 
+\section{Discussion and Outlook}
+Connect real-world thermalization time and the simulated annealing time to explore the connection between time and energy cost per computation.
+The emergence of wisdom?
+
 \begin{acknowledgments}
     We thank Lei Wang, Madelyn Cain and XXX for helpful discussions on the simulation methods.
 \end{acknowledgments}
@@ -714,6 +590,121 @@ the circuit satisfiability problem, which is NP-complete~\cite{Moore2011}.
 
 $P \neq NP$: Cooling is generally hard, especially when from the
 non-deterministic direction.
+
+\subsubsection{The Rule 110 Gadget}\label{the-rule-110-gadget}
+
+We can encode the Rule 110 cellular automaton into a Weighted Maximum
+Independent Set Problem, with blue vertices assigned a weight of 1 and
+red vertices assigned a weight of 2, as follows.
+
+\includegraphics[width=0.6\columnwidth]{../notes/images/image.png}
+
+This graph can be embedded into a grid graph, where two vertices are
+connected if and only if their Euclidean distance is no more than $2$.
+
+\includegraphics[width=0.7\columnwidth]{../notes/images/image-1.png}
+
+The correspondence between the Maximum Weighted Independent Set (MWIS)
+Solution and Rule 110 is as follows:
+
+The states of vertex \textbf{1}, vertex \textbf{3}, and vertex
+\textbf{8} represent the states of the \textbf{middle}, \textbf{left},
+and \textbf{right} cells of the automaton's \textbf{input},
+respectively. If the input value of a cell is 1, then the corresponding
+vertex must be in the MWIS solution; otherwise, it is not. Vertex
+\textbf{12} corresponds to the automaton's \textbf{output}. If the
+automaton output is 1, then vertex 12 is in the MWIS solution;
+otherwise, it is not.
+
+In the automaton diagram, the above gadget is equivalent to:
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{../notes/images/rule110.png}
+\caption{Alt text}
+\end{figure}
+
+There are exactly \textbf{8} different MWIS solutions in this graph (the
+weighted size of each MWIS solution is 7), each corresponding to one of
+the \textbf{8} possible outputs of the automaton. We list them as
+follows.
+\includegraphics[width=\columnwidth]{../notes/images/gadget110.png}
+
+Utilizing copy gadget and cross gadget~\cite{Nguyen2023}, we construct a \textbf{Surface Programmable Material} with open boundary conditions as follows.
+
+\begin{figure}
+\centering
+\includesvg[width=\columnwidth]{../notes/images/rule110transvarient.svg}
+\caption{Alt text}
+\end{figure}
+
+The above gadget depicts a two-layer cellular automaton. The vertices in
+blue, red, green and black have weights of 1, 2, 3 and 4, respectively.
+In the automaton diagram, the above gadget is equivalent to:
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{../notes/images/rule110_2-2_automaton.png}
+\caption{Alt text}
+\end{figure}
+
+\subsection{Speed and work}\label{speed-and-work}
+
+The trade-off between the energy consumption and the speed of
+computation~\cite{Feynman2018}. To avoid confusion, we emphasize the
+``energy consumption'' is defined as the work done in a computational
+process, which is the same as the amount of heat dissipated to the
+environment. This quantity has a lower bound given by the Landauer
+principle, which states that the work done in a computation is at least
+$kT\ln 2$ per bit erased\cite{Reeb2014}.
+
+Information erasure in the surface programmable material is proportional
+to the volume of the material, which is $O(tS)$, where $t$ is the
+time of computation, and $S$ is memory (proportional to the surface
+area) of the material.
+
+From the chemical reaction perspective, the speed of computation is
+determined by the parameter $\lambda$.
+
+\subsubsection{Quantum adiabatic annealing energy gap}\label{quantum-adiabatic-annealing-energy-gap}
+
+One possible way is to use quantum adiabatic annealing: start from a
+simple hamiltonian $H(0)$ and its simple ground state
+$|\psi(0)\rangle$, then gradually change the parameters until reaching
+the desire hamiltonian $H(t)$.
+
+More specifically, set $\Delta(t=0) <0$ and $\Omega(t=0) =0$
+initially, then first turning on $\Omega(t)$ to a non-zero value,
+sweeping $\Delta(t)$ to final value, and finally turning off
+$\Omega(t)$.
+
+\begin{equation}
+H_{QAA}(t) = \sum_{v\in V} (-\Delta(t)w_v \hat n_v + \Omega(t)\sigma_{v}^x) + \sum_{(u,w) \in E} U\hat n_u \hat n_w
+\end{equation}
+
+If the time evolution is sufficiently slow, then by the adiabatic
+theorem, the system follows the instantaneous ground state, ending up in
+the solution to the MWIS problem~\cite{Pichler2018}.
+Then we only need to evalute
+the minimum energy gap $\Delta_{QAA}$ between the ground and
+first-excited states of instantaneous hamiltonian.
+
+We set $\Omega = 1 \times 2\pi$ and sweep the $\Delta$ from $3
+\times 2\pi$ to $40 \times 2\pi$ with 1*1 gadget. For deterministic
+direction, we simply set the weight of the input vertices to $50$; as
+for non-deterministic direction, we set the weight of the output vertice
+to $50$.
+
+Result listed as follows. \textbf{However, we didn't see cooling from
+deterministic direction would give a smaller energy gap than the other
+direction. We think that's because the size of this gadget is too
+small.}
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{../notes/images/energy_gap_1_gadget.png}
+\caption{Alt text}
+\end{figure}
 
 
 \end{document}
