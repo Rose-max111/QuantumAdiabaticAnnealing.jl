@@ -94,10 +94,10 @@ end
 
 function plot(ydata, xdata)
     ydata = (log.(ydata ./ xdata))
-    xdata = Float64.(xdata)
+    xdata = log.(Float64.(xdata))
     f = Figure()
-    ax = Axis(f[1, 1], xlabel = "log(depth)", ylabel = "gap",
-        title = "Log(Gap) v.s. Depth")
+    ax = Axis(f[1, 1], xlabel = "log(depth)", ylabel = "log(gap)",
+        title = "Log(Gap) v.s. log(Depth)")
     scatter!(ax, xdata, ydata)
 
     fit = curve_fit(LinearFit, xdata, ydata)
