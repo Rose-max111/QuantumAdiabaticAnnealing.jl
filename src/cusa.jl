@@ -13,8 +13,8 @@ hasparent(sa::SimulatedAnnealingHamiltonian, node::Integer) = node > sa.n
 function evaluate_parent(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, inode::Integer, ibatch::Integer)
     i, j = CartesianIndices((sa.n, sa.m))[inode].I
     idp = parent_nodes(sa, inode)
-    # trueoutput = @inbounds rule110(state[idp[1], ibatch], state[idp[2], ibatch], state[idp[3], ibatch])
-    trueoutput = @inbounds automatarule(state[idp[1], ibatch], state[idp[2], ibatch], state[idp[3], ibatch], 150)
+    trueoutput = @inbounds rule110(state[idp[1], ibatch], state[idp[2], ibatch], state[idp[3], ibatch])
+    # trueoutput = @inbounds automatarule(state[idp[1], ibatch], state[idp[2], ibatch], state[idp[3], ibatch], 110)
     return @inbounds (trueoutput ⊻ state[inode, ibatch]) * (energy_gradient[ibatch] ^ (sa.m - j))
 end
 function calculate_energy(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, ibatch::Integer)
@@ -271,6 +271,48 @@ function track_equilibration_gausspulse_gpu!(rule::TransitionRule,
         midposition += each_movement
     end
     return sa
+end
+
+function track_equilibration_collective_temperature_cpu!(rule::TransitionRule,
+                                        sa::SimulatedAnnealingHamiltonian, 
+                                        state::AbstractMatrix,
+                                        temperature,
+                                        annealing_time; accelerate_flip = false)
+    for t in 1:annealing_time
+        singlebatch_temp = fill(temperature, sa.m-1)
+        Temp = fill(singlebatch_temp, size(state, 2))
+        if accelerate_flip == false
+            for thisatom in 1:natom(sa)
+                step!(rule, sa, state, fill(1.0, size(state, 2)), Temp, thisatom)
+            end
+        else
+            flip_list = get_parallel_flip_id(sa)
+            for eachflip in flip_list
+                step_parallel!(rule, sa, state, fill(1.0, size(state, 2)), Temp, eachflip)
+            end
+        end
+    end
+end
+
+function track_equilibration_collective_temperature_gpu!(rule::TransitionRule,
+                                        sa::SimulatedAnnealingHamiltonian, 
+                                        state::AbstractMatrix,
+                                        temperature,
+                                        annealing_time; accelerate_flip = false)
+    for t in 1:annealing_time
+        singlebatch_temp = fill(Float32(temperature), sa.m-1)
+        Temp = CuArray(fill(singlebatch_temp, size(state, 2)))
+        if accelerate_flip == false
+            for thisatom in 1:natom(sa)
+                step!(rule, sa, state, CuArray(fill(1.0f0, size(state, 2))), Temp, thisatom)
+            end
+        else
+            flip_list = get_parallel_flip_id(sa)
+            for eachflip in flip_list
+                step_parallel!(rule, sa, state, CuArray(fill(1.0f0, size(state, 2))), Temp, CuArray(eachflip))
+            end
+        end
+    end
 end
 
 
