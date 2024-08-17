@@ -1,7 +1,7 @@
 using JuMP
-import HiGHS
 using GenericTensorNetworks
 using COPT
+using HiGHS
 using Suppressor
 
 function rule110(p, q, r)
@@ -45,12 +45,12 @@ function find_proper_model(ruleid, total_atoms)
     total_mask = Vector{Vector{Int}}()
     generate_vaild_mask!(total_mask, 1, total_atoms - 4, zeros(Int, total_atoms - 4))
     for msk in total_mask 
+    # msk = [1, 15]
     # for T in 1:1
-        # msk = [1, 15]
-        model = @suppress Model(COPT.Optimizer)
+        model = @suppress Model(HiGHS.Optimizer)
+        set_silent(model)
         @variable(model, x[1:Int(total_atoms * (total_atoms - 1) / 2 + total_atoms)])
-
-        delta = 0.1
+        delta = 1
         cnt = 0
         proper_states = Vector{Vector{Int}}()
         for p in [0,1]
@@ -74,46 +74,82 @@ function find_proper_model(ruleid, total_atoms)
             end
         end
         @assert length(wrong_states) + length(proper_states) == 2^total_atoms
-
+        
         for id in 2:length(proper_states)
             weights = make_constriant(proper_states[1], proper_states[id], total_atoms)
             @constraint(model, sum(weights[i] * x[i] for i in 1:length(weights)) == 0)
-            # open("test.txt","a") do io
-            #     # println(io, weights)
-            #     for i in weights
-            #         print(io, i, " ")
-            #     end
-            #     println(io)
-            # end
         end
 
         for id in 1:length(wrong_states)
             weights = make_constriant(proper_states[1], wrong_states[id], total_atoms)
             @constraint(model, sum(weights[i] * x[i] for i in 1:length(weights)) <= -delta)
-            # open("test.txt","a") do io
-            #     for i in weights
-            #         print(io, i, " ")
-            #     end
-            #     println(io)
-            # end
         end
 
-        @objective(model, Min, x[1])
-
-        # @info "ruleid = $ruleid, msk = $msk, proper_states = $(length(proper_states)), wrong_states = $(length(wrong_states))"
-        # @info "model = $model"
-        @suppress optimize!(model)
+        # @objective(model, Min, x[1])
+        optimize!(model)
         if is_solved_and_feasible(model)
-            # @info "msk = $msk, successfully find a solution"
-            # weights = value.(x)
-            # push!(answer, [maximum(weights), minimum(weights), maximum(weights) / minimum(weights), msk])
-            # println(maximum(weights)," ", minimum(weights)," ", maximum(weights) / minimum(weights))
             return msk, [value(x[i]) for i in 1:length(x)]
         else
             @info "msk = $msk, ruleid = $ruleid, failed to find a solution"
         end
+        for con in all_constraints(model; include_variable_in_set_constraints = false)
+            delete(model, con)
+        end
     end
     return -1, false
+end
+
+function individualsolver()
+    model = @suppress Model(COPT.Optimizer)
+    # set_attribute(model, "output_flag", false)
+    @variable(model, x[1:15+6])
+    open("test.txt","r") do io
+        for t in 1:7
+            weights = parse.(Int, split(readline(io)))
+            @constraint(model, sum(weights[i] * x[i] for i in 1:length(weights)) == 0)
+        end
+        for t in 8:63
+            weights = parse.(Int, split(readline(io)))
+            @constraint(model, sum(weights[i] * x[i] for i in 1:length(weights)) <= -0.1)
+        end
+    end
+    @objective(model, Min, x[1])
+    # @info "$model"
+    @suppress optimize!(model)
+    if is_solved_and_feasible(model)
+        @info "yes"
+    else
+        @info "no"
+    end
+end
+
+function check_vaild(total_atoms, weights, ruleid, msk)
+    hyperedges = [[i, j] for i in 1:total_atoms for j in i+1:total_atoms]
+    for i in 1:total_atoms
+        push!(hyperedges, [i])
+    end
+    hyperweights = weights
+    spgls = SpinGlass(total_atoms, hyperedges, hyperweights)
+    spproblem = GenericTensorNetwork(spgls)
+    gs = GenericTensorNetworks.solve(spproblem, CountingMin())[]
+    @assert gs.c == 8.0
+    cnt = 0
+    for p in [0, 1]
+        for q in [0, 1]
+            for r in [0, 1]
+                cnt += 1
+                state = [p, q, r, generic_logic_grate(p, q, r, ruleid)]
+                for i in 1:total_atoms-4
+                    push!(state, (msk[i]>>(cnt-1))&1)
+                end
+                state .⊻= 1
+                stbit = StaticBitVector(state)
+                this_energy = spinglass_energy(spgls, stbit)
+                # @info "state = $(state.⊻1), energy = $this_energy"
+                @assert this_energy == gs.n
+            end
+        end
+    end
 end
 
 function query_model(ruleid, total_atoms)
@@ -124,6 +160,80 @@ function query_model(ruleid, total_atoms)
     weights = round.(weights, digits=2)
     weights = weights ./ 0.25
     return msk, weights
+end
+
+function write_data(total_atoms, weights, ruleid, msk)
+    filename = (pwd()) * "/data/spin_glass_mapping/$(ruleid).txt"
+    weights = map(x -> x==-0.0 ? 0.0 : x, weights)
+    open(filename, "w") do io
+        println(io, "Total Atoms = $total_atoms")
+        println(io, "")
+        cnt = 0
+        for i in 1:total_atoms
+            for j in i+1:total_atoms
+                cnt = cnt + 1
+                println(io,"J($i, $j)=", weights[cnt])
+            end
+        end
+        for i in 1:total_atoms
+            println(io, "h($i)=$(weights[cnt+i])")
+        end
+
+        println(io, "")
+        hyperedges = [[i, j] for i in 1:total_atoms for j in i+1:total_atoms]
+        for i in 1:total_atoms
+            push!(hyperedges, [i])
+        end
+        hyperweights = weights
+        spgls = SpinGlass(total_atoms, hyperedges, hyperweights)
+        spproblem = GenericTensorNetwork(spgls)
+        gs = GenericTensorNetworks.solve(spproblem, CountingMin())[]
+        println(io, "Ground state energy = $(gs.n), ", "Ground state degenerate = $(gs.c)")
+
+        println(io, "")
+        println(io, "The 8 degenerate ground states are:")
+        cnt = 0
+        for p in [0,1]
+            for q in [0,1]
+                for r in [0,1]
+                    state = [p, q, r, generic_logic_grate(p, q, r, ruleid)]
+                    for i in 1:total_atoms-4
+                        push!(state, (msk[i]>>(cnt-1))&1)
+                    end
+                    state = map(x -> 2*x-1, state)
+                    println(io, state)
+                end
+            end
+        end
+    end
+end
+
+function __main__()
+    natoms = Vector{Vector{Int}}()
+    previous = Vector{Int}()
+    for total_atoms = 4:1:5
+        ok = Vector{Int}()
+        for id in 0:255
+            if (id in previous) == false
+                msk, weights = query_model(id, total_atoms)
+                if msk != -1
+                    push!(ok, id)
+                    push!(previous, id)
+                    @info "now testing ruleid = $id, total_atoms = $total_atoms, weights = $(weights)"
+                    check_vaild(total_atoms, weights, id, msk)
+                    write_data(total_atoms, weights, id, msk)
+                end
+            end
+        end
+        push!(natoms, ok)
+    end
+end
+
+__main__()
+
+
+
+
     # solution_summary(model)
 
     # hyperedges = [[i,j] for i in 1:5 for j in i+1:5]
@@ -151,68 +261,3 @@ function query_model(ruleid, total_atoms)
     #         end
     #     end
     # end
-end
-
-natoms = Vector{Vector{Int}}()
-previous = Vector{Int}() 
-for total_atoms = 6:1:6
-    ok = Vector{Int}()
-    for id in 0:255
-        if (ok in previous) == false
-            msk, weights = query_model(id, total_atoms)
-            if msk != -1
-                push!(ok, id)
-                push!(previous, id)
-            end
-        end
-    end
-    push!(natoms, ok)
-end
-
-
-
-# output_weights = zeros(Int, 5, 5)
-
-# for i in 1:10
-#     output_weights[hyperedges[i][1], hyperedges[i][2]] = weights[i]
-# end
-# for i in 11:15
-#     output_weights[hyperedges[i][1], hyperedges[i][1]] = weights[i]
-# end
-# for i in 1:5
-#     for j in 1:i-1
-#         output_weights[i, j] = output_weights[j, i]
-#     end
-# end
-
-# for i in 1:5
-#     for j in 1:5
-#         print(output_weights[i, j], " ")
-#     end
-#     println("")
-# end
-
-function individualsolver()
-    model = @suppress Model(COPT.Optimizer)
-    # set_attribute(model, "output_flag", false)
-    @variable(model, x[1:15+6])
-    open("test.txt","r") do io
-        for t in 1:7
-            weights = parse.(Int, split(readline(io)))
-            @constraint(model, sum(weights[i] * x[i] for i in 1:length(weights)) == 0)
-        end
-        for t in 8:63
-            weights = parse.(Int, split(readline(io)))
-            @constraint(model, sum(weights[i] * x[i] for i in 1:length(weights)) <= -0.1)
-        end
-    end
-    @objective(model, Min, x[1])
-    # @info "$model"
-    @suppress optimize!(model)
-    if is_solved_and_feasible(model)
-        @info "yes"
-    else
-        @info "no"
-    end
-end
-individualsolver()
