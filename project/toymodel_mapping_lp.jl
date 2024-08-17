@@ -221,6 +221,21 @@ function write_data(total_atoms, weights, ruleid, msk)
     end
 end
 
+
+function write_data_readable(total_atoms, weights, ruleid, msk)
+    filename = (pwd()) * "/data/spin_glass_mapping/densedata.txt"
+    weights = map(x -> x==-0.0 ? 0.0 : x, weights)
+    weights = Int.(weights)
+    open(filename, "a") do io
+        print(io, "$total_atoms ")
+        for i in weights
+            print(io, "$i ")
+        end
+        println(io, "")
+    end
+end
+
+
 function __main__()
     natoms = Vector{Vector{Int}}()
     previous = Vector{Int}()
@@ -235,6 +250,7 @@ function __main__()
                     @info "now testing ruleid = $id, total_atoms = $total_atoms, weights = $(weights)"
                     check_vaild(total_atoms, weights, id, msk)
                     write_data(total_atoms, weights, id, msk)
+                    write_data_readable(total_atoms, weights, id, msk)
                 end
             end
         end
