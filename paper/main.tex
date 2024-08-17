@@ -59,8 +59,7 @@ to perform universal computation.
 \subsubsection{Elementary cellular automaton}\label{elementary-cellular-automaton}
 
 An elementary cellular automaton is a 1-dimensional cellular
-automaton\footnote{https://en.wikipedia.org/wiki/Elementary_cellular_automaton}
-where there are two possible states (labeled by 0 and 1). The rule to
+automaton, where there are two possible states (labeled by 0 and 1). The rule to
 determine the state of the cell in next generation depends only on the
 current state of the cell and its two immediate neighbors.
 
@@ -85,10 +84,7 @@ New State For Center Cell & 0 & 1 & 1 & 0 & 1 & 1 & 1 & 0 \\
 \hline
 \end{tabular}
 
-Rule 110 has been shown to be Turing Complete\footnote{Cook, M. (2009).
-  A Concrete View of Rule 110 Computation. Electronic Proceedings in
-  Theoretical Computer Science, 1, 31--55.
-  https://doi.org/10.4204/EPTCS.1.4}, and thus capable of universal
+Rule 110 has been shown to be Turing Complete~\cite{Cook2009}, and thus capable of universal
 computation.
 
 \subsubsection{The Rule 110 Gadget}\label{the-rule-110-gadget}
@@ -96,11 +92,11 @@ computation.
 We can encode the Rule 110 cellular automaton into a Weighted Maximum
 Independent Set Problem, with blue vertices assigned a weight of 1 and
 red vertices assigned a weight of 2, as follows.
-\includegraphics[width=3.125in,height=\textheight,keepaspectratio]{../notes/images/image.png}
+\includegraphics[width=\columnwidth]{../notes/images/image.png}
 
 This graph can be embedded into a grid graph, where two vertices are
 connected if and only if their Euclidean distance is no more than $2$.
-\includegraphics[width=3.125in,height=\textheight,keepaspectratio]{../notes/images/image-1.png}
+\includegraphics[width=\columnwidth]{../notes/images/image-1.png}
 
 The correspondence between the Maximum Weighted Independent Set (MWIS)
 Solution and Rule 110 is as follows:
@@ -118,7 +114,7 @@ In the automaton diagram, the above gadget is equivalent to:
 
 \begin{figure}
 \centering
-\includegraphics[width=3.125in,height=\textheight,keepaspectratio]{../notes/images/rule110.png}
+\includegraphics[width=\columnwidth]{../notes/images/rule110.png}
 \caption{Alt text}
 \end{figure}
 
@@ -126,7 +122,7 @@ There are exactly \textbf{8} different MWIS solutions in this graph (the
 weighted size of each MWIS solution is 7), each corresponding to one of
 the \textbf{8} possible outputs of the automaton. We list them as
 follows.
-\includegraphics[width=5.20833in,height=\textheight,keepaspectratio]{../notes/images/gadget110.png}
+\includegraphics[width=\columnwidth]{../notes/images/gadget110.png}
 
 \subsubsection{A 2D Surface Programmable
 Material}\label{a-2d-surface-programmable-material}
@@ -135,10 +131,7 @@ The gadget we constructed based on the Rule 110 cellular automaton
 naturally possesses Turing completeness. Therefore, it can be tiled in a
 two-dimensional plane to create a computational material with logical
 operation capabilities. Utilizing copy gadget and cross
-gadget\footnote{Nguyen, M.-T., Liu, J.-G., Wurtz, J., Lukin, M. D.,
-  Wang, S.-T., \& Pichler, H. (2023). Quantum Optimization with
-  Arbitrary Connectivity Using Rydberg Atom Arrays. PRX Quantum, 4(1),
-  010316. https://doi.org/10.1103/PRXQuantum.4.010316}, we construct a
+gadget~\cite{Nguyen2023}, we construct a
 \textbf{Surface Programmable Material} with open boundary conditions as
 follows.
 
@@ -154,7 +147,7 @@ In the automaton diagram, the above gadget is equivalent to:
 
 \begin{figure}
 \centering
-\includegraphics[width=3.125in,height=\textheight,keepaspectratio]{../notes/images/rule110_2-2_automaton.png}
+\includegraphics[width=\columnwidth]{../notes/images/rule110_2-2_automaton.png}
 \caption{Alt text}
 \end{figure}
 
@@ -187,9 +180,7 @@ computation~\cite{Feynman2018}. To avoid confusion, we emphasize the
 process, which is the same as the amount of heat dissipated to the
 environment. This quantity has a lower bound given by the Landauer
 principle, which states that the work done in a computation is at least
-$kT\ln 2$ per bit erased\footnote{Reeb, D. \& Wolf, M. M. An improved
-  Landauer principle with finite-size corrections. New Journal of
-  Physics 16, 1--34 (2014).}.
+$kT\ln 2$ per bit erased\cite{Reeb2014}.
 
 Information erasure in the surface programmable material is proportional
 to the volume of the material, which is $O(tS)$, where $t$ is the
@@ -204,8 +195,7 @@ direction}\label{non-deterministic-direction}
 
 Solving the ground state of the Hamiltonian of the Surface Programmable
 Material is at least as hard as solving the circuit satisfiability
-problem, which is NP-complete\footnote{Moore, Cristopher, and Stephan
-  Mertens. The nature of computation. OUP Oxford, 2011.}.
+problem, which is NP-complete~\cite{Moore2011}.
 
 \subsection{Outlook: The emergence of
 wisdom}\label{outlook-the-emergence-of-wisdom}
@@ -250,10 +240,8 @@ H_{QAA}(t) = \sum_{v\in V} (-\Delta(t)w_v \hat n_v + \Omega(t)\sigma_{v}^x) + \s
 
 If the time evolution is sufficiently slow, then by the adiabatic
 theorem, the system follows the instantaneous ground state, ending up in
-the solution to the MWIS problem\footnote{Pichler, H., Wang, S.-T.,
-  Zhou, L., Choi, S., \& Lukin, M. D. (2018). Quantum Optimization for
-  Maximum Independent Set Using Rydberg Atom Arrays (arXiv:1808.10816).
-  arXiv. http://arxiv.org/abs/1808.10816}.Then we only need to evalute
+the solution to the MWIS problem~\cite{Pichler2018}.
+Then we only need to evalute
 the minimum energy gap $\Delta_{QAA}$ between the ground and
 first-excited states of instantaneous hamiltonian.
 
@@ -270,7 +258,7 @@ small.}
 
 \begin{figure}
 \centering
-\includegraphics[width=5.20833in,height=\textheight,keepaspectratio]{../notes/images/energy_gap_1_gadget.png}
+\includegraphics[width=\columnwidth]{../notes/images/energy_gap_1_gadget.png}
 \caption{Alt text}
 \end{figure}
 
@@ -330,7 +318,7 @@ layer 4-gadget automaton. Result listed as follows.
 
 \begin{figure}
 \centering
-\includegraphics[keepaspectratio]{../notes/images/error vs runtime.png}
+\includegraphics[width=\columnwidth]{../notes/images/error vs runtime.png}
 \caption{Alt text}
 \end{figure}
 
@@ -404,7 +392,7 @@ $n$ represents the width per single layer.
 
 \begin{figure}
 \centering
-\includegraphics[keepaspectratio]{../notes/images/toy_model_gradient_time_vs_depth_1_3.png}
+\includegraphics[width=\columnwidth]{../notes/images/toy_model_gradient_time_vs_depth_1_3.png}
 \caption{Alt text}
 \end{figure}
 
@@ -426,14 +414,11 @@ seems not a good idea when the system become larger.
 Inspired by the way clothes are ironed, we conceived the idea of slowly
 scanning a wave-shaped temperature curve from one end to the other. This
 method is widely used in studying the heating-recrystallization
-properties of real materials\footnote{Zhang, X., Yager, K. G., Douglas,
-  J. F., \& Karim, A. (2014). Suppression of target patterns in domain
-  aligned cold-zone annealed block copolymer films with immobilized
-  film-spanning nanoparticles. Soft matter, 10(20), 3656-3666.}.
+properties of real materials~\cite{Zhang2014}.
 
 \begin{figure}
 \centering
-\includegraphics[keepaspectratio]{../notes/images/zhang2014.png}
+\includegraphics[width=\columnwidth]{../notes/images/zhang2014.png}
 \caption{Alt text}
 \end{figure}
 
@@ -486,7 +471,7 @@ sweep time against $m\log^2(m)$. Result is listed as follows.
 
 \begin{figure}
 \centering
-\includegraphics[keepaspectratio]{../notes/images/toy_model_wave_packet_time_vs_depth_1_3.png}
+\includegraphics[width=\columnwidth]{../notes/images/toy_model_wave_packet_time_vs_depth_1_3.png}
 \caption{Alt text}
 \end{figure}
 
@@ -496,39 +481,24 @@ annealing}\label{some-details-about-non-equilibrium-simulated-annealing}
 The classical simulated annealing can only deal with the situation that
 the temperature is space-invariant. Although there are many ways to
 simulated a real-world system with temperature gradient, such as
-Molecular Dynamics\footnote{Bai, X. M., Zhang, Y., \& Tonks, M. R.
-  (2015). Testing thermal gradient driving force for grain boundary
-  migration using molecular dynamics simulations. Acta materialia, 85,
-  95-106.} \footnote{Deng, D., \& Murakawa, H. (2006). Numerical
-  simulation of temperature field and residual stress in multi-pass
-  welds in stainless steel pipe and comparison with experimental
-  measurements. Computational materials science, 37(3), 269-277.}, but
+Molecular Dynamics~\cite{Bai2015, Deng2006}, but
 these methods mainly depend on dynamically adjusting the atomic
 velocities to achieve a temperature gradient, which can't be directly
 used in our model.
 
 There are also Monte Carlo-based methods to simulate a moving
-temperature wave packet that facilitates material growth\footnote{Godfrey,
-  A. W., \& Martin, J. W. (1995). Some Monte Carlo studies of grain
-  growth in a temperature gradient. Philosophical Magazine A, 72(3),
-  737-749.} \footnote{Tan, Y., Maniatty, A. M., Zheng, C., \& Wen, J. T.
-  (2017). Monte Carlo grain growth modeling with local temperature
-  gradients. Modelling and Simulation in Materials Science and
-  Engineering, 25(6), 065003.}. However, these methods fail to establish
-a direct connection between the simulated temperature and experimental
-temperature\footnote{Zöllner, D. (2014). A new point of view to
-  determine the simulation temperature for the Potts model simulation of
-  grain growth. Computational materials science, 86, 99-107.}.Therefore,
-based on HeatBath acceptance rule, we made a slight modification to the
-classical SA model.
+temperature wave packet that facilitates material growth~\cite{Godfrey1995, Tan2017}.
+However, these methods fail to establish a direct connection between the simulated temperature and experimental
+temperature~\cite{Zollner2014}.
+Therefore, based on HeatBath acceptance rule, we made a slight modification to the classical SA model.
 
 When we flip one atom's state, there would be some energy difference
 $\Delta E_{i}$ in field $i$ with temperature $T_i$. The
 probability to accept this flip would be
 
-\[
+\begin{equation}
 P = \frac{1}{1 + e^{\sum_i \frac{\Delta E_i}{T_i}}}
-\]
+\end{equation}
 
 It is easily to observe that when the system returns to
 heat-equilibrium, the probability reverts to the classical HeatBath
@@ -542,19 +512,13 @@ some good hamiltonian. There has already been work on mapping
 combinatorial optimization problems to a spin-glass model (known as the
 Ising Machine) and leveraging the properties of digital devices that
 simulate this Ising Machine to find an appropriate ground state, which
-encodes computational information\footnote{Aadit, N. A., Grimaldi, A.,
-  Carpentieri, M., Theogarajan, L., Martinis, J. M., Finocchio, G., \&
-  Camsari, K. Y. (2022). Massively parallel probabilistic computing with
-  sparse Ising machines. Nature Electronics, 5(7), 460-468.}
-\footnote{Bybee, C., Kleyko, D., Nikonov, D. E., Khosrowshahi, A.,
-  Olshausen, B. A., \& Sommer, F. T. (2023). Efficient optimization with
-  higher-order Ising machines. Nature Communications, 14(1), 6033.}.
+encodes computational information~\cite{Aadit2022,Bybee2023}.
 
 A spin-glass hamiltonian is described as follows.
 
-\[
+\begin{equation}
 H = \sum_{u,v \in E} J_{u,v}s_us_v + \sum_{i\in V}h_i s_i
-\]
+\end{equation}
 
 where $h_i$ is onsite energy, $J_{u,v}$ is interaction energy and
 $s_i \in {-1, 1}$ is local spin. The mapped spin-glass model should
@@ -570,11 +534,13 @@ model}\label{use-linear-programming-to-map-model}
 
 Linear problems are problems that can be express in standard form as
 
-\[
-\min_{x \in \mathbb{R}^n} \sum_{i=1}^n c_ix_i\\
-\text{s.t. } l_j \leq \sum_{i=1}^n a_{i,j}x_i \leq u_j, j=1...m\\
-p_i \leq x_i \leq q_i, i=1...n
-\]
+\begin{equation}
+    \begin{split}
+        &\min_{x \in \mathbb{R}^n} \sum_{i=1}^n c_ix_i\\
+        &\text{s.t. } l_j \leq \sum_{i=1}^n a_{i,j}x_i \leq u_j, \; j=1,\ldots,m\\
+        &p_i \leq x_i \leq q_i, \; i=1,\ldots, n
+    \end{split}
+\end{equation}
 
 Here with a spin-glass consists $N$ atoms, we choose $n$ to be
 $\frac{N(N-1)}{2} + N$, which means each variable $x_i$ represents a
@@ -588,11 +554,13 @@ energy $H(\mathbf s_i)$. We denote the target states with minimum
 energy as $S_{\text{min}} \subset S$. We can express the linear
 programming problem as
 
-\begin{align*}
-&\min_{J \in \mathbb{R}^{}{N(N{-}1)/2}, h\in \mathbb{R}^{}N} 0
-&H(\mathbf s_i) \textless{} H(\mathbf s_j), \forall \mathbf s_i \in S_{\text{min}}, \mathbf s_j \in S \setminus S_{\text{min}}
-&H(\mathbf s_i) = H(\mathbf s_j), \forall \mathbf s_i, \mathbf s_j \in S_{\text{min}}
-\end{align*}
+\begin{equation}
+    \begin{split}
+        &\min_{J \in \mathbb{R}^{N(N{-}1)/2}, h\in \mathbb{R}^N} 0\\
+        &H(\mathbf s_i) < H(\mathbf s_j), \forall \mathbf s_i \in S_{\text{min}}, \mathbf s_j \in S \setminus S_{\text{min}}\\
+        &H(\mathbf s_i) = H(\mathbf s_j), \forall \mathbf s_i, \mathbf s_j \in S_{\text{min}}
+    \end{split}
+\end{equation}
 
 Note that $H$ is a linear function of $J$ and $h$, so the
 constraints are linear. The less constraints and equality constraints
@@ -624,16 +592,16 @@ satisfying the constraints is
 
 \begin{equation}
 J = \begin{pmatrix}
-\cdot \& 1 \& 1 \& 2 \& 3
-\cdot \& \cdot \& 2 \& 2 \& 5
-\cdot \& \cdot \& \cdot \& 2 \& 5
-\cdot \& \cdot \& \cdot \& \cdot \& 6
-\cdot \& \cdot \& \cdot \& \cdot \& \cdot
+\cdot & 1 & 1 & 2 & 3\\
+\cdot & \cdot & 2 & 2 & 5\\
+\cdot & \cdot & \cdot & 2 & 5\\
+\cdot & \cdot & \cdot & \cdot & 6\\
+\cdot & \cdot & \cdot & \cdot & \cdot
 \end{pmatrix}, h = \begin{pmatrix}
-1
-2
-2
-2
+1\\
+2\\
+2\\
+2\\
 5
 \end{pmatrix}
 \end{equation}
@@ -676,9 +644,6 @@ region in ~\cite{Wang2013}. Because every interaction energy is positive, which
 gives rise to strong frustration. Results in this reference also shows that even in
 random spin-glass model, there exist hard instance that can't be solve.
 
-\subsection{References}\label{references}
-
-\end{document}
 \begin{acknowledgments}
     We thank Lei Wang, Madelyn Cain and XXX for helpful discussions on the simulation methods.
 \end{acknowledgments}
@@ -697,7 +662,7 @@ an independent set problem.
 The Rydberg Hamiltonian~\cite{Nguyen2023} is defined as
 
 \begin{equation}
-    H_{\text{Ryd}} = \sum_v \dfrac{\Omega_v}{2} \sigma^x_v -\sum_v \Delta_v n_v + \sum_{v \textless{} w}  V_{\text{Ryd}}(|\overrightarrow{\mathbf{r}_v} -\overrightarrow{\mathbf{r}_w}|)n_v n_w.
+    H_{\text{Ryd}} = \sum_v \dfrac{\Omega_v}{2} \sigma^x_v -\sum_v \Delta_v n_v + \sum_{v < w}  V_{\text{Ryd}}(|\overrightarrow{\mathbf{r}_v} -\overrightarrow{\mathbf{r}_w}|)n_v n_w.
 \end{equation}
 
 where $\Omega_v$ is the Rabi frequency, $\Delta_v$ is the detuning,
@@ -733,7 +698,7 @@ array}\label{energy-based-universal-computation-with-rydberg-atoms-array}
 
 The NOR gate can be implemented using the Rydberg Hamiltonian (subfigure
 c below). The NOR gate is a universal gate for classical computation.
-\includegraphics[width=3.125in,height=\textheight,keepaspectratio]{../notes/images/gadgets.png}
+\includegraphics[width=\columnwidth]{../notes/images/gadgets.png}
 
 The conjunction of gates can be implemented by ``gluing'' the Rydberg
 atoms together (subfigure d below). The weights are added together.
@@ -745,9 +710,7 @@ For more logic gates, please check the GitHub repository
 
 \textbf{Statement 4}: The Rydberg Hamiltonian, if cooled successfully
 with some vertices fixed to certain configuration, can be used to solve
-the circuit satisfiability problem, which is NP-complete.\footnote{Moore,
-  Cristopher, and Stephan Mertens. The nature of computation. OUP
-  Oxford, 2011.}
+the circuit satisfiability problem, which is NP-complete~\cite{Moore2011}.
 
 $P \neq NP$: Cooling is generally hard, especially when from the
 non-deterministic direction.
