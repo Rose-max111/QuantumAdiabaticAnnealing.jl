@@ -51,7 +51,8 @@
 translational invariance) model that can be programmed on its surfaces
 to perform universal computation.
 
-\subsubsection{Elementary cellular automaton}\label{elementary-cellular-automaton}
+\section{Model and Method}
+\subsection{Elementary cellular automaton}\label{elementary-cellular-automaton}
 
 An elementary cellular automaton is a 1-dimensional cellular
 automaton, where there are two possible states (labeled by 0 and 1). The rule to
@@ -82,7 +83,7 @@ New Center Cell & 0 & 1 & 1 & 0 & 1 & 1 & 1 & 0 \\
 Rule 110 has been shown to be Turing Complete~\cite{Cook2009}, and thus capable of universal
 computation.
 
-\subsubsection{A 2D Surface Programmable Material}\label{a-2d-surface-programmable-material}
+\subsection{Energy Model}\label{a-2d-surface-programmable-material}
 
 Let us define a model Hamiltonian on a 2D lattice as
 \begin{equation}
@@ -119,12 +120,7 @@ time $t$ is $T_{1/2}(t) = T_{1/2}(0)\lambda^{-c t}$, where
 $T_{1/2}(0)$ is the initial temperature of the heat sources, and
 $\alpha$ is a constant.
 
-\subsubsection{Non-deterministic
-direction}\label{non-deterministic-direction}
-
-Solving the ground state of the Hamiltonian of the Surface Programmable
-Material is at least as hard as solving the circuit satisfiability
-problem, which is NP-complete~\cite{Moore2011}.
+Solving the ground state of the Hamiltonian of the Surface Programmable Material from the non-deterministic direction is at least as hard as solving the circuit satisfiability problem, which is NP-complete~\cite{Moore2011}.
 
 \subsection{Local cooling}\label{local-cooling}
 
@@ -198,8 +194,7 @@ layer 4-gadget automaton. Result listed as follows.
 \caption{Alt text}
 \end{figure}
 
-\subsection{Estimation of the computing
-time}\label{estimation-of-the-computing-time}
+\subsubsection{Estimation of the computing time}\label{estimation-of-the-computing-time}
 
 Let the temperature of the $k$-th layer at time $t$ be
 $T(t, k) = T \lambda^{ct - k}$, where $T$ is the initial
