@@ -104,13 +104,18 @@ One can easily verify that with this lattice-like structure, we can
 build infinitely large gadgets capable of universal computing in a
 surface. Thus we call it Surface Programmable Material.
 
-\subsection{The direction of computation}\label{sec:direction}
+\subsection{Cooling computation with direction}\label{sec:direction}
 
 Definitions: * \emph{in-surface/out-suface}: The surface of a surface
 programmable material that associated with the input/output of the logic
 circuit.
 
-The computation contains the following steps: (1). Initialize the in-surface configuration. By removing
+The process of heating and annealing the entire material does not have computational capability, as the system lacks logical directionality.
+
+Logical directionality needs to be introduced through an orderly annealing method. 
+Similar to the localized heating-annealing approach that catalyzes the growth of ordered crystals, we introduced a temperature gradient annealing scheme.
+
+More specifically, the computation, with computing direction from in-surface to out-surface, contains the following steps: (1). Initialize the in-surface configuration. By removing
 some atoms on the in-surface. (2). Connect the in-surface/out-surface to
 external heat sources at temperature $T_1 < T_2$, respectively. We
 also require that the energy gap between the ground state and the first
@@ -121,7 +126,8 @@ time $t$ is $T_{1/2}(t) = T_{1/2}(0)\lambda^{-c t}$, where
 $T_{1/2}(0)$ is the initial temperature of the heat sources, and
 $\alpha$ is a constant.
 
-Solving the ground state of the Hamiltonian of the Surface Programmable Material from the non-deterministic direction is at least as hard as solving the circuit satisfiability problem, which is NP-complete~\cite{Moore2011}.
+The computing direction could be reversed by swaping the temperature of the heat sources connected in-surface and out-surface.
+However, solving the ground state from the non-deterministic direction is at least as hard as solving the circuit satisfiability problem, which is NP-complete~\cite{Moore2011}.
 
 \subsection{Computing by cooling}\label{local-cooling}
 
@@ -135,86 +141,26 @@ one must be non-deterministic because this gadget is Turing-Complete.
 
 The goal is to drive the the \textbf{state} to the one with lowest energy as fast as possible, while some bits set to be 1 or 0 in the \textbf{state}.
 
-\subsubsection{Local cooling test through simulated
-annealing}\label{local-cooling-test-through-simulated-annealing}
+\subsubsection{Estimation of the computing time along computation direction}\label{estimation-of-the-computing-time}
 
-We will refer to a toy-model limit: $\Delta = 1$ and $U = \infty$.
-What's more, we introduced \textbf{``Energy Gradient''} to the gadget to
-provide directionality for the simulated annealing. The hamiltonian for
-a m-layers automaton now change the form into:
-
-\[
-H = \sum_{|\vec r_i - \vec r_j|\leq 2} U \hat n_i \hat n_j  - \Delta \sum_{i,k|\text{vertice i belongs to layer k}} w_i \lambda^{m-k} \hat n_i
-\]
-
-The last term of our new hamiltonian represent the \textbf{``Energy
-Gradient''}. For vertice $i$ in the k-th layer along the computation
-direction, we reset its weight to $w_i\lambda^{m-k}$.
-
-From an intuitive perspective, for layers where the thermal energy
-exceeds the energy required to flip the nodes in the current layer,
-simulated annealing always filps them randomly; for layers where the
-thermal energy is lower than the energy required to flip the nodes in
-the current layer, simulated annealing tends to maintain their
-configuration; for layers where the thermal energy is just comparable to
-the flipping energy, simulated annealing executes the corresponding
-cooling process.
-
-Hence, we can simply set the discrete annealing tempretures as
-$T(k) = T_0 \eta^k$, where $\eta < 1$ and $\eta ^R = \lambda$.
-Here $R$ represent the number of the cooling iterations performed for
-a given layer.
-
-Similar to what we did in QAA, firstly, we set the weights of the
-inputs/outputs vertices to $\infty$ (NOTE: by removing vertices) for
-testing doing computation along deterministic
-direction/non-deterministic direction. Then we compare the probability
-of successfully finding the corresponding ground state under certain
-$T_0, R, \lambda$ and $\eta$. \textbf{We find that doing computation
-along the non-deterministic direction is harder than the other one}
-
-Next, we believe that for each layers's cooling process, we are
-essentially calculating a probability transition matrix $P(T,k)$,
-where $P(T,k)_{outputm, inputm}$ represent the probability that, given
-the input vertices state is $inputm$, the cooling process sets the
-output vertices state to $outputm$.
-
-Thanks to the translational invariant structure of our gadget and
-cooling process, we believe the matrix $P(T,k)$ is independent from
-$T$ and $k$, which give us an intuitation that if the failure
-probability of each layer's cooling process is $F$, the total success
-probability is $(1-F)^m$. \textbf{We test this in a 4-single-gadget
-per layer automaton and find this suit well.}
-
-Finally, we evaluate the error probability v.s. run time in a single
-layer 4-gadget automaton. Result listed as follows.
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{../notes/images/error vs runtime.png}
-\caption{Alt text}
-\end{figure}
-
-\subsubsection{Estimation of the computing time}\label{estimation-of-the-computing-time}
+We fixed the width of each layer and denote $m$ as the number of layers in this material.
 
 Let the temperature of the $k$-th layer at time $t$ be
 $T(t, k) = T \lambda^{ct - k}$, where $T$ is the initial
 temperature, $c$ is a constant, and $\lambda < 1$ is a constant. At
 any given time $t$, we denote the subset of atoms at depth
-$-\frac{W}{2} < ct - k < \frac{W}{2}$ as the \textbf{active zone},
+$ct-\frac{W}{2}\le k \le ct + \frac{W}{2}$ as the \textbf{active zone},
 where $W$ is the width of the sliding window such that
 $e^{-\Delta E_{max} /\lambda^{W/2}} = \epsilon \ll 1$. The active zone
 is the region where non-trivial computation occurs. The atoms outside
-the active zone are either frozen or completely randomized. Clearly,
-$W$ asymptotically scales as
-$(1-\lambda)^{-1} \log(-\frac{1}{\log\epsilon})$
-(NOTE:$W \sim \log_{\lambda}(-\frac{1}{\log{\epsilon}}) = \frac{\log(-\frac{1}{\log{\epsilon}})}{\log(\lambda)} \approx (1 - \lambda)^{-1}\log(-\frac{1}{\log \epsilon})$,
-the last term exists when $\lambda \lessapprox 1$).
+the active zone are either frozen or completely randomized. 
+
+Clearly, $W$ asymptotically scales as $\frac{\log(-\frac{1}{\log{\epsilon}})}{\log(\lambda)}$. The situations we care about
+are those $\lambda \lessapprox 1$, so one can rewrite $W$ as $W \approx (1-\lambda)^{-1} \log(-\frac{1}{\log\epsilon})$.
 
 We consider thermalizing the system in units of $W$. $\epsilon$ is
 the error probability of each unit of time, which should scale as
-$\epsilon \sim\left(\frac{m}{W}\right)^{-1}$, where $m$ is the total
-number of time steps.
+$\epsilon \sim\left(\frac{m}{W}\right)^{-1}$.
 
 The probability transition matrix of the active zone at any given time
 $t$ (except the starting and ending time) is the same, so we denote it
@@ -228,34 +174,35 @@ $t_{\text{th}} \sim \left(1-\frac{\lambda_2(P)}{\lambda_1(P)}\right)^{-1}\log(\e
 Under the assumption that
 $\left(1-\frac{\lambda_2(P)}{\lambda_1(P)}\right)\sim e^{-W}$, we have
 $t_{\text{th}} \sim e^{(1-\lambda)^{-1}}\log^2(\epsilon^{-1})$. The
-total time for the computation is
+total time for the computation should be
 $t_{\text{total}} \sim \left(\frac{m}{W}\right)\log^2(\frac{m}{W}) e^{(1-\lambda)^{-1}}$.
 
-\subsubsection{Temperature gradient and Energy
-gradient}\label{temperature-gradient-and-energy-gradient}
+\subsubsection{Estimation of the computing time along input memory direction}\label{Estimation-of-the-computing-time-along-input-memory-direction}
 
-Temperature gradient and energy gradient is indeed equal. One can simply
+We fixed the number of layers and denote $n$ as the width of each layer in this material.
+
+However, we fail to derive an explicitly expression for the time complexity in this direction. 
+Numerical result shows that computing complexity is linear to $n$. Thus a total time
+for the computation should scale as $nm\log^2(m)e^{(1-\lambda)^{-1}}$ 
+
+\subsubsection{Testing model through equilibrilium SA}\label{temperature-gradient-and-energy-gradient}
+
+We used simulated annealing to mimic the heating-annealing process.
+However, classical simulated annealing can only handle the situation
+where the temperature is space-invariant. Thus, a scheme change is needed.
+
+One can simply
 make the following modification to the transition probability in the
-markov process and find the equality.
+markov process and return to the situation, called energy-gradient scheme, where the temperature is space-invariant.
 
 \begin{equation}
 e^{-\frac{\Delta E_k}{T\lambda^{ct+k}}} = e^{-\frac{\Delta E_k(\frac{1}{\lambda})^k}{T\lambda^{ct}}} = e^{-\frac{\Delta E_k \Lambda^k}{T(t)}}
 \end{equation}
 
-The time complexity in $\Lambda$ form is apparently
+Where we denote $\Lambda = \frac{1}{\lambda}$ and the time complexity in $\Lambda$ form is apparently
 $T_{total} \sim \frac{m}{W}\log^2(\frac{m}{W})e^{(\Lambda-1)^{-1}}$
 
-The reason that we did this transform is that classical simulated
-annealing could only generate heat-equilibrilium Boltzmann Distribution,
-where the temperature must remain invariant across space.
 
-Time per computation scales as $E \sim \log^2 \frac{m}{W}$.
-
-One should notice that we used a important hypothesis that
-$(1-\frac{\lambda_2}{\lambda_1}) \sim e^{-W}$, which means that the
-spectral gap of the transition matrix has nothing to do with the width
-of a single layer. Should this exists? (\textbf{NOTE: should do some
-numerical experiments})
 
 \subsection{Algorithm beyond temperature
 gradient}\label{algorithm-beyond-temperature-gradient}
@@ -263,21 +210,21 @@ gradient}\label{algorithm-beyond-temperature-gradient}
 Applying a huge energy gradient or temperature gradient to this material
 seems not a good idea when the system become larger.
 
-Inspired by the way clothes are ironed, we conceived the idea of slowly
+Inspired by the way clothes are ironed, we conceived an idea called wave-packet scheme, that slowly
 scanning a wave-shaped temperature curve from one end to the other. This
 method is widely used in studying the heating-recrystallization
 properties of real materials~\cite{Zhang2014}.
 
-\begin{figure}
+\begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../notes/images/zhang2014.png}
-\caption{Alt text}
+\caption{Method to scan the wave packet}
 \end{figure}
 
 There are various specific choices for the wave packet, such as
 power-law, exponential, and others. In this context, we primarily focus
 on a exponential wave packet, which can be directly linked to the
-concept of temperature gradient.
+concept of energy gradient.
 
 A expoential wave packet with central position $middle(t)$, amplitude
 $A$ and base $\Lambda$, can be express as following.
@@ -317,23 +264,13 @@ stay ``frozen'', but we don't care their state.
 Therefore, the wave packet model are just the same as the temperature
 gradient model, and is more likely to be realized physically.
 
-We also conducted a numerical simulation on the wave packet model with
-the same condition $\Lambda = 1.3$ and $width = 15$ and fitted the
-sweep time against $m\log^2(m)$. Result is listed as follows.
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{../notes/images/toy_model_wave_packet_time_vs_depth_1_3.png}
-\caption{Alt text}
-\end{figure}
-
 \subsubsection{Some details about non-equilibrium simulated
 annealing}\label{some-details-about-non-equilibrium-simulated-annealing}
 
 The classical simulated annealing can only deal with the situation that
 the temperature is space-invariant. Although there are many ways to
 simulated a real-world system with temperature gradient, such as
-Molecular Dynamics~\cite{Bai2015, Deng2006}, but
+Molecular Dynamics \cite{Bai2015, Deng2006}, but
 these methods mainly depend on dynamically adjusting the atomic
 velocities to achieve a temperature gradient, which can't be directly
 used in our model.
@@ -359,18 +296,36 @@ acceptance probability.
 \section{Numerical result}\label{sec:numerical-result}
 To determine large-scale effect, we mainly focus on the simple toy model in \Cref{eq:toy-hamiltonian}.
 
-We conducted numerical experiments under the condition
-$\Lambda = 1.3, n = 15$, and fitted each sweep time against
+We conducted numerical experiments both for energy-gradient and wave-packet scheme, under the condition
+$\Lambda = 1.3, n = 15$ , and fitted each sweep time against
 $m \log^2(m)$. Where $m$ represents the number of the single layers,
 $n$ represents the width per single layer.
 
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{../notes/images/toy_model_gradient_time_vs_depth_1_3.png}
-\caption{Alt text}
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.48\linewidth} 
+        \centering
+        \includegraphics[width=\linewidth]{../notes/images/toy_model_gradient_time_vs_depth_1_3.png} 
+        \caption{Energy-gradient scheme result}
+        \label{fig:image1}
+    \end{minipage}
+    \begin{minipage}{0.48\linewidth} 
+        \centering
+        \includegraphics[width=\linewidth]{../notes/images/toy_model_wave_packet_time_vs_depth_1_3.png}
+        \caption{Wave-packet scheme result}
+        \label{fig:image2}
+    \end{minipage}
 \end{figure}
 
+Another numerical experiment are conducted to determine the time complexity of the computation along the input memory direction. 
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\columnwidth,keepaspectratio]{../notes/images/toy_model_time_vs_width_wave_packet.png}
+    \caption{Time v.s. width of the material}
+\end{figure}
+
+This indeed informs that the time scale along the memory direction is linear.
 
 \section{Physical implementation on Ising machine}\label{spin-glass}
 
@@ -435,7 +390,7 @@ There is no solution with 4-atoms spin-glass that can satisfy the
 constraints. The minimum number of atoms required to satisfy the
 constraints is 5. We set the target states to
 
-\begin{table}
+\begin{table}[H]
     \centering
 \begin{tabular}{|c|c|c|c|c|}
 \hline
@@ -487,7 +442,6 @@ The emergence of wisdom?
 %\bibliographystyle{apsrev4-1}
 \bibliography{refs.bib}
 
-\newpage
 \appendix
 
 \section{The implmentation in Rydberg atoms array}\label{physical-model-rydberg-atoms-array}
