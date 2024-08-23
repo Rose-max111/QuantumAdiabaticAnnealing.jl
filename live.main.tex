@@ -1,0 +1,745 @@
+% !TEX program = xelatex
+\documentclass[twocolumn,superscriptaddress,english,showpacs,longbibliography]{revtex4-2}
+\usepackage[colorlinks=true,urlcolor=blue,citecolor=blue,linkcolor=blue]{hyperref} 
+
+\usepackage{svg}
+\usepackage{amsmath}
+\usepackage{graphicx}% Include figure files
+\usepackage{textcomp}
+\usepackage{bm}% bold math
+\usepackage{color}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{mathrsfs}
+\usepackage{float}
+\usepackage{indentfirst}
+\usepackage{txfonts}
+\usepackage{algorithm}  
+\usepackage{algpseudocode}  
+\usepackage{balance}
+\usepackage{flushend}
+\usepackage{cleveref}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}  % Use Input in the format of Algorithm  
+\renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm  
+
+
+\newcommand{\jgl}[1]{[{\color{green}{JGL: #1}}]}
+\newcommand{\s}{\mathbf {s}}
+\newcommand{\net}[1]{{\textsc{#1}}}
+\newcommand{\argmin}{\mathop{\mathrm{argmin}}\limits}
+\newcommand{\Eq}[1]{Eq.~(\ref{#1})}
+\newcommand{\Fig}[1]{Fig.~\ref{#1}}
+
+\begin{document}
+
+% !TEX program = xelatex
+\documentclass[twocolumn,superscriptaddress,english,showpacs,longbibliography]{revtex4-2}
+\usepackage[colorlinks=true,urlcolor=blue,citecolor=blue,linkcolor=blue]{hyperref} 
+
+\usepackage{svg}
+\usepackage{amsmath}
+\usepackage{graphicx}% Include figure files
+\usepackage{textcomp}
+\usepackage{bm}% bold math
+\usepackage{color}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{mathrsfs}
+\usepackage{float}
+\usepackage{indentfirst}
+\usepackage{txfonts}
+\usepackage{algorithm}  
+\usepackage{algpseudocode}  
+\usepackage{balance}
+\usepackage{flushend}
+\usepackage{cleveref}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}  % Use Input in the format of Algorithm  
+\renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm  
+
+
+\newcommand{\jgl}[1]{[{\color{green}{JGL: #1}}]}
+\newcommand{\s}{\mathbf {s}}
+\newcommand{\net}[1]{{\textsc{#1}}}
+\newcommand{\argmin}{\mathop{\mathrm{argmin}}\limits}
+\newcommand{\Eq}[1]{Eq.~(\ref{#1})}
+\newcommand{\Fig}[1]{Fig.~\ref{#1}}
+
+\begin{document}
+
+\title{Surface programmable materials}
+
+\author{Authors}
+\email{xxx@xxx.com}
+\affiliation{
+    XXX
+}
+
+\begin{abstract}
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+\textbf{Definition: (Surface programmable material)}: a lattice (with
+translational invariance) model that can be programmed on its surfaces
+to perform universal computation.
+
+\section{Model and Method}
+\subsection{Elementary cellular automaton}\label{elementary-cellular-automaton}
+
+An elementary cellular automaton is a 1-dimensional cellular
+automaton, where there are two possible states (labeled by 0 and 1). The rule to
+determine the state of the cell in next generation depends only on the
+current state of the cell and its two immediate neighbors.
+
+There are $8 = 2^3$ possible configurations for a cell and its two
+immediate neighbors. Different elementary cellular automaton are only
+different from their translation rules. There are only $2^8 = 256$
+different rules, so do the automatons.
+
+If we put each possible current configurations in order: 111, 110,
+\ldots, 001, 000, and put the resulting state under them. We then get an
+integer in its binary representations. Then this integer is taken to be
+the rule number of the automaton. For example, rule 110.
+
+Given that $110_d = 01101110_2$, so rule 110 is defined by the
+translation rule:
+
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+Current Pattern & 111 & 110 & 101 & 100 & 011 & 010 & 001 & 000 \\
+\hline
+New Center Cell & 0 & 1 & 1 & 0 & 1 & 1 & 1 & 0 \\
+\hline
+\end{tabular}
+
+Rule 110 has been shown to be Turing Complete~\cite{Cook2009}, and thus capable of universal
+computation.
+
+\subsection{Energy model}\label{a-2d-surface-programmable-material}
+
+Let us define a model Hamiltonian on a 2D lattice as
+\begin{equation}\label{eq:toy-hamiltonian}
+H = \sum_{\text{each gadget}} (n_{i+1, t} \land \neg(n_{i, t} \land \neg n_{i-1, t})) \veebar n_{i,t+1},
+\end{equation}
+where $n_{i, t} \in \{0, 1\}$ is the state of the cell at row $i$ and column $t$.
+Its ground state with energy $0$ encodes a $110$ cellular automaton, where the direction of computation is from the left to right.
+
+The gadget we constructed based on the Rule 110 cellular automaton
+naturally possesses Turing completeness. Therefore, it can be tiled in a
+two-dimensional plane to create a computational material with logical
+operation capabilities.
+
+\jgl{We need a main figure to show the tiling and cooling.}
+
+One can easily verify that with this lattice-like structure, we can
+build infinitely large gadgets capable of universal computing in a
+surface. Thus we call it Surface Programmable Material.
+
+\subsection{C}\label{sec:direction}
+
+Definitions: * \emph{in-surface/out-suface}: The surface of a surface
+programmable material that associated with the input/output of the logic
+circuit.
+
+The computation contains the following steps: (1). Initialize the in-surface configuration. By removing
+some atoms on the in-surface. (2). Connect the in-surface/out-surface to
+external heat sources at temperature $T_1 < T_2$, respectively. We
+also require that the energy gap between the ground state and the first
+excited state of the Hamiltonian to be $\Delta E< T_1$. (3). Lower the
+temperature of the heat sources ``slowly'' to cool the system to the
+ground state of the Hamiltonian. The temperature of the heat sources at
+time $t$ is $T_{1/2}(t) = T_{1/2}(0)\lambda^{-c t}$, where
+$T_{1/2}(0)$ is the initial temperature of the heat sources, and
+$\alpha$ is a constant.
+
+Solving the ground state of the Hamiltonian of the Surface Programmable Material from the non-deterministic direction is at least as hard as solving the circuit satisfiability problem, which is NP-complete~\cite{Moore2011}.
+
+\subsection{Computing by cooling}\label{local-cooling}
+
+We test the hypothesis: Cooling is easy if the process is from the
+deterministic direction, hard if the process is from the
+non-deterministic direction.
+
+In our gadget, cooling from deterministic direction is from input to
+output, non-deterministic direction is from output to input. The latter
+one must be non-deterministic because this gadget is Turing-Complete.
+
+The goal is to drive the the \textbf{state} to the one with lowest energy as fast as possible, while some bits set to be 1 or 0 in the \textbf{state}.
+
+\subsubsection{Local cooling test through simulated
+annealing}\label{local-cooling-test-through-simulated-annealing}
+
+We will refer to a toy-model limit: $\Delta = 1$ and $U = \infty$.
+What's more, we introduced \textbf{``Energy Gradient''} to the gadget to
+provide directionality for the simulated annealing. The hamiltonian for
+a m-layers automaton now change the form into:
+
+\[
+H = \sum_{|\vec r_i - \vec r_j|\leq 2} U \hat n_i \hat n_j  - \Delta \sum_{i,k|\text{vertice i belongs to layer k}} w_i \lambda^{m-k} \hat n_i
+\]
+
+The last term of our new hamiltonian represent the \textbf{``Energy
+Gradient''}. For vertice $i$ in the k-th layer along the computation
+direction, we reset its weight to $w_i\lambda^{m-k}$.
+
+From an intuitive perspective, for layers where the thermal energy
+exceeds the energy required to flip the nodes in the current layer,
+simulated annealing always filps them randomly; for layers where the
+thermal energy is lower than the energy required to flip the nodes in
+the current layer, simulated annealing tends to maintain their
+configuration; for layers where the thermal energy is just comparable to
+the flipping energy, simulated annealing executes the corresponding
+cooling process.
+
+Hence, we can simply set the discrete annealing tempretures as
+$T(k) = T_0 \eta^k$, where $\eta < 1$ and $\eta ^R = \lambda$.
+Here $R$ represent the number of the cooling iterations performed for
+a given layer.
+
+Similar to what we did in QAA, firstly, we set the weights of the
+inputs/outputs vertices to $\infty$ (NOTE: by removing vertices) for
+testing doing computation along deterministic
+direction/non-deterministic direction. Then we compare the probability
+of successfully finding the corresponding ground state under certain
+$T_0, R, \lambda$ and $\eta$. \textbf{We find that doing computation
+along the non-deterministic direction is harder than the other one}
+
+Next, we believe that for each layers's cooling process, we are
+essentially calculating a probability transition matrix $P(T,k)$,
+where $P(T,k)_{outputm, inputm}$ represent the probability that, given
+the input vertices state is $inputm$, the cooling process sets the
+output vertices state to $outputm$.
+
+Thanks to the translational invariant structure of our gadget and
+cooling process, we believe the matrix $P(T,k)$ is independent from
+$T$ and $k$, which give us an intuitation that if the failure
+probability of each layer's cooling process is $F$, the total success
+probability is $(1-F)^m$. \textbf{We test this in a 4-single-gadget
+per layer automaton and find this suit well.}
+
+Finally, we evaluate the error probability v.s. run time in a single
+layer 4-gadget automaton. Result listed as follows.
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{../notes/images/error vs runtime.png}
+\caption{Alt text}
+\end{figure}
+
+\subsubsection{Estimation of the computing time}\label{estimation-of-the-computing-time}
+
+Let the temperature of the $k$-th layer at time $t$ be
+$T(t, k) = T \lambda^{ct - k}$, where $T$ is the initial
+temperature, $c$ is a constant, and $\lambda < 1$ is a constant. At
+any given time $t$, we denote the subset of atoms at depth
+$-\frac{W}{2} < ct - k < \frac{W}{2}$ as the \textbf{active zone},
+where $W$ is the width of the sliding window such that
+$e^{-\Delta E_{max} /\lambda^{W/2}} = \epsilon \ll 1$. The active zone
+is the region where non-trivial computation occurs. The atoms outside
+the active zone are either frozen or completely randomized. Clearly,
+$W$ asymptotically scales as
+$(1-\lambda)^{-1} \log(-\frac{1}{\log\epsilon})$
+(NOTE:$W \sim \log_{\lambda}(-\frac{1}{\log{\epsilon}}) = \frac{\log(-\frac{1}{\log{\epsilon}})}{\log(\lambda)} \approx (1 - \lambda)^{-1}\log(-\frac{1}{\log \epsilon})$,
+the last term exists when $\lambda \lessapprox 1$).
+
+We consider thermalizing the system in units of $W$. $\epsilon$ is
+the error probability of each unit of time, which should scale as
+$\epsilon \sim\left(\frac{m}{W}\right)^{-1}$, where $m$ is the total
+number of time steps.
+
+The probability transition matrix of the active zone at any given time
+$t$ (except the starting and ending time) is the same, so we denote it
+as $P = P(t)$. The error tolerance requires the zone to be thermalized
+to certain extent,
+i.e.~$\left(\frac{\lambda_2(P)}{\lambda_1(P)}\right)^{t_{\text{th}}} < \epsilon$,
+where $\lambda_1(P) \geq \lambda_2(P)$ are the two largest eigenvalues
+of $P$. We have
+$t_{\text{th}} \sim \left(1-\frac{\lambda_2(P)}{\lambda_1(P)}\right)^{-1}\log(\epsilon^{-1})$.
+
+Under the assumption that
+$\left(1-\frac{\lambda_2(P)}{\lambda_1(P)}\right)\sim e^{-W}$, we have
+$t_{\text{th}} \sim e^{(1-\lambda)^{-1}}\log^2(\epsilon^{-1})$. The
+total time for the computation is
+$t_{\text{total}} \sim \left(\frac{m}{W}\right)\log^2(\frac{m}{W}) e^{(1-\lambda)^{-1}}$.
+
+\subsubsection{Temperature gradient and Energy
+gradient}\label{temperature-gradient-and-energy-gradient}
+
+Temperature gradient and energy gradient is indeed equal. One can simply
+make the following modification to the transition probability in the
+markov process and find the equality.
+
+\begin{equation}
+e^{-\frac{\Delta E_k}{T\lambda^{ct+k}}} = e^{-\frac{\Delta E_k(\frac{1}{\lambda})^k}{T\lambda^{ct}}} = e^{-\frac{\Delta E_k \Lambda^k}{T(t)}}
+\end{equation}
+
+The time complexity in $\Lambda$ form is apparently
+$T_{total} \sim \frac{m}{W}\log^2(\frac{m}{W})e^{(\Lambda-1)^{-1}}$
+
+The reason that we did this transform is that classical simulated
+annealing could only generate heat-equilibrilium Boltzmann Distribution,
+where the temperature must remain invariant across space.
+
+Time per computation scales as $E \sim \log^2 \frac{m}{W}$.
+
+One should notice that we used a important hypothesis that
+$(1-\frac{\lambda_2}{\lambda_1}) \sim e^{-W}$, which means that the
+spectral gap of the transition matrix has nothing to do with the width
+of a single layer. Should this exists? (\textbf{NOTE: should do some
+numerical experiments})
+
+\subsection{Algorithm beyond temperature
+gradient}\label{algorithm-beyond-temperature-gradient}
+
+Applying a huge energy gradient or temperature gradient to this material
+seems not a good idea when the system become larger.
+
+Inspired by the way clothes are ironed, we conceived the idea of slowly
+scanning a wave-shaped temperature curve from one end to the other. This
+method is widely used in studying the heating-recrystallization
+properties of real materials~\cite{Zhang2014}.
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{../notes/images/zhang2014.png}
+\caption{Alt text}
+\end{figure}
+
+There are various specific choices for the wave packet, such as
+power-law, exponential, and others. In this context, we primarily focus
+on a exponential wave packet, which can be directly linked to the
+concept of temperature gradient.
+
+A expoential wave packet with central position $middle(t)$, amplitude
+$A$ and base $\Lambda$, can be express as following.
+
+\[
+T(k,t) = A\Lambda^{|k-middle(t)|}
+\]
+
+So slowly moving the wave packet means slowly changing $middle(t)$
+
+Let's review the concept \textbf{active zone} defined earlier. When the
+temperature of the system is defined as
+$T_{tg}(k, t) = T\lambda^{ct-k}$, atoms in the active zone are those
+whose layer $k$ belongs to $k<ct - \frac{W}{2}$, where $W$ are
+given by
+$e^{-\frac{\Delta E_{max}}{\lambda^{\frac{W}{2}}}}\leq \epsilon$. For
+those $k<ct - \frac{W}{2}$, the probability that SA would flip an
+atom's state is no more than
+$e^{-\frac{\Delta E_{max}}{T\lambda^{ct}\lambda^{-ct + \frac{W}{2}}}}=e^{-\frac{\Delta E_{max}}{T\lambda^{\frac{W}{2}}}}\leq \epsilon^{\frac{1}{T}}$,
+which means these previous layer would stay ``frozen''. For those layer
+much deeper than $k = ct$, SA would just randomly flip them. These
+layer won't affect layers in active zone.
+
+Now turn our sight into the wave packet model, we can construct a
+similar concept \textbf{heat zone}. Layers in the heat zone are those
+$A\lambda^{|k-middle(t)|}\ge \epsilon\rightarrow middle(t) + \frac{\log(\epsilon)}{\log(\Lambda)}< k < middle(t) - \frac{\log(\epsilon)}{\log(\Lambda)}$.
+
+The layers that shallower than
+$middle(t) + \frac{\log(\epsilon)}{\log(\Lambda)}$ correspond to
+layers shallower than $ct-\frac{W}{2}$ in temperature gradient model,
+since they are both stay ``frozen''; layers between
+$middle(t) +\frac{\log(\epsilon)}{\log(\Lambda)}$ and $middle(t)$
+are effectively cooled down, which correspond to the \textbf{active
+zone}; layers deeper than $middle(t)$ are either randomly fliped or
+stay ``frozen'', but we don't care their state.
+
+Therefore, the wave packet model are just the same as the temperature
+gradient model, and is more likely to be realized physically.
+
+We also conducted a numerical simulation on the wave packet model with
+the same condition $\Lambda = 1.3$ and $width = 15$ and fitted the
+sweep time against $m\log^2(m)$. Result is listed as follows.
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{../notes/images/toy_model_wave_packet_time_vs_depth_1_3.png}
+\caption{Alt text}
+\end{figure}
+
+\subsubsection{Some details about non-equilibrium simulated
+annealing}\label{some-details-about-non-equilibrium-simulated-annealing}
+
+The classical simulated annealing can only deal with the situation that
+the temperature is space-invariant. Although there are many ways to
+simulated a real-world system with temperature gradient, such as
+Molecular Dynamics~\cite{Bai2015, Deng2006}, but
+these methods mainly depend on dynamically adjusting the atomic
+velocities to achieve a temperature gradient, which can't be directly
+used in our model.
+
+There are also Monte Carlo-based methods to simulate a moving
+temperature wave packet that facilitates material growth~\cite{Godfrey1995, Tan2017}.
+However, these methods fail to establish a direct connection between the simulated temperature and experimental
+temperature~\cite{Zollner2014}.
+Therefore, based on HeatBath acceptance rule, we made a slight modification to the classical SA model.
+
+When we flip one atom's state, there would be some energy difference
+$\Delta E_{i}$ in field $i$ with temperature $T_i$. The
+probability to accept this flip would be
+
+\begin{equation}
+P = \frac{1}{1 + e^{\sum_i \frac{\Delta E_i}{T_i}}}
+\end{equation}
+
+It is easily to observe that when the system returns to
+heat-equilibrium, the probability reverts to the classical HeatBath
+acceptance probability.
+
+\section{Numerical result}\label{sec:numerical-result}
+To determine large-scale effect, we mainly focus on the simple toy model in \Cref{eq:toy-hamiltonian}.
+
+We conducted numerical experiments under the condition
+$\Lambda = 1.3, n = 15$, and fitted each sweep time against
+$m \log^2(m)$. Where $m$ represents the number of the single layers,
+$n$ represents the width per single layer.
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{../notes/images/toy_model_gradient_time_vs_depth_1_3.png}
+\caption{Alt text}
+\end{figure}
+
+
+
+\section{Physical implementation on Ising machine}\label{spin-glass}
+
+To examine whether this model could achieve a better performance when
+using adiabatic methods, we need to generalize this energy function to
+some good hamiltonian. There has already been work on mapping
+combinatorial optimization problems to a spin-glass model (known as the
+Ising Machine) and leveraging the properties of digital devices that
+simulate this Ising Machine to find an appropriate ground state, which
+encodes computational information~\cite{Aadit2022,Bybee2023}.
+
+A spin-glass hamiltonian is described as follows.
+
+\begin{equation}
+H = \sum_{u,v \in E} J_{u,v}s_us_v + \sum_{i\in V}h_i s_i
+\end{equation}
+
+where $h_i$ is onsite energy, $J_{u,v}$ is interaction energy and
+$s_i \in \{-1, 1\}$ is local spin. The mapped spin-glass model should
+possess propertys that it has exactly 8 ground states, each correspond
+to one input-output relation in Cellular Automata.
+
+\subsection{Ising machine gadget design}\label{sec:gadget-design}
+To map our toy model in \Cref{eq:toy-hamiltonian} to
+spin-glass model, we used Linear Programming algorithm.
+Linear problems are problems that can be express in standard form as
+
+\begin{equation}
+    \begin{split}
+        &\min_{x \in \mathbb{R}^n} \sum_{i=1}^n c_ix_i\\
+        &\text{s.t. } l_j \leq \sum_{i=1}^n a_{i,j}x_i \leq u_j, \; j=1,\ldots,m\\
+        &p_i \leq x_i \leq q_i, \; i=1,\ldots, n
+    \end{split}
+\end{equation}
+
+Here with a spin-glass consists $N$ atoms, we choose $n$ to be
+$\frac{N(N-1)}{2} + N$, which means each variable $x_i$ represents a
+correspond interaction energy $J_{u, v}$ or a correspond onsite energy
+$h_u$, we assigned aliases to these $x_i$ as $x_{u,v}$ or
+$x_{u}$.
+
+Let the configuration space of the system be
+$S = {\mathbf s_i\mid i=1,\ldots, 2^N}$, each associated with a
+energy $H(\mathbf s_i)$. We denote the target states with minimum
+energy as $S_{\text{min}} \subset S$. We can express the linear
+programming problem as
+
+\begin{equation}
+    \begin{split}
+        &\min_{J \in \mathbb{R}^{N(N{-}1)/2}, h\in \mathbb{R}^N} 0\\
+        &H(\mathbf s_i) < H(\mathbf s_j), \forall \mathbf s_i \in S_{\text{min}}, \mathbf s_j \in S \setminus S_{\text{min}}\\
+        &H(\mathbf s_i) = H(\mathbf s_j), \forall \mathbf s_i, \mathbf s_j \in S_{\text{min}}
+    \end{split}
+\end{equation}
+
+Note that $H$ is a linear function of $J$ and $h$, so the
+constraints are linear. The less constraints and equality constraints
+can be easily transformed into inequality constraints by adding ancilla
+variables.
+
+There is no solution with 4-atoms spin-glass that can satisfy the
+constraints. The minimum number of atoms required to satisfy the
+constraints is 5. We set the target states to
+
+\begin{table}
+    \centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+input 1 & input 2 & input 3 & output & ancilla \\
+\hline
+$\downarrow$ & $\downarrow$ & $\downarrow$ & $\downarrow$ & $?$ \\
+$\downarrow$ & $\downarrow$ & $\uparrow$ & $\uparrow$ & $?$ \\
+$\downarrow$ & $\uparrow$ & $\downarrow$ & $\uparrow$ & $?$ \\
+$\downarrow$ & $\uparrow$ & $\uparrow$ & $\uparrow$ & $?$ \\
+$\uparrow$ & $\downarrow$ & $\downarrow$ & $\downarrow$ & $?$ \\
+$\uparrow$ & $\downarrow$ & $\uparrow$ & $\uparrow$ & $?$ \\
+$\uparrow$ & $\uparrow$ & $\downarrow$ & $\uparrow$ & $?$ \\
+$\uparrow$ & $\uparrow$ & $\uparrow$ & $\downarrow$ & $?$ \\
+\hline
+\end{tabular}
+\caption{The eight degenerate ground states of the spin-glass model to implement the $110$ rule.}
+\end{table}
+
+where the ancilla bit in each row can be either $\uparrow$ or
+$\downarrow$ (256 total possibilities). One of the solutions
+satisfying the constraints is
+
+\begin{equation}
+J = \begin{pmatrix}
+~\cdot~ & ~1~ & ~1~ & ~2~ & ~3~\\
+\cdot & \cdot & 2 & 2 & 5\\
+\cdot & \cdot & \cdot & 2 & 5\\
+\cdot & \cdot & \cdot & \cdot & 6\\
+\cdot & \cdot & \cdot & \cdot & \cdot
+\end{pmatrix}, h = \begin{pmatrix}
+~1~\\
+2\\
+2\\
+2\\
+5
+\end{pmatrix}
+\end{equation}
+
+\subsubsection{Numerical result}\label{numerical-result-1}
+
+\section{Discussion and Outlook}
+Connect real-world thermalization time and the simulated annealing time to explore the connection between time and energy cost per computation.
+The emergence of wisdom?
+
+\begin{acknowledgments}
+    We thank Lei Wang, Madelyn Cain and XXX for helpful discussions on the simulation methods.
+\end{acknowledgments}
+
+%\bibliographystyle{apsrev4-1}
+\bibliography{refs.bib}
+
+\newpage
+\appendix
+
+\section{The implmentation in Rydberg atoms array}\label{physical-model-rydberg-atoms-array}
+
+\textbf{Statement 1}: The classical part of Rydberg Hamiltonian encodes
+an independent set problem.
+
+The Rydberg Hamiltonian~\cite{Nguyen2023} is defined as
+
+\begin{equation}
+    H_{\text{Ryd}} = \sum_v \dfrac{\Omega_v}{2} \sigma^x_v -\sum_v \Delta_v n_v + \sum_{v < w}  V_{\text{Ryd}}(|\overrightarrow{\mathbf{r}_v} -\overrightarrow{\mathbf{r}_w}|)n_v n_w.
+\end{equation}
+
+where $\Omega_v$ is the Rabi frequency, $\Delta_v$ is the detuning,
+$n_v = \dfrac{1}{2}(1 - \sigma^z_v)$ is the number operator, and
+$V_{\text{Ryd}}(|\overrightarrow{\mathbf{r}_v} - \overrightarrow{\mathbf{r}_w}|) = C_6/|\overrightarrow{\mathbf{r}_v} - \overrightarrow{\mathbf{r}_w}|^6$
+is the Rydberg interaction potential.
+
+The classical part of which can be written as
+
+\begin{equation}
+H_{\text{MWIS}} = -\sum_{v \in V}\delta_v n_v + \sum_{(u, v) \in E} U_{uv} n_u n_v.
+\end{equation}
+
+The ground state of which encodes the maximum weight independent set
+(MWIS) problem.
+
+\begin{quote}
+Wikipedia: In graph theory, a maximal independent set (MIS) or maximal
+stable set is an independent set that is not a subset of any other
+independent set. In other words, there is no vertex outside the
+independent set that may join it because it is maximal with respect to
+the independent set property.
+\end{quote}
+
+\textbf{Statement 2}: Finding the ground state of the classical part of
+the Rydberg Hamiltonian is equivalent to finding the maximum weight
+independent set.
+
+\subsubsection{Energy based universal computation with Rydberg atoms
+array}\label{energy-based-universal-computation-with-rydberg-atoms-array}
+
+\textbf{Statement 3}: The classical Rydberg Hamiltonian is universal for classical computation.
+
+The NOR gate can be implemented using the Rydberg Hamiltonian (subfigure
+c below). The NOR gate is a universal gate for classical computation.
+\includegraphics[width=\columnwidth]{../notes/images/gadgets.png}
+
+The conjunction of gates can be implemented by ``gluing'' the Rydberg
+atoms together (subfigure d below). The weights are added together.
+
+For more logic gates, please check the GitHub repository
+\href{https://github.com/QuEraComputing/UnitDiskMapping.jl/blob/main/test/logicgates.jl}{UnitDiskMapping.jl}.
+
+\subsubsection{Cooling the Rydberg Hamiltonian}\label{cooling-the-rydberg-hamiltonian}
+
+\textbf{Statement 4}: The Rydberg Hamiltonian, if cooled successfully
+with some vertices fixed to certain configuration, can be used to solve
+the circuit satisfiability problem, which is NP-complete~\cite{Moore2011}.
+
+$P \neq NP$: Cooling is generally hard, especially when from the
+non-deterministic direction.
+
+\subsubsection{The Rule 110 Gadget}\label{the-rule-110-gadget}
+
+We can encode the Rule 110 cellular automaton into a Weighted Maximum
+Independent Set Problem, with blue vertices assigned a weight of 1 and
+red vertices assigned a weight of 2, as follows.
+
+\includegraphics[width=0.6\columnwidth]{../notes/images/image.png}
+
+This graph can be embedded into a grid graph, where two vertices are
+connected if and only if their Euclidean distance is no more than $2$.
+
+\includegraphics[width=0.7\columnwidth]{../notes/images/image-1.png}
+
+The correspondence between the Maximum Weighted Independent Set (MWIS)
+Solution and Rule 110 is as follows:
+
+The states of vertex \textbf{1}, vertex \textbf{3}, and vertex
+\textbf{8} represent the states of the \textbf{middle}, \textbf{left},
+and \textbf{right} cells of the automaton's \textbf{input},
+respectively. If the input value of a cell is 1, then the corresponding
+vertex must be in the MWIS solution; otherwise, it is not. Vertex
+\textbf{12} corresponds to the automaton's \textbf{output}. If the
+automaton output is 1, then vertex 12 is in the MWIS solution;
+otherwise, it is not.
+
+In the automaton diagram, the above gadget is equivalent to:
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{../notes/images/rule110.png}
+\caption{Alt text}
+\end{figure}
+
+There are exactly \textbf{8} different MWIS solutions in this graph (the
+weighted size of each MWIS solution is 7), each corresponding to one of
+the \textbf{8} possible outputs of the automaton. We list them as
+follows.
+\includegraphics[width=\columnwidth]{../notes/images/gadget110.png}
+
+Utilizing copy gadget and cross gadget~\cite{Nguyen2023}, we construct a \textbf{Surface Programmable Material} with open boundary conditions as follows.
+
+\begin{figure}
+\centering
+\includesvg[width=\columnwidth]{../notes/images/rule110transvarient.svg}
+\caption{Alt text}
+\end{figure}
+
+The above gadget depicts a two-layer cellular automaton. The vertices in
+blue, red, green and black have weights of 1, 2, 3 and 4, respectively.
+In the automaton diagram, the above gadget is equivalent to:
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{../notes/images/rule110_2-2_automaton.png}
+\caption{Alt text}
+\end{figure}
+
+\subsection{Speed and work}\label{speed-and-work}
+
+The trade-off between the energy consumption and the speed of
+computation~\cite{Feynman2018}. To avoid confusion, we emphasize the
+``energy consumption'' is defined as the work done in a computational
+process, which is the same as the amount of heat dissipated to the
+environment. This quantity has a lower bound given by the Landauer
+principle, which states that the work done in a computation is at least
+$kT\ln 2$ per bit erased\cite{Reeb2014}.
+
+Information erasure in the surface programmable material is proportional
+to the volume of the material, which is $O(tS)$, where $t$ is the
+time of computation, and $S$ is memory (proportional to the surface
+area) of the material.
+
+From the chemical reaction perspective, the speed of computation is
+determined by the parameter $\lambda$.
+
+\subsubsection{Quantum adiabatic annealing energy gap}\label{quantum-adiabatic-annealing-energy-gap}
+
+One possible way is to use quantum adiabatic annealing: start from a
+simple hamiltonian $H(0)$ and its simple ground state
+$|\psi(0)\rangle$, then gradually change the parameters until reaching
+the desire hamiltonian $H(t)$.
+
+More specifically, set $\Delta(t=0) <0$ and $\Omega(t=0) =0$
+initially, then first turning on $\Omega(t)$ to a non-zero value,
+sweeping $\Delta(t)$ to final value, and finally turning off
+$\Omega(t)$.
+
+\begin{equation}
+H_{QAA}(t) = \sum_{v\in V} (-\Delta(t)w_v \hat n_v + \Omega(t)\sigma_{v}^x) + \sum_{(u,w) \in E} U\hat n_u \hat n_w
+\end{equation}
+
+If the time evolution is sufficiently slow, then by the adiabatic
+theorem, the system follows the instantaneous ground state, ending up in
+the solution to the MWIS problem~\cite{Pichler2018}.
+Then we only need to evalute
+the minimum energy gap $\Delta_{QAA}$ between the ground and
+first-excited states of instantaneous hamiltonian.
+
+We set $\Omega = 1 \times 2\pi$ and sweep the $\Delta$ from $3
+\times 2\pi$ to $40 \times 2\pi$ with 1*1 gadget. For deterministic
+direction, we simply set the weight of the input vertices to $50$; as
+for non-deterministic direction, we set the weight of the output vertice
+to $50$.
+
+Result listed as follows. \textbf{However, we didn't see cooling from
+deterministic direction would give a smaller energy gap than the other
+direction. We think that's because the size of this gadget is too
+small.}
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{../notes/images/energy_gap_1_gadget.png}
+\caption{Alt text}
+\end{figure}
+
+\section{Classical Dynamics}\label{classical-dynamics-1}
+We firstly tried classical adiabatic annealing with the classical-spin
+mapping method~\cite{Wang2013}
+\begin{equation}
+\frac{\partial \vec M_i}{\partial t} = \vec M_{i} \times \vec H_{i}(t)
+\end{equation}
+
+where
+
+\begin{equation}
+\vec H_i(t) = -\frac{\partial H(t)}{\partial \vec M_i} 
+\end{equation}
+
+Here the hamiltonian of the system is
+
+\begin{equation}
+H(t) = \frac{t}{T}(\sum_{u,v}J_{u,v} M_{u,z}M_{v,z} + \sum_{u} h_u M_{u, z}) + (1-\frac{t}{T})(I\sum_{u}M_{u,x})
+\end{equation}
+
+The former term is the generally increasing target hamiltonian, the
+latter term is a generally decreasing known Ising-transverse field. We
+can explicitly write out the effective magnetic field.
+
+\[
+\vec H_{i}(t) = -\frac{t}{T}(\sum_{v}J_{i, v}M_{v,z} + h_i)\hat e_z - (1-\frac{t}{T})I\hat e_x
+\]
+
+Integrate the ordinary differential equation then we get the classical
+dynamics of this spin-glass model. However, result shows that it is
+extremely hard to find the solution when the number of layers exceed
+$4$ (input layer is pinned).
+
+The reason maybe that the mapped spin-glass model lies in the hard
+region in ~\cite{Wang2013}. Because every interaction energy is positive, which
+gives rise to strong frustration. Results in this reference also shows that even in
+random spin-glass model, there exist hard instance that can't be solve.
+
+
+
+\end{document}
+
+\end{document}
