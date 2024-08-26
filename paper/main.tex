@@ -25,7 +25,7 @@
 \renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm  
 
 
-\newcommand{\jgl}[1]{[{\color{green}{JGL: #1}}]}
+\newcommand{\jgl}[1]{[{\color{blue}{JGL: #1}}]}
 \newcommand{\s}{\mathbf {s}}
 \newcommand{\net}[1]{{\textsc{#1}}}
 \newcommand{\argmin}{\mathop{\mathrm{argmin}}\limits}
@@ -52,6 +52,16 @@
 \textbf{Definition: (Surface programmable material)}: a lattice (with
 translational invariance) model that can be programmed on its surfaces
 to perform universal computation.
+
+\jgl{Please cover the following topics: \begin{enumerate}
+    \item Computational models driven by the thermodynamics (cooling, or lowering the free energy), i.e. Brownian machine, such as DNA and Ising machine.
+    \item Potential advantages: energy saving, parallelism, no size limits (robust to quantum effects). Disadvantages: slow, error-prone.
+    \item Two approaches to lower the free energy: entropy driven, or energy based modeling. Embedding a computational model to energy models, the non-deterministic version: Circuit SAT, QUBO, Spin-Glass and Ising machine.
+    \item Crutial issue of energy based model, hard to thermalize, hard to prepare.
+    \item Crystal based computing: Cellular automata as a computational model.
+    \item The method to thermalize, inspired from crystalization and heat zone.
+\end{enumerate}
+}
 
 \section{Model and Method}
 \subsection{Elementary cellular automaton}\label{elementary-cellular-automaton}
@@ -87,11 +97,11 @@ computation.
 
 \subsection{Energy model}\label{a-2d-surface-programmable-material}
 
-Let us define a model Hamiltonian on a 2D lattice as
+Let us define a model Hamiltonian on a 2D lattice of size $S \times T$ as
 \begin{equation}\label{eq:toy-hamiltonian}
-H = \sum_{\text{each gadget}} (n_{i+1, t} \land \neg(n_{i, t} \land \neg n_{i-1, t})) \veebar n_{i,t+1},
+H = \sum_{t=1}^{T-1}\sum_{i=1}^{S} (n_{i+1, t} \land \neg(n_{i, t} \land \neg n_{i-1, t})) \veebar n_{i,t+1},
 \end{equation}
-where $n_{i, t} \in \{0, 1\}$ is the state of the cell at row $i$ and column $t$.
+where $n_{i, t} \in \{0, 1\}$ is the state of the cell at row $i$ and column $t$, the boundary is periodic in the space direction, i.e. $n_{0, t} = n_{S, t}$.
 Its ground state with energy $0$ encodes a $110$ cellular automaton, where the direction of computation is from the left to right.
 
 The gadget we constructed based on the Rule 110 cellular automaton
