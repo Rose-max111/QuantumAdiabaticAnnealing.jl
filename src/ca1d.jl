@@ -5,3 +5,4 @@ function logic_gate(::CellularAutomata1D{N}, p, q, r) where N
     return (N >> (p << 2 | q << 1 | r)) & 1
 end
 rule110(p, q, r) = logic_gate(CellularAutomata1D{110}(), p, q, r)
+rule150(p, q, r) = logic_gate(CellularAutomata1D{150}(), p, q, r)

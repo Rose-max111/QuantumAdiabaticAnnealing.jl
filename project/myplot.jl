@@ -13,7 +13,7 @@ evaluate_time = Vector{Float64}()
 #     end
 # end
 
-graph_depth = [6, 8, 10, 12, 15, 18, 22, 25, 28, 31, 34, 36]
+graph_depth = [6, 8, 10, 15, 18, 22, 25, 28, 31, 34, 36, 39, 42, 45, 48, 50]
 λ = 1.5
 for d in graph_depth
     filepath = joinpath(@__DIR__, "data_toymodel/W=$(graph_width)_D=$(d)_E=$(λ).txt")
