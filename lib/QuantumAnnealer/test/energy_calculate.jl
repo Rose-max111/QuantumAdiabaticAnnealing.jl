@@ -1,15 +1,70 @@
-using QuantumAdiabaticAnnealing, Test
-using QuantumAdiabaticAnnealing.QuantumAnnealing: get_low_energy_state, get_low_energy_state_gpu
-using QuantumAdiabaticAnnealing: generate_random_lattice
-using Bloqade, KrylovKit
-using Bloqade: AtomList, rydberg_h
+using Test
+using QuantumAnnealer
+using KrylovKit
+using BloqadeLattices: AtomList
+using BloqadeExpr: rydberg_h
 using KrylovKit: eigsolve
-using CUDA; CUDA.allowscalar(false)
 
-@testset "distance" begin
-    @test distance((0,0), (3,4)) ≈ 5.0
-    @test distance((-1,-2), (3,1)) ≈ 5.0
+function generate_some_graph()
+
+    origin_graph = [(4,2),
+    (2,6),
+    (6,8),
+    (10,6),
+    (8,2),
+    (0,6),
+    (14,6),
+    (6,12),
+    (20,6),
+    (24,6),
+    (28,8),
+    (32,6),
+    (36,6),
+    (30,2),
+    (26,2),
+    (28,12),
+    (10,14),
+    (26,14),
+    (14,16),
+    (16,12),
+    (20,12),
+    (22,16),
+    (18,18)]
+
+    weights = [1,
+    2,
+    2,
+    2,
+    1,
+    1,
+    1,
+    2,
+    1,
+    2,
+    2,
+    2,
+    1,
+    1,
+    1,
+    2,
+    2,
+    2,
+    2,
+    1,
+    1,
+    2,
+    1]
+
+
+    vaild = ones(length(weights))
+    vaild[[6, 2, 4, 7, 9, 13]] .= 0
+    # vaild[end] = 0
+
+    new_graph = [tuple(float(origin_graph[i][1]), float(origin_graph[i][2])) for i in 1:length(vaild) if vaild[i] == 1.0]
+    new_weight = [weights[i] for i in 1:length(vaild) if vaild[i] == 1.0]
+    return new_graph, new_weight
 end
+
 
 @testset "get_low_energy_state" begin
     new_graph_nodes, new_graph_weights = generate_some_graph()
@@ -17,7 +72,7 @@ end
     Δ = fill(30 * 2π, length(new_graph_nodes))
     Ω = fill(4 * 2π, length(new_graph_nodes))
 
-    dmrg_energy,psi= get_low_energy_state_gpu(Δ, Ω, new_graph_nodes;outputlevel = 1)
+    dmrg_energy,psi= get_low_energy_state(Δ, Ω, new_graph_nodes;outputlevel = 1)
     @show dmrg_energy
 
     H0 = rydberg_h(AtomList(new_graph_nodes), Ω = Ω, Δ = Δ)

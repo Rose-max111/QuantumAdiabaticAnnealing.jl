@@ -1,19 +1,13 @@
-module QuantumAnnealing
-
-using BloqadeExpr, ITensors
-
-export state_energy_calculation, Hamiltonian_energy_plot, pulse_energy_plot, get_low_energy_state
-
 function van_der_waals_potential(u, v; C=862690)
     d2 = (u[1] - v[1])^2 + (u[2] - v[2])^2
-    return 2*π*C / d2^2
+    return 2*π*C / d2^3
 end
 
 function state_energy_calculation(state, Δ, T_set, nodes)
     energy = 0.0
     for i in eachindex(state)
         for j in (i+1):length(state)
-            if state[i] == state[j] && state[i] == 1
+            if state[i] == state[j] == 1
                 energy += van_der_waals_potential(nodes[i], nodes[j])
             end
         end
@@ -32,11 +26,7 @@ function Hamiltonian_energy_plot(hamiltonian, T_max, T_step, howmany; subspace =
     val = []
     for t in clocks
         h = hamiltonian |> attime(t)
-        if subspace === nothing
-            mat_h = mat(h)
-        else
-            mat_h = mat(h, subspace)
-        end
+        mat_h = subspace === nothing ? mat(h) : mat(h, subspace)
         eigvals, eigvecs, info = eigsolve(mat_h, rand(Float64, size(mat_h, 1)), howmany, :SR; tol = 1e-7, maxiter = 5000)
         append!(val, [eigvals])
         if outputwhich === nothing
@@ -152,4 +142,4 @@ function get_low_energy_state_gpu(Δ, Ω, nodes; outputlevel = 0)
     sort!(energy)
     return energy, psi_pre
 end
-end
+

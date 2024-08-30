@@ -1,11 +1,12 @@
 using QuantumAdiabaticAnnealing
 using QuantumAdiabaticAnnealing: random_state, calculate_energy
-using QuantumAdiabaticAnnealing: track_equilibration_gausspulse_gpu!
+using QuantumAdiabaticAnnealing: track_equilibration_gausspulse_gpu!, track_equilibration_gausspulse_reverse_cpu!
 using CUDA
+using QuantumAdiabaticAnnealing: get_parallel_flip_id
 
 function evaluate_50percent_time_cpu(width::Integer, depth::Integer, gauss_width, energy_gradient)
     sa = SimulatedAnnealingHamiltonian(width, depth)
-    nbatch = 1000
+    nbatch = 5000
 
     anneal_time = 0
     max_try = 2
@@ -15,7 +16,7 @@ function evaluate_50percent_time_cpu(width::Integer, depth::Integer, gauss_width
         state = random_state(sa, nbatch)
         @info "Stage1, max_try = $max_try, next_try = $next_try, begin annealing"
         # @info "$Temp_sa"
-        @time track_equilibration_gausspulse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, gauss_width, next_try)
+        @time track_equilibration_gausspulse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, gauss_width, next_try; accelerate_flip = true)
         @info "finish annealing"
 
         state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
@@ -38,7 +39,7 @@ function evaluate_50percent_time_cpu(width::Integer, depth::Integer, gauss_width
         state = random_state(sa, nbatch)
         @info "Stage2, max_try = $max_try, next_try = $next_try, begin annealing"
         # @info "$Temp_sa"
-        @time track_equilibration_gausspulse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, gauss_width, next_try)
+        @time track_equilibration_gausspulse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, gauss_width, next_try; accelerate_flip = true)
         @info "finish annealing"
 
         state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
@@ -110,6 +111,7 @@ function evaluate_50percent_time_gpu(width::Integer, depth::Integer, gauss_width
     return anneal_time + 1
 end
 
+# evaluate_50percent_time_cpu(12, 8, 1.0, 1.5)
 
 width = ARGS[1]
 depth = ARGS[2]

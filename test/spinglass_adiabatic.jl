@@ -2,46 +2,51 @@ using Test
 using DormandPrince
 using DifferentialEquations
 using QuantumAdiabaticAnnealing
-using QuantumAdiabaticAnnealing: initialvector, spinglass_mapping, vector2sp, spingls!, runge_kutta_integrate!, euclidean_integrate!, fcn, freeze_input!
-using QuantumAdiabaticAnnealing: printsp, sp_energy
-using QuantumAdiabaticAnnealing: instantaneous_field, instantaneous_field_autodiff
+using QuantumAdiabaticAnnealing: spinglass_mapping, runge_kutta_integrate, euclidean_integrate, Point3D
+using QuantumAdiabaticAnnealing: sp_energy
+using QuantumAdiabaticAnnealing: instantaneous_field!, instantaneous_field_autodiff, wrap_data, unwrap_data, vectorgradient!, nspin
+using Random
 
 @testset "integrater_double_check" begin
     Tmax = 1000.0
-    init_dp5 = initialvector(Tmax, 3, 4;gradient=1.0)
-    init_dp8 = initialvector(Tmax, 3, 4;gradient=1.0)
-    solver5 = DP5Solver(fcn, 0.0, init_dp5; atol=1e-12, rtol=1e-12, maximum_allowed_steps=20000000)
+    sg = spinglass_mapping(3, 4)
+    M = QuantumAdiabaticAnnealing.init_state(sg)
+    cache = QuantumAdiabaticAnnealing.SpinGlassModelCache(nspin(sg))
+    init_dp5 = unwrap_data(M)
+    solver5 = DP5Solver(0.0, init_dp5; atol=1e-12, rtol=1e-12, maximum_allowed_steps=20000000) do t, y, field
+        vectorgradient!(field, M, sg, cache, y, t; Tmax)
+    end
     @time integrate!(solver5, Tmax)
-    solver8 = DP8Solver(fcn, 0.0, init_dp8; atol=1e-12, rtol=1e-12, maximum_allowed_steps=5000000)
+
+    M = QuantumAdiabaticAnnealing.init_state(sg)
+    cache = QuantumAdiabaticAnnealing.SpinGlassModelCache(nspin(sg))
+    init_dp8 = unwrap_data(M)
+    solver8 = DP8Solver(0.0, init_dp8; atol=1e-12, rtol=1e-12, maximum_allowed_steps=5000000) do t, y, field
+        vectorgradient!(field, M, sg, cache, y, t; Tmax)
+    end
     @time integrate!(solver8, Tmax)
 
-    init_de = initialvector(Tmax, 3, 4;gradient=1.0)
+    M = QuantumAdiabaticAnnealing.init_state(sg)
+    cache = QuantumAdiabaticAnnealing.SpinGlassModelCache(nspin(sg))
+    init_de = unwrap_data(M)
     # cb = ManifoldProjection(gproject)
     tspan = (0.0, Tmax)
-    prob = ODEProblem(spingls!, init_de, tspan)
+    prob = ODEProblem(init_de, tspan) do du, u, p, t
+        vectorgradient!(du, M, sg, cache, u, t; Tmax)
+    end
+
     @time sol = DifferentialEquations.solve(prob, Vern7(), reltol = 1e-12, abstol=1e-12)
 
-    sp_this5 = vector2sp(get_current_state(solver5))
-    sp_this8 = vector2sp(get_current_state(solver8))
-    sp_de = vector2sp(sol[end])
-
-    # for i in 1:length(sp_this5.onsite)
-    #     for j in 1:3
-    #         @test abs(sp_this5.M[i][j] - sp_de.M[i][j]) <= 1e-1
-    #         @test abs(sp_this8.M[i][j] - sp_de.M[i][j]) <= 1e-1
-    #         @test abs(sp_this5.M[i][j] - sp_this8.M[i][j]) <= 1e-1
-    #     end
-    # end
+    sp_this5 = wrap_data(get_current_state(solver5))
+    sp_this8 = wrap_data(get_current_state(solver8))
+    sp_de = wrap_data(sol[end])
 
     @info "dp5 solution"
-    printsp(sp_this5)
-    println(sp_energy(sp_this5, Tmax, Tmax, fill(1.0, length(sp_this5.onsite))))
+    println(sp_energy(sg, sp_this5, Tmax, Tmax, fill(1.0, length(sg.onsite))))
     @info "dp8 solution"
-    printsp(sp_this8)
-    println(sp_energy(sp_this8, Tmax, Tmax, fill(1.0, length(sp_this5.onsite))))
+    println(sp_energy(sg, sp_this8, Tmax, Tmax, fill(1.0, length(sg.onsite))))
     @info "de solution"
-    printsp(sp_de)
-    println(sp_energy(sp_de, Tmax, Tmax, fill(1.0, length(sp_this5.onsite))))
+    println(sp_energy(sg, sp_de, Tmax, Tmax, fill(1.0, length(sg.onsite))))
 end
 
 @testset "runge_kutta_vs_integrator" begin
@@ -49,19 +54,22 @@ end
     n=3
     m=3
     gradient = 1.0
-    init_dp8 = initialvector(Tmax, n, m;gradient=gradient)
-    solver8 = DP8Solver(fcn, 0.0, init_dp8; atol=1e-10, rtol=1e-10, maximum_allowed_steps=5000000)
-    @time integrate!(solver8, Tmax)
-    sp_dp8 = vector2sp(get_current_state(solver8))
-
     sp_rk = spinglass_mapping(n, m; gradient=gradient)
-    freeze_input!(sp_rk)
+    M = QuantumAdiabaticAnnealing.init_state(sp_rk)
+    cache = QuantumAdiabaticAnnealing.SpinGlassModelCache(nspin(sp_rk))
+    init_dp8 = unwrap_data(M)
+    solver8 = DP8Solver(0.0, init_dp8; atol=1e-10, rtol=1e-10, maximum_allowed_steps=5000000) do t, y, field
+        vectorgradient!(field, M, sp_rk, cache, y, t; Tmax)
+    end
+    @time integrate!(solver8, Tmax)
+    sp_dp8 = QuantumAdiabaticAnnealing.wrap_data(get_current_state(solver8))
+
     Vtrans = fill(1.0, length(sp_rk.onsite))
-    @time runge_kutta_integrate!(sp_rk, 1e-4, Tmax, Vtrans; T_end = Tmax)
+    MS, _ = @time runge_kutta_integrate(sp_rk, 1e-4, Tmax, Vtrans; T_end = Tmax)
 
     for i in 1:length(sp_rk.onsite)
         for j in 1:3
-            @test abs(sp_rk.M[i][j] - sp_dp8.M[i][j]) <= 1e-3
+            @test abs(sp_dp8[i][j] - MS[end][i][j]) <= 1e-3
         end
     end
 end
@@ -70,12 +78,12 @@ end
     sp_r1 = spinglass_mapping(4, 2)
     sp_r2 = spinglass_mapping(4, 2)
     Vtrans = fill(1.0, length(sp_r1.onsite))
-    runge_kutta_integrate!(sp_r1, 1e-4, 100.0, Vtrans; T_end = 100.0)
-    runge_kutta_integrate!(sp_r2, 1e-3, 100.0, Vtrans; T_end = 100.0)
+    MS1, _ = runge_kutta_integrate(sp_r1, 1e-4, 100.0, Vtrans; T_end = 100.0)
+    MS2, _ = runge_kutta_integrate(sp_r2, 1e-3, 100.0, Vtrans; T_end = 100.0)
 
     for i in 1:length(sp_r1.onsite)
         for j in 1:3
-            @test abs(sp_r1.M[i][j] - sp_r2.M[i][j]) <= 1e-5
+            @test abs(MS1[end][i][j] - MS2[end][i][j]) <= 1e-5
         end
     end
 end
@@ -84,12 +92,12 @@ end
     sp_r = spinglass_mapping(3, 2)
     sp_e = spinglass_mapping(3, 2)
     Vtrans = fill(1.0, length(sp_r.onsite))
-    runge_kutta_integrate!(sp_r, 1e-2, 10.0, Vtrans)
-    euclidean_integrate!(sp_e, 1e-6, 10.0, Vtrans)
+    MS, _ = runge_kutta_integrate(sp_r, 1e-2, 10.0, Vtrans)
+    MU = euclidean_integrate(sp_e, 1e-6, 10.0, Vtrans)
 
     for i in 1:length(sp_r.onsite)
         for j in 1:3
-            @test abs(sp_r.M[i][j] - sp_e.M[i][j]) <= 1e-2
+            @test abs(MS[end][i][j] - MU[i][j]) <= 1e-2
         end
     end
 end
@@ -166,31 +174,22 @@ end
     m=5
     sp = spinglass_mapping(3, 5)
     for edge in sp.edges
-        i, j, w = edge[1], edge[2], edge[3]
+        i, j, w = edge.src, edge.dst, edge.weight
         @test i <= n*m || j<=n*m # no ancilla connection
     end
-    sp = spinglass_mappint(1, 1)
-    sp_gs = sp_energy(sp)
 end
 
-using Random
 @testset "autodiff vs exact" begin
     sp=spinglass_mapping(3, 4)
-    for i in 1:length(sp.onsite)
-        sp.M[i]=Point(rand()*2-1, rand()*2-1, rand()*2-1)
-    end
-    @info "sp.M[1] = $(sp.M[1])"
+    M = [Point(rand()*2-1, rand()*2-1, rand()*2-1) for i in 1:length(sp.onsite)]
+    @info "M[1] = $(M[1])"
     Vtrans = fill(1.0, length(sp.onsite))
     Tmax = 10.0
     this_t = 3.0
-    H_autodiff = instantaneous_field_autodiff(sp, this_t, Tmax, Vtrans)
-    H_exact = instantaneous_field(sp, this_t, Tmax, Vtrans)
-    
-    for i in 1:length(sp.onsite)
-        for j in 1:3
-            @test abs(H_exact[i][j] - H_autodiff[i][j]) <= 1e-6
-        end
-    end
+    H_autodiff = instantaneous_field_autodiff(sp, M, this_t, Tmax, Vtrans)
+    H_exact = zeros(Point3D{Float64}, length(sp.onsite))
+    instantaneous_field!(H_exact, sp, M, this_t, Tmax, Vtrans)
+    @test all(isapprox.(H_autodiff, H_exact))
 end
 
 @testset "singlemodel" begin
