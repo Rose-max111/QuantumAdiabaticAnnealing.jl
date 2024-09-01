@@ -1,10 +1,10 @@
 using QuantumAdiabaticAnnealing
 using QuantumAdiabaticAnnealing: random_state, calculate_energy
-using QuantumAdiabaticAnnealing: track_equilibration_gausspulse_gpu!, track_equilibration_gausspulse_reverse_cpu!
+using QuantumAdiabaticAnnealing: track_equilibration_pulse_gpu!, track_equilibration_pulse_reverse_cpu!
 using CUDA
 using QuantumAdiabaticAnnealing: get_parallel_flip_id
 
-function evaluate_50percent_time_cpu(width::Integer, depth::Integer, gauss_width, energy_gradient)
+function evaluate_50percent_time_cpu(temprule::TempcomputeRule, width::Integer, depth::Integer, gauss_width, energy_gradient)
     sa = SimulatedAnnealingHamiltonian(width, depth)
     nbatch = 5000
 
@@ -16,7 +16,7 @@ function evaluate_50percent_time_cpu(width::Integer, depth::Integer, gauss_width
         state = random_state(sa, nbatch)
         @info "Stage1, max_try = $max_try, next_try = $next_try, begin annealing"
         # @info "$Temp_sa"
-        @time track_equilibration_gausspulse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, gauss_width, next_try; accelerate_flip = true)
+        @time track_equilibration_pulse_cpu!(HeatBath(), temprule, sa, state, energy_gradient, 10.0, gauss_width, next_try; accelerate_flip = true)
         @info "finish annealing"
 
         state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
@@ -39,7 +39,7 @@ function evaluate_50percent_time_cpu(width::Integer, depth::Integer, gauss_width
         state = random_state(sa, nbatch)
         @info "Stage2, max_try = $max_try, next_try = $next_try, begin annealing"
         # @info "$Temp_sa"
-        @time track_equilibration_gausspulse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, gauss_width, next_try; accelerate_flip = true)
+        @time track_equilibration_pulse_cpu!(HeatBath(), temprule, sa, state, energy_gradient, 10.0, gauss_width, next_try; accelerate_flip = true)
         @info "finish annealing"
 
         state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
@@ -57,7 +57,7 @@ function evaluate_50percent_time_cpu(width::Integer, depth::Integer, gauss_width
 end
 
 
-function evaluate_50percent_time_gpu(width::Integer, depth::Integer, gauss_width, energy_gradient)
+function evaluate_50percent_time_gpu(temprule::TempcomputeRule, width::Integer, depth::Integer, gauss_width, energy_gradient)
     sa = SimulatedAnnealingHamiltonian(width, depth)
     nbatch = 10000
 
@@ -69,7 +69,7 @@ function evaluate_50percent_time_gpu(width::Integer, depth::Integer, gauss_width
         state = CuArray(random_state(sa, nbatch))
         @info "Stage1, max_try = $max_try, next_try = $next_try, begin annealing"
         # @info "$Temp_sa"
-        @time track_equilibration_gausspulse_gpu!(HeatBath(), sa, state, energy_gradient, 10.0, gauss_width, next_try; accelerate_flip = true)
+        @time track_equilibration_pulse_gpu!(HeatBath(), temprule, sa, state, energy_gradient, 10.0, gauss_width, next_try; accelerate_flip = true)
         @info "finish annealing"
 
         cpu_state = Array(state)
@@ -93,7 +93,7 @@ function evaluate_50percent_time_gpu(width::Integer, depth::Integer, gauss_width
         state = CuArray(random_state(sa, nbatch))
         @info "Stage2, max_try = $max_try, next_try = $next_try, begin annealing"
         # @info "$Temp_sa"
-        @time track_equilibration_gausspulse_gpu!(HeatBath(), sa, state, energy_gradient, 10.0, gauss_width, next_try; accelerate_flip = true)
+        @time track_equilibration_pulse_gpu!(HeatBath(), temprule, sa, state, energy_gradient, 10.0, gauss_width, next_try; accelerate_flip = true)
         @info "finish annealing"
 
         cpu_state = Array(state)
@@ -127,11 +127,11 @@ device = parse(Int, device)
 
 @info "this time try width = $width, depth = $depth, λ = $λ, gauss_width = $(gauss_width)"
 CUDA.device!(device)
-evaluate_time = evaluate_50percent_time_gpu(width, depth, gauss_width, λ)
+evaluate_time = evaluate_50percent_time_gpu(Gaussiantype(), width, depth, gauss_width, λ)
 
 @info "width = $width, depth = $depth, λ = $λ, evaluate_time = $evaluate_time"
 
-filepath = joinpath(@__DIR__, "data_toymodel_pulse/rule110/width_sweep/W=$(width)_D=$(depth)_GW=$(gauss_width)_E=$(λ).txt")
+filepath = joinpath(@__DIR__, "data_toymodel_gausspulse/W=$(width)_D=$(depth)_GW=$(gauss_width)_E=$(λ).txt")
 open(filepath,"w") do file
     println(file, evaluate_time)
 end
@@ -145,9 +145,9 @@ end
 # # state = random_state(sa, nbatch)
 # # state_energy = [calculate_energy(sa, state, energy_gradient_sa, i) for i in 1:nbatch]
 
-# # track_equilibration_gausspulse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 500; accelerate_flip = false)
+# # track_equilibration_pulse_cpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 500; accelerate_flip = false)
 
-# @time track_equilibration_gausspulse_gpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 1000; accelerate_flip = true)
+# @time track_equilibration_pulse_gpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 1000; accelerate_flip = true)
 # cpu_state = Array(state)
 
 # # state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]

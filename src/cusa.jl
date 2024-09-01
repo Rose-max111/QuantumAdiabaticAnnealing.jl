@@ -2,6 +2,11 @@ struct SimulatedAnnealingHamiltonian
     n::Int # number of atoms per layer
     m::Int # number of full layers (count the last layer!)
 end
+
+abstract type TempcomputeRule end
+struct Gaussiantype <: TempcomputeRule end
+struct Exponentialtype <: TempcomputeRule end
+
 natom(sa::SimulatedAnnealingHamiltonian) = sa.n * sa.m
 atoms(sa::SimulatedAnnealingHamiltonian) = Base.OneTo(natom(sa))
 function random_state(sa::SimulatedAnnealingHamiltonian, nbatch::Integer)
@@ -174,15 +179,26 @@ function track_equilibration!(rule::TransitionRule, sa::SimulatedAnnealingHamilt
     return sa
 end
 
-function toymodel_gausspulse(sa::SimulatedAnnealingHamiltonian,
-                            gausspulse_amplitude::Float64,
-                            gausspulse_width::Float64,
+function toymodel_pulse(rule::TempcomputeRule, sa::SimulatedAnnealingHamiltonian,
+                            pulse_amplitude::Float64,
+                            pulse_width::Float64,
                             middle_position::Float64,
                             gradient::Float64)
     # amplitude * e^(- (1 /width) * (x-middle_position)^2)
-    eachposition = Tuple([gausspulse_amplitude * gradient^(- (1.0/gausspulse_width) * abs(i-middle_position)) + 1e-5 for i in 1:sa.m-1])
+    # eachposition = Tuple([pulse_amplitude * gradient^(- (1.0/pulse_width) * abs(i-middle_position)) + 1e-5 for i in 1:sa.m-1])
+    eachposition = Tuple([temp_calculate(rule, pulse_amplitude, pulse_width, middle_position, gradient, i) for i in 1:sa.m-1])
     return eachposition
 end
+temp_calculate(::Gaussiantype, pulse_amplitude::Float64,
+                            pulse_width::Float64,
+                            middle_position::Float64,
+                            gradient::Float64,
+                            i) = pulse_amplitude * gradient^(- (1.0/pulse_width) * (i-middle_position)^2) + 1e-5
+temp_calculate(::Exponentialtype, pulse_amplitude::Float64,
+                            pulse_width::Float64,
+                            middle_position::Float64,
+                            gradient::Float64,
+                            i) = pulse_amplitude * gradient^(- (1.0/pulse_width) * abs(i-middle_position)) + 1e-5
 
 function get_parallel_flip_id(sa)
     ret = Vector{Vector{Int}}()
@@ -206,16 +222,25 @@ function get_parallel_flip_id(sa)
     return ret
 end
 
+midposition_calculate(::Exponentialtype, 
+                    pulse_amplitude::Float64,
+                    pulse_width::Float64,
+                    energy_gradient::Float64) = 1.0 - (-(pulse_width) * log(1e-5/pulse_amplitude) / log(energy_gradient))
+midposition_calculate(::Gaussiantype, 
+                    pulse_amplitude::Float64,
+                    pulse_width::Float64,
+                    energy_gradient::Float64) = 1.0 - sqrt(-(pulse_width) * log(1e-5/pulse_amplitude) /log(energy_gradient))
 
-function track_equilibration_gausspulse_cpu!(rule::TransitionRule,
+function track_equilibration_pulse_cpu!(rule::TransitionRule,
+                                        temprule::TempcomputeRule,
                                         sa::SimulatedAnnealingHamiltonian, 
                                         state::AbstractMatrix, 
                                         energy_gradient, 
-                                        gausspulse_amplitude::Float64,
-                                        gausspulse_width::Float64,
+                                        pulse_amplitude::Float64,
+                                        pulse_width::Float64,
                                         annealing_time; accelerate_flip = false
                                         )
-    midposition = 1.0 - (-(gausspulse_width) * log(1e-5/gausspulse_amplitude) / log(energy_gradient))
+    midposition = midposition_calculate(temprule, pulse_amplitude, pulse_width, energy_gradient)
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
     # @info "midposition = $midposition"
     # @info "each_movement = $each_movement"
@@ -224,7 +249,7 @@ function track_equilibration_gausspulse_cpu!(rule::TransitionRule,
     single_layer_temp = []
     for t in 1:annealing_time
         # @info "midposition = $midposition"
-        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient)
+        singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, energy_gradient)
         Temp = fill((singlebatch_temp), size(state, 2))
         if accelerate_flip == false
             for thisatom in 1:natom(sa)
@@ -242,21 +267,23 @@ function track_equilibration_gausspulse_cpu!(rule::TransitionRule,
     # return single_layer_temp
 end
 
-function track_equilibration_gausspulse_gpu!(rule::TransitionRule,
+function track_equilibration_pulse_gpu!(rule::TransitionRule,
+                                        temprule::TempcomputeRule,
                                         sa::SimulatedAnnealingHamiltonian, 
                                         state::AbstractMatrix, 
                                         energy_gradient, 
-                                        gausspulse_amplitude,
-                                        gausspulse_width,
+                                        pulse_amplitude,
+                                        pulse_width,
                                         annealing_time; accelerate_flip = false
-                                        )
-    midposition = 1.0 - (-(gausspulse_width) * log(1e-5/gausspulse_amplitude) / log(energy_gradient))
+                                        )    
+    midposition = midposition_calculate(temprule, pulse_amplitude, pulse_width, energy_gradient)
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
     @info "each_movement = $each_movement"
+    # @info "init middle = $midposition"
 
     # NOTE: do we really need niters? or just set it to 1?
     for t in 1:annealing_time
-        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient)
+        singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, energy_gradient)
         Temp = CuArray(fill(Float32.(singlebatch_temp), size(state, 2)))
         if accelerate_flip == false
             for thisatom in 1:natom(sa)
@@ -268,6 +295,9 @@ function track_equilibration_gausspulse_gpu!(rule::TransitionRule,
                 step_parallel!(rule, sa, state, CuArray(fill(1.0, size(state, 2))), Temp, CuArray(eachflip))
             end
         end
+        # if t*2 == annealing_time
+        #     @info "midposition = $midposition, Temp = $singlebatch_temp"
+        # end
         midposition += each_movement
     end
     return sa
@@ -316,23 +346,24 @@ function track_equilibration_collective_temperature_gpu!(rule::TransitionRule,
 end
 
 
-function track_equilibration_gausspulse_reverse_cpu!(rule::TransitionRule,
+function track_equilibration_pulse_reverse_cpu!(rule::TransitionRule,
+                                        temprule::TempcomputeRule,
                                         sa::SimulatedAnnealingHamiltonian, 
                                         state::AbstractMatrix, 
                                         energy_gradient, 
-                                        gausspulse_amplitude::Float64,
-                                        gausspulse_width::Float64,
+                                        pulse_amplitude::Float64,
+                                        pulse_width::Float64,
                                         annealing_time;
                                         accelerate_flip = false
                                         )
-    midposition = 1.0 - (-(gausspulse_width) * log(1e-5/gausspulse_amplitude) / log(energy_gradient))
+    midposition = midposition_calculate(temprule, pulse_amplitude, pulse_width, energy_gradient)
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
     midposition = sa.m - 1.0 + 1.0 - midposition
 
     single_layer_temp = []
     for t in 1:annealing_time
         @info "midposition = $midposition"
-        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient)
+        singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, energy_gradient)
         Temp = fill(singlebatch_temp, size(state, 2))
         if accelerate_flip == false
             for thisatom in 1:natom(sa)

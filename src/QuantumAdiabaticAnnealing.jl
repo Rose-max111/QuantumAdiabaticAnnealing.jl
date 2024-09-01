@@ -28,6 +28,8 @@ export spinglass_hamiltonian, instantaneous_field_autodiff, runge_kutta_integrat
 export track_equilibration_gausspulse_cpu!, SimulatedAnnealingHamiltonian, track_equilibration_gausspulse_gpu!
 export track_equilibration_collective_temperature_cpu!, track_equilibration_collective_temperature_gpu!
 
+export TempcomputeRule, Gaussiantype, Exponentialtype
+
 include("point.jl")
 include("ca1d.jl")
 include("gadgets/gadgets.jl")
