@@ -65,33 +65,68 @@ to perform universal computation.
 \end{enumerate}
 }
 
-A thermodynamic computer is a complex system, driven by thermodynamics when exposed to external potentials. Like quantum computers, TCs are distinguished by their ability
-to employ the underlying physics of computing substrate to
-accomplish a task. For example, TCs may employ naturally
-occurring device-level fluctuations to explore a state space
-and to stabilize on low-energy representations, which may
-then be employed in an engineered task~\cite{conte2019thermodynamic}.
+Improving the energy efficiency of computation is a major challenge in the development of future computing systems.
+The thermodynamic computer (TC)~\cite{conte2019thermodynamic} is a new type of computer that uses thermodynamics to perform computation.
+Instead of performing the computation deterministically, TCs are stochastic and are driven by thermodynamics.
+Physical implementations of TCs include DNA machines~\cite{tanaka2005design}, memristors~\cite{yang2013memristive, wang2017memristors, kumar2017chaotic, wang2018fully}, and Ising machines~\cite{gu2012encoding, lucas2014ising, mohseni2022ising, fabre2014optical}.
 
-Comparing with all conventional computers fully controlled by humans, the TC, on the other hand, are directly connected to real-world potentials, which drive the
-evolution of its internal organization. As an example of using a TC, a user might program
-constraints that describe an optimization objective
-over the external potentials and that capture the TC’s
-natural tendency to maximize entropy production in the
-environment while minimizing entropy production internally~\cite{conte2019thermodynamic}.
+The computational process of TCs are driven by the lowering of free energy, which is a fundamental law of thermodynamics.
+A physical system has the tendency to evolve toward the state with the lowest free energy.
+By manipulating the minimum free energy state of the system, the computation can be performed.
+The change of free energy minimum state can be achieved by changing the distribution of the particles in the system, such as in the case of DNA machines~\cite{Feynman2018} or lowering the temperature of the system, such as in the case of Ising machines~\cite{boixo2013experimental, boixo2014evidence, Pichler2018, Nguyen2023}.
+The former is known as the Brownian machine, which evolves the system toward the direction of the entropy increase, while the latter are energy based, which evolves the system toward the direction of the energy decrease.
+\jgl{What category are the memristors?}
+
+Energy based models are probability one of the most powerful models for computation.
+The Ising model is not only capable of universal computation~\cite{gu2012encoding}, and it can be used to formulate many NP problems~\cite{lucas2014ising,mohseni2022ising}.
+However, they are notoriously hard to thermalize, even with the help of quantum entanglement~\cite{boixo2013experimental, boixo2014evidence}.
+
+Intrigued by the question that how to lower the energy of an Ising machine, we propose a new type of TC, which is based on a translational invariant crystalline structure.
+We first show that the crystalline structure can be programmed on its surfaces to perform universal computation.
+Then we show that if we thermalize the crystal from the ``deterministic direction'', the crystal can thermalize in time almost linear to the size of the crystal, i.e. efficient computation can be performed.
+
+% The way to lower the free energy is inspired by the process of crystalization.
+% The material is orderly grown by slowly moving the temperature gradient in-plane~\cite{Zhang2014}.
+% Growing a perfect crystal itself is a computation process of copying the information from one surface to another.
+%In the DNA based TC, the DNA enzyme is driven by thermodynamics, and the computation is performed by the enzyme as it moves along the DNA strand. It is a Brownian type computational model~\cite{Feynman2018} that driven by the change of entropy.
+
+% TCs are distinguished by their ability to employ the underlying physics of the computing substrate to accomplish a task.
+% For example, TCs may employ naturally occurring device-level fluctuations to explore a state space and to stabilize on low-energy representations, which may then be employed in an engineered task.
+% TCs are directly connected to real-world potentials, which drive the evolution of their internal organization.
+% A user might program constraints that describe an optimization objective over the external potentials and that capture the TC’s natural tendency to maximize entropy production in the environment while minimizing entropy production internally.
+% TCs have the potential to be more energy efficient than conventional computers, and they may be able to solve problems that are difficult for conventional computers to solve.
+% TCs are still in the early stages of development, but they have the potential to revolutionize computing in the future.
+
+% A thermodynamic computer is a complex system, driven by thermodynamics when exposed to external potentials. Like quantum computers, TCs are distinguished by their ability
+% to employ the underlying physics of computing substrate to
+% accomplish a task. For example, TCs may employ naturally
+% occurring device-level fluctuations to explore a state space
+% and to stabilize on low-energy representations, which may
+% then be employed in an engineered task~\cite{conte2019thermodynamic}.
+
+% Comparing with all conventional computers fully controlled by humans, the TC, on the other hand, are directly connected to real-world potentials, which drive the
+% evolution of its internal organization. As an example of using a TC, a user might program
+% constraints that describe an optimization objective
+% over the external potentials and that capture the TC’s
+% natural tendency to maximize entropy production in the
+% environment while minimizing entropy production internally~\cite{conte2019thermodynamic}.
 
 \ym{Need to add a brief summary about the state-of-the-art TCs. Following is some basic summaries of references}
 
-Quantum annealing outperform classical annealing~\cite{boixo2013experimental, boixo2014evidence}.
-Firstly introduced Rydberg atoms to solve MIS problem with quantum property~\cite{Pichler2018}. Utilized quantum annealing on Rydberg arrays to efficiently solve the combinatorial optimization problem~\cite{Nguyen2023}
+%Quantum annealing outperform classical annealing~\cite{boixo2013experimental, boixo2014evidence}.
+%Firstly introduced Rydberg atoms to solve MIS problem with quantum property~\cite{Pichler2018}. Utilized quantum annealing on Rydberg arrays to efficiently solve the combinatorial optimization problem~\cite{Nguyen2023}
 
-Provided basic knowledge about computational model like DNA Enzyme driven by thermodynamics, raised concepts of reversible computing and gradient power~\cite{Feynman2018}.
+%Provided basic knowledge about computational model like DNA Enzyme driven by thermodynamics, raised concepts of reversible computing and gradient power~\cite{Feynman2018}.
 
 The material was orderly grown by slowly moving the temperature gradient in-plane~\cite{Zhang2014}. Tested thermal gradient force for grain boundary migration~\cite{Bai2015}.
 
 Discussed the architecture of future thermodynamic computer and brought up an idea about the understanding of using TC to solve problems~\cite{hylton2021vision}.
 
 
-Proved Ising model is capable of universal computation~\cite{gu2012encoding}. Provided Ising formulations of many NP problems~\cite{lucas2014ising}. Reviewed various type of Ising machines as hardware analog solvers of combinatorial optimization problems~\cite{mohseni2022ising}. A special optical form Ising machine~\cite{fabre2014optical}. Other type of TCs like memristors~\cite{yang2013memristive, wang2017memristors, kumar2017chaotic,wang2018fully}, DNA machine~\cite{tanaka2005design}. 
+%Proved Ising model is capable of universal computation~\cite{gu2012encoding}. Provided Ising formulations of many NP problems~\cite{lucas2014ising}.
+%Reviewed various type of Ising machines as hardware analog solvers of combinatorial optimization problems~\cite{mohseni2022ising}.
+%A special optical form Ising machine~\cite{fabre2014optical}.
+%Other type of TCs like memristors~\cite{yang2013memristive, wang2017memristors, kumar2017chaotic,wang2018fully}, DNA machine~\cite{tanaka2005design}. 
 
 
 
