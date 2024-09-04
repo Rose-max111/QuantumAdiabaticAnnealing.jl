@@ -643,13 +643,16 @@ q^\prime & \cdot & \cdot & \cdot & \cdot & 6\\
 A & \cdot & \cdot & \cdot & \cdot & \cdot\\
 \end{block}
 \end{blockarray}
-~~, h = \begin{pmatrix}
-~1~\\
-2\\
-2\\
-2\\
-5
-\end{pmatrix}
+~~, ~~h = \begin{blockarray}{cc}
+& \phantom{x} \\
+\begin{block}{c(c)}
+p & ~1~\\
+q & 2\\
+r & 2\\
+q^\prime & 2\\
+A & 5\\
+\end{block}
+\end{blockarray}
 \end{equation}
 
 Since a copy gate\jinguo{do we really use copy gates?} can be simply described as two spins with an interaction $J_{u, v}=1$, and by applying the method of connecting logic gates~\cite{Aadit2022}, we can concatenate the rule 110 gadget with some copy gates, ultimately forming the TC shown in [Fig. \ref{Surface-programmable-thermodynamic computer}(a)]. The gadget we constructed based on the Rule 110 cellular automaton
