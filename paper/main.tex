@@ -21,12 +21,14 @@
 \usepackage{balance}
 \usepackage{flushend}
 \usepackage{cleveref}
+\usepackage{kbordermatrix}
+\usepackage{blkarray}
 \usepackage{tikz}
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}  % Use Input in the format of Algorithm  
 \renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm  
 \newtheorem{hyp}{Hypothesis}
 
-\newcommand{\jgl}[1]{[{\color{blue}{JGL: #1}}]}
+\newcommand{\jinguo}[1]{[{\color{blue}{JGL: #1}}]}
 \newcommand{\ym}[1]{[{\color{red}{YM: #1}}]}
 \newcommand{\s}{\mathbf {s}}
 \newcommand{\net}[1]{{\textsc{#1}}}
@@ -51,17 +53,16 @@
 
 \section{Introduction}
 
-\textbf{Definition: (Surface programmable material)}: a lattice (with
-translational invariance) model that can be programmed on its surfaces
-to perform universal computation.
-
-\jgl{Please cover the following topics: \begin{enumerate}
-    \item Computational models driven by the thermodynamics (cooling, or lowering the free energy), i.e. Brownian machine, such as DNA and Ising machine.
-    \item Potential advantages: energy saving, parallelism, no size limits (robust to quantum effects). Disadvantages: slow, error-prone.
-    \item Two approaches to lower the free energy: entropy driven, or energy based modeling. Embedding a computational model to energy models, the non-deterministic version: Circuit SAT, QUBO, Spin-Glass and Ising machine.
-    \item Crutial issue of energy based model, hard to thermalize, hard to prepare.
-    \item Crystal based computing: Cellular automata as a computational model.
+\jinguo{Please cover the following topics:
+\begin{enumerate}
     \item The method to thermalize, inspired from crystalization and heat zone.
+\end{enumerate}
+}
+\ym{Need to add a brief summary about the state-of-the-art TCs. Following is some basic summaries of references
+\begin{enumerate}
+    \item The material was orderly grown by slowly moving the temperature gradient in-plane~\cite{Zhang2014}. Tested thermal gradient force for grain boundary migration~\cite{Bai2015}.
+    \item Discussed the architecture of future thermodynamic computer and brought up an idea about the understanding of using TC to solve problems~\cite{hylton2021vision}.
+    \item TODO: search for gadgets for array multiplier.
 \end{enumerate}
 }
 
@@ -70,20 +71,21 @@ The thermodynamic computer (TC)~\cite{conte2019thermodynamic} is a new type of c
 Instead of performing the computation deterministically, TCs are stochastic and are driven by thermodynamics.
 Physical implementations of TCs include DNA machines~\cite{tanaka2005design}, memristors~\cite{yang2013memristive, wang2017memristors, kumar2017chaotic, wang2018fully}, and Ising machines~\cite{gu2012encoding, lucas2014ising, mohseni2022ising, fabre2014optical}.
 
-The computational process of TCs are driven by the lowering of free energy, which is a fundamental law of thermodynamics.
-A physical system has the tendency to evolve toward the state with the lowest free energy.
+The computational process of TCs utilizes the tendency of a physical system to evolve towards the state with the lowest free energy.
 By manipulating the minimum free energy state of the system, the computation can be performed.
-The change of free energy minimum state can be achieved by changing the distribution of the particles in the system, such as in the case of DNA machines~\cite{Feynman2018} or lowering the temperature of the system, such as in the case of Ising machines~\cite{boixo2013experimental, boixo2014evidence, Pichler2018, Nguyen2023}.
+The change of free energy minimum state can be achieved by changing the distribution of the particles in the system, such as in the case of DNA machines~\cite{Feynman2018} or lowering the temperature of the system, such as in the case of Ising machines~\cite{boixo2013experimental}.
 The former is known as the Brownian machine, which evolves the system toward the direction of the entropy increase, while the latter are energy based, which evolves the system toward the direction of the energy decrease.
-\jgl{What category are the memristors?}
+\jinguo{What category are the memristors?}
 
 Energy based models are probability one of the most powerful models for computation.
 The Ising model is not only capable of universal computation~\cite{gu2012encoding}, and it can be used to formulate many NP problems~\cite{lucas2014ising,mohseni2022ising}.
-However, they are notoriously hard to thermalize, even with the help of quantum entanglement~\cite{boixo2013experimental, boixo2014evidence}.
+However, they are notoriously hard to thermalize, even with the help of quantum entanglement~\cite{boixo2013experimental, boixo2014evidence, Pichler2018, Ebadi2022, Nguyen2023}.
 
-Intrigued by the question that how to lower the energy of an Ising machine, we propose a new type of TC, which is based on a translational invariant crystalline structure.
-We first show that the crystalline structure can be programmed on its surfaces to perform universal computation.
-Then we show that if we thermalize the crystal from the ``deterministic direction'', the crystal can thermalize in time almost linear to the size of the crystal, i.e. efficient computation can be performed.
+Intrigued by the question of how to thermalize and lower the energy of an Ising machine, we propose a new type of TC that has a crystalline structure.
+The crystalline structure is based on a universal elementary cellular automaton, and is translational invariant in all spacial dimensions.
+The translational invariance not only makes the crystal easier to be constructed in nature, but also enables the study of the scaling behavior the thermalization process.
+In the rest of this paper, we first show that the crystalline structure can be programmed on its surfaces to perform universal computation \Cref{sec:Overview-of-main-results}.
+Then we use numerical results in \Cref{sec:numerical-result} to show that if we thermalize the crystal from the so-called ``deterministic direction'', the crystal can thermalize in time almost linear to the size of the crystal, i.e. efficient computation can be performed.
 
 % The way to lower the free energy is inspired by the process of crystalization.
 % The material is orderly grown by slowly moving the temperature gradient in-plane~\cite{Zhang2014}.
@@ -111,17 +113,10 @@ Then we show that if we thermalize the crystal from the ``deterministic directio
 % natural tendency to maximize entropy production in the
 % environment while minimizing entropy production internally~\cite{conte2019thermodynamic}.
 
-\ym{Need to add a brief summary about the state-of-the-art TCs. Following is some basic summaries of references}
-
 %Quantum annealing outperform classical annealing~\cite{boixo2013experimental, boixo2014evidence}.
 %Firstly introduced Rydberg atoms to solve MIS problem with quantum property~\cite{Pichler2018}. Utilized quantum annealing on Rydberg arrays to efficiently solve the combinatorial optimization problem~\cite{Nguyen2023}
 
 %Provided basic knowledge about computational model like DNA Enzyme driven by thermodynamics, raised concepts of reversible computing and gradient power~\cite{Feynman2018}.
-
-The material was orderly grown by slowly moving the temperature gradient in-plane~\cite{Zhang2014}. Tested thermal gradient force for grain boundary migration~\cite{Bai2015}.
-
-Discussed the architecture of future thermodynamic computer and brought up an idea about the understanding of using TC to solve problems~\cite{hylton2021vision}.
-
 
 %Proved Ising model is capable of universal computation~\cite{gu2012encoding}. Provided Ising formulations of many NP problems~\cite{lucas2014ising}.
 %Reviewed various type of Ising machines as hardware analog solvers of combinatorial optimization problems~\cite{mohseni2022ising}.
@@ -131,8 +126,8 @@ Discussed the architecture of future thermodynamic computer and brought up an id
 
 
 
-\section{Overview of the computation model}\label{Overview-of-main-results}
-In this article, We develop a new type of TC shown in [Fig.\ref{Surface-programmable-thermodynamic computer}(a)], which features a crystalline structure based on an universal elementary cellular automaton, makes it easier to be constructed in real life. 
+\section{Overview of the computation model}\label{sec:Overview-of-main-results}
+In this article, We develop a new type of TC shown in \Cref{Surface-programmable-thermodynamic computer}(a), which features a crystalline structure based on a universal elementary cellular automaton, makes it easier to be constructed in real life. 
 
 \tikzset{every picture/.style={line width=0.75pt}} %set default line width to 0.75pt        
 \tikzset {_ue4dovf1e/.code = {\pgfsetadditionalshadetransform{ \pgftransformshift{\pgfpoint{0 bp } { -37.5 bp }  }  \pgftransformrotate{0 }  \pgftransformscale{2 }  }}}
@@ -562,7 +557,7 @@ color(100bp)=(transparent!80) }
 
     
     \end{tikzpicture}
-    \caption{Surface programmable thermodynamic computer (TC) and rule110 automaton gadget. $\mathtt{(a)}$ Example of a surface programmable TC with a moving heat bath slowly doing ``calculation''. White circles are spins and black lines represent interaction between spins, while red rectangles represent cellular automaton gadget. $\mathtt{(b)}$ Example of a rule110 gadget. Here spins $p$, $q$, and $r$ represent the left, middle, and right states in the cellular automaton, respectively, while $q’$ represents the result computed by the cellular automaton, and $A$ is an auxiliary spin. We define a spin pointing up as representing logical 1 and pointing down as representing logical 0. }
+    \caption{Surface programmable thermodynamic computer (TC) and rule110 automaton gadget. $\mathtt{(a)}$ Example of a surface programmable TC with a moving heat bath slowly doing ``calculation''. White circles are spins and black lines represent interaction between spins, while red rectangles represent cellular automaton gadget. $\mathtt{(b)}$ Example of a rule110 gadget. Here spins $p$, $q$, and $r$ represent the left, middle, and right states in the cellular automaton, respectively, while $q’$ represents the result computed by the cellular automaton, and $A$ is an auxiliary spin. We define a spin pointing up as representing logical 1 and pointing down as representing logical 0. \jinguo{why capital A? q' not clear.}}
     \label{Surface-programmable-thermodynamic computer}
 \end{figure}
 
@@ -572,10 +567,7 @@ The input layer consists of the leftmost spin, while the output layer consists o
 
 Users can design the computing algorithm and obtain the desired output by setting the input configuration and then making slight movements to the external heat bath, requiring only approximately linear time (up to a $\log^2$ factor) with respect to the number of layers.
 
-\section{Model and Method}
-
-
-
+\section{Model and Method}\label{sec:model-method}
 
 \subsection{Elementary cellular automaton}\label{elementary-cellular-automaton}
 \ym{I haven't made change in this section}
@@ -606,32 +598,52 @@ New Center Cell & 0 & 1 & 1 & 0 & 1 & 1 & 1 & 0 \\
 \hline
 \end{tabular}
 
+In boolean form, it can be expressed as:
+\begin{equation}\label{eq:110rule}
+    q^\prime = r \land \neg (q \land \neg p)
+\end{equation}
+
 Rule 110 has been shown to be Turing Complete~\cite{Cook2009}, and thus capable of universal
 computation.
 
 \subsection{Mapping CA to Ising model}
 
-A spin-glass hamiltonian is described as follows.
+An $n$-vertex fully connected spin-glass Hamiltonian is described as follows.
 
 \begin{equation}
-H = \sum_{u,v \in E} J_{u,v}s_us_v + \sum_{i\in V}h_i s_i
+H = \sum_{i < j} J_{ij}s_us_v + \sum_{i=1}^{n}h_i s_i
 \end{equation}
 
-where $h_i$ is onsite energy, $J_{u,v}$ is interaction energy and
+where $h_i$ is onsite energy, $J_{ij}$ is interaction energy and
 $s_i \in \{-1, 1\}$ is local spin. $s_i=1$ means spin-up and $s_i=-1$ means spin-down.
 
-Previous studies already shown that it is possible to encode a universal set of elementary logic gates into Ising models and concatenate them to formulate any Boolean truth table in Ising models~\cite{onizawa2020design, camsari2017stochastic, Aadit2022}. However, we consider using this method to encode Boolean truth tables to be inefficient, as the interaction complexity on each spin is relatively low. In Appendix \ref{sec:gadget-design}, we used a linear programming method to directly encoding Boolean truth tables into the ground state of the Ising model. This method is applied to compute the model corresponding to the rule 110 automaton, which we refer to as the gadget, shown in [Fig. \ref{Surface-programmable-thermodynamic computer}(b)].
-
-The interaction energy and onsite energy of the rule 110 gadget are given below. Spins $1, 2, 3$, and $4$ correspond to the $p, q, r$, and $q'$ spins in [Fig. \ref{Surface-programmable-thermodynamic computer}(b)], while spin $5$ is the auxiliary spin.
+Previous studies have shown that the Ising model is universal for computation~\cite{Aadit2022, onizawa2020design, camsari2017stochastic}, meaning that any logic circuit can be encoded into the Ising model and solved by finding the ground state of the Ising model. A universal set logic gate gadgets are designed, by concatenating which any logic circuit can be constructed.
+For example the logic expression $z = \neg (x \land y)$ can be encoded into the Ising model by the following Hamiltonian:
+\begin{equation}
+    \begin{split}
+        H_{c = a \land b} &= s_a s_b -2 s_a s_c -2 s_bs_c + s_a + s_b -2 s_c\\
+        H_{z = \neg c} &= s_c s_z\\
+        H_{z = \neg (a \land b)} &= H_{z = \neg c} + H_{c = a \land b}
+    \end{split}
+\end{equation}
+where, the variable $c$ is an ancilla spin.
+A cellular automaton can be viewed as a translational invariant logic circuit, and thus can be encoded into the Ising model. The ground states of the Ising model encode the correspondence between the inputs and the outputs of the cellular automaton.
+Directly synthesizing the logic circuit for the universal $110$ rule (\Cref{eq:110rule}) requires at least 3 ancilla spins, which is far from optimal. By converting the gadget finding problem to a linear programming problem~\cite{}, we propose a provable optimal method to encode the $110$ rule into the Ising model, which is described in \Cref{sec:gadget-design}.
+The proposed gadget is shown in \Cref{Surface-programmable-thermodynamic computer}(b), which only requires 1 ancilla spin.
+The interaction energy and onsite energy of the rule 110 gadget are given below, where spins $1, 2, 3$, and $4$ correspond to the $p, q, r$, and $q'$ spins in \Cref{Surface-programmable-thermodynamic computer}(b), respectively, while spin $5$ is the auxiliary spin.
 
 \begin{equation}
-J = \begin{pmatrix}
-~\cdot~ & ~1~ & ~1~ & ~2~ & ~3~\\
-\cdot & \cdot & 2 & 2 & 5\\
-\cdot & \cdot & \cdot & 2 & 5\\
-\cdot & \cdot & \cdot & \cdot & 6\\
-\cdot & \cdot & \cdot & \cdot & \cdot
-\end{pmatrix}, h = \begin{pmatrix}
+J = \begin{blockarray}{cccccc}
+& p & q & r & q^\prime & A\\
+\begin{block}{c(ccccc)}
+p & ~\cdot~ & ~1~ & ~1~ & ~2~ & ~3~\\
+q & \cdot & \cdot & 2 & 2 & 5\\
+r & \cdot & \cdot & \cdot & 2 & 5\\
+q^\prime & \cdot & \cdot & \cdot & \cdot & 6\\
+A & \cdot & \cdot & \cdot & \cdot & \cdot\\
+\end{block}
+\end{blockarray}
+~~, h = \begin{pmatrix}
 ~1~\\
 2\\
 2\\
@@ -640,7 +652,7 @@ J = \begin{pmatrix}
 \end{pmatrix}
 \end{equation}
 
-Since a copy gate can be simply described as two spins with an interaction $J_{u, v}=1$, and by applying the method of connecting logic gates~\cite{Aadit2022}, we can concatenate the rule 110 gadget with some copy gates, ultimately forming the TC shown in [Fig. \ref{Surface-programmable-thermodynamic computer}(a)]. The gadget we constructed based on the Rule 110 cellular automaton
+Since a copy gate\jinguo{do we really use copy gates?} can be simply described as two spins with an interaction $J_{u, v}=1$, and by applying the method of connecting logic gates~\cite{Aadit2022}, we can concatenate the rule 110 gadget with some copy gates, ultimately forming the TC shown in [Fig. \ref{Surface-programmable-thermodynamic computer}(a)]. The gadget we constructed based on the Rule 110 cellular automaton
 naturally possesses Turing completeness. Therefore, this 2-dimensional TC is capable of universal computing.
 
 \subsection{Cooling computation with a moving heat bath}\label{cooling-computation-with-moving-heat-bath}
@@ -902,6 +914,8 @@ encodes computational information~\cite{Aadit2022,Bybee2023}.
 Connect real-world thermalization time and the simulated annealing time to explore the connection between time and energy cost per computation.
 The emergence of wisdom?
 
+Potential advantages: energy saving, parallelism, no size limits (robust to quantum effects). Disadvantages: slow, error-prone.
+
 \begin{acknowledgments}
     We thank Lei Wang, Madelyn Cain and XXX for helpful discussions on the simulation methods.
 \end{acknowledgments}
@@ -1020,10 +1034,10 @@ Each $\mathbf n \in \mathcal{M}$ is associated with an energy $H_{\text{WMIS}}(\
 
 Note that the constraints are all linear. The less constraints and equality constraints can be easily transformed into inequality constraints by adding ancilla variables.
 The possible choice of $S_{\text{min}}$ grows exponentially as the number of ancilla vertices increases, which limits the capability of this method.
-\jgl{We focus on the general graphs first.}
+\jinguo{We focus on the general graphs first.}
 
 In the following, we restrict the graph to be two dimensional grid graphs, the unit distance can be arbitrary. A graph configuration can be denoted as a boolean mask $M\in \{0, 1\}^{m\times n}$.
-\jgl{Then the unit disk graphs.}
+\jinguo{Then the unit disk graphs.}
 
 \subsubsection{Energy based universal computation with Rydberg atoms
 array}\label{energy-based-universal-computation-with-rydberg-atoms-array}
