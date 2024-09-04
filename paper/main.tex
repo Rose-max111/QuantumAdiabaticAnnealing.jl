@@ -631,10 +631,9 @@ For example the logic expression $z = \neg (x \land y)$ can be encoded into the 
 \end{equation}
 where, the variable $c$ is an ancilla spin.
 A cellular automaton can be viewed as a translational invariant logic circuit, and thus can be encoded into the Ising model. The ground states of the Ising model encode the correspondence between the inputs and the outputs of the cellular automaton.
-Directly synthesizing the logic circuit for the universal $110$ rule (\Cref{eq:110rule}) requires at least 3 ancilla spins, which is far from optimal. By converting the gadget finding problem to a linear programming problem~\cite{}, we propose a provable optimal method to encode the $110$ rule into the Ising model, which is described in \Cref{sec:gadget-design}.
-The proposed gadget is shown in \Cref{Surface-programmable-thermodynamic computer}(b), which only requires 1 ancilla spin.
+Directly synthesizing the logic circuit for the universal $110$ rule (\Cref{eq:110rule}) requires at least 3 ancilla spins, which is far from optimal. By converting the gadget finding problem to a linear programming problem~\cite{}, we propose a provable optimal method to encode any cellular automaton rule into the Ising model, which is described in \Cref{sec:gadget-design}.
+The proposed gadget for the $110$ rule is shown in \Cref{Surface-programmable-thermodynamic computer}(b), which only requires 1 ancilla spin.
 The interaction energy and onsite energy of the rule 110 gadget are given below, where $p, q, r$ and inputs and $q'$ is the output in \Cref{Surface-programmable-thermodynamic computer}(b), respectively, while spin $A$ is the auxiliary spin.
-
 \begin{equation}
 J = \begin{blockarray}{cccccc}
 & p & q & r & q^\prime & A\\
@@ -657,7 +656,6 @@ A & 5\\
 \end{block}
 \end{blockarray}
 \end{equation}
-
 Since a copy gate\jinguo{do we really use copy gates?} can be simply described as two spins with an interaction $J_{u, v}=1$, and by applying the method of connecting logic gates~\cite{Aadit2022}, we can concatenate the rule 110 gadget with some copy gates, ultimately forming the TC shown in [Fig. \ref{Surface-programmable-thermodynamic computer}(a)]. The gadget we constructed based on the Rule 110 cellular automaton
 naturally possesses Turing completeness. Therefore, this 2-dimensional TC is capable of universal computing.
 
