@@ -242,8 +242,8 @@ function track_equilibration_pulse_cpu!(rule::TransitionRule,
                                         )
     midposition = midposition_calculate(temprule, pulse_amplitude, pulse_width, energy_gradient)
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
-    # @info "midposition = $midposition"
-    # @info "each_movement = $each_movement"
+    @info "midposition = $midposition"
+    @info "each_movement = $each_movement"
 
     # NOTE: do we really need niters? or just set it to 1?
     single_layer_temp = []
@@ -262,9 +262,9 @@ function track_equilibration_pulse_cpu!(rule::TransitionRule,
             end
         end
         midposition += each_movement
-        # push!(single_layer_temp, singlebatch_temp[1])
+        push!(single_layer_temp, singlebatch_temp[1])
     end
-    # return single_layer_temp
+    return single_layer_temp
 end
 
 function track_equilibration_pulse_gpu!(rule::TransitionRule,
