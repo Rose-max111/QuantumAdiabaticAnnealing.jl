@@ -27,6 +27,7 @@ export spinglassmodel, spinglass_mapping, instantaneous_field, spinglass_random_
 export spinglass_hamiltonian, instantaneous_field_autodiff, runge_kutta_integrate!
 export track_equilibration_pulse_cpu!, SimulatedAnnealingHamiltonian, track_equilibration_pulse_gpu!
 export track_equilibration_collective_temperature_cpu!, track_equilibration_collective_temperature_gpu!
+export track_equilibration_pulse_reverse_cpu!, track_equilibration_pulse_reverse_gpu!
 
 export TempcomputeRule, Gaussiantype, Exponentialtype
 

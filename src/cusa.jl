@@ -380,3 +380,35 @@ function track_equilibration_pulse_reverse_cpu!(rule::TransitionRule,
     end
     # return single_layer_temp
 end
+
+function track_equilibration_pulse_reverse_gpu!(rule::TransitionRule,
+                                        temprule::TempcomputeRule,
+                                        sa::SimulatedAnnealingHamiltonian, 
+                                        state::AbstractMatrix, 
+                                        energy_gradient, 
+                                        pulse_amplitude,
+                                        pulse_width,
+                                        annealing_time; accelerate_flip = false
+                                        )    
+    midposition = midposition_calculate(temprule, pulse_amplitude, pulse_width, energy_gradient)
+    each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
+    midposition = sa.m - 1.0 + 1.0 - midposition
+    @info "each_movement = $each_movement"
+
+    for t in 1:annealing_time
+        singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, energy_gradient)
+        Temp = CuArray(fill(Float32.(singlebatch_temp), size(state, 2)))
+        if accelerate_flip == false
+            for thisatom in 1:natom(sa)
+                step!(rule, sa, state, CuArray(fill(1.0, size(state, 2))), Temp, thisatom)
+            end
+        else
+            flip_list = get_parallel_flip_id(sa)
+            for eachflip in flip_list
+                step_parallel!(rule, sa, state, CuArray(fill(1.0, size(state, 2))), Temp, CuArray(eachflip))
+            end
+        end
+        midposition -= each_movement
+    end
+    return sa
+end
