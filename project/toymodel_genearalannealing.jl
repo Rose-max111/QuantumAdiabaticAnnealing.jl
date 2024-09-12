@@ -99,7 +99,7 @@ function evaluate_50percent_time_gpu(temprule::TempcomputeRule, width::Integer, 
         cpu_state = Array(state)
         state_energy = [calculate_energy(sa, cpu_state, fill(1.0, nbatch), i) for i in 1:nbatch]
         success = count(x -> x == 0, state_energy)
-        # @info "Stage 2, now max_try = $max_try, success time = $success, anneal_time = $anneal_time"
+        @info "Stage 2, now max_try = $max_try, success time = $success, anneal_time = $anneal_time"
         if 1.0 * success / nbatch >= 0.49
             max_try /=2
             continue
@@ -127,11 +127,11 @@ device = parse(Int, device)
 
 @info "this time try width = $width, depth = $depth, λ = $λ, gauss_width = $(gauss_width)"
 CUDA.device!(device)
-evaluate_time = evaluate_50percent_time_gpu(Gaussiantype(), width, depth, gauss_width, λ)
+evaluate_time = evaluate_50percent_time_gpu(Exponentialtype(), width, depth, gauss_width, λ)
 
 @info "width = $width, depth = $depth, λ = $λ, evaluate_time = $evaluate_time"
 
-filepath = joinpath(@__DIR__, "data_toymodel_gausspulse/W=$(width)_D=$(depth)_GW=$(gauss_width)_E=$(λ).txt")
+filepath = joinpath(@__DIR__, "data_toymodel_pulse/W=$(width)_D=$(depth)_GW=$(gauss_width)_E=$(λ).txt")
 open(filepath,"w") do file
     println(file, evaluate_time)
 end
