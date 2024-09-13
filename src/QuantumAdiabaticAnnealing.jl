@@ -14,7 +14,7 @@ using SparseArrays
 
 export Point
 export generate_random_lattice
-export mis_gadget, CellularAutomata1D, topology, logic_gate
+export mis_gadget, CellularAutomata1D, topology, logic_gate, rule110
 export show_transversal_graph_weight
 export track_equilibration!, SimulatedAnnealingMIS
 
@@ -27,6 +27,8 @@ export spinglassmodel, spinglass_mapping, instantaneous_field, spinglass_random_
 export spinglass_hamiltonian, instantaneous_field_autodiff, runge_kutta_integrate!
 export track_equilibration_pulse_cpu!, SimulatedAnnealingHamiltonian, track_equilibration_pulse_gpu!
 export track_equilibration_collective_temperature_cpu!, track_equilibration_collective_temperature_gpu!
+export track_equilibration_pulse_reverse_gpu!, track_equilibration_pulse_reverse_cpu!
+export track_equilibration_fixedlayer_cpu!, track_equilibration_fixedlayer_gpu!
 
 export TempcomputeRule, Gaussiantype, Exponentialtype
 

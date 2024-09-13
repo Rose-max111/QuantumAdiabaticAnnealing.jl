@@ -159,25 +159,57 @@ function testplot(xdata, ydata)
     fig
 end
 
-pulse_plot(10.0, 1.0, 10.0, 1.5, 1.02, 0.0, 40.0)
+function trueoutput(width, depth, inputs) # inputs is the first layer calculate depth layer
+    statearray = zeros(Bool, (width, 1))
+    next_array = zeros(Bool, (width, 1))
+    for i in 1:width
+        statearray[i] = inputs[i]
+    end
+    # @info statearray
+    for i in 1:depth-1
+        for mid in 1:width
+            pre = mod1(mid-1, width)
+            suf = mod1(mid+1, width)
+            next_array[mid] = rule110(statearray[pre], statearray[mid], statearray[suf])
+        end
+        # @info next_array
+        statearray = copy(next_array)
+    end
+    return statearray
+end
 
-sa = SimulatedAnnealingHamiltonian(15, 20)
+
+function trans_vaild_output!(state, sa, nbatch)
+    for ibatch in 1:nbatch
+        this_input = copy(state[1:sa.n, ibatch])
+        true_output = trueoutput(sa.n, sa.m, this_input)
+        state[sa.n*sa.m-sa.n+1:sa.n*sa.m, ibatch] .= true_output
+    end
+end
+
+# pulse_plot(10.0, 1.0, 10.0, 1.5, 1.02, 0.0, 40.0)
+
+sa = SimulatedAnnealingHamiltonian(10, 8)
 nbatch = 100
-energy_gradient_gauss = 1.01
-energy_gradient_exp = 1.5
-# state = CuArray(random_state(sa, nbatch))
+# energy_gradient_gauss = 1.01
+# energy_gradient_exp = 1.5
+# # state = CuArray(random_state(sa, nbatch))
 state = random_state(sa, nbatch)
-# state_energy = [calculate_energy(sa, state, energy_gradient_sa, i) for i in 1:nbatch]
+# # state_energy = [calculate_energy(sa, state, energy_gradient_sa, i) for i in 1:nbatch]
 
-# track_temp = track_equilibration_pulse_cpu!(HeatBath(), Gaussiantype(), sa, state, energy_gradient_gauss, 10.0, 1.0, 2000; accelerate_flip = false)
-track_temp = track_equilibration_pulse_cpu!(HeatBath(), Exponentialtype(), sa, state, energy_gradient_exp, 10.0, 1.0, 2000, accelerate_flip = false)
+# # track_temp = track_equilibration_pulse_cpu!(HeatBath(), Gaussiantype(), sa, state, energy_gradient_gauss, 10.0, 1.0, 2000; accelerate_flip = false)
+# track_temp = track_equilibration_pulse_cpu!(HeatBath(), Exponentialtype(), sa, state, energy_gradient_exp, 10.0, 1.0, 2000, accelerate_flip = false)
 
+# track_temp = track_equilibration_pulse_reverse_cpu!(HeatBath(), Exponentialtype(), sa, state, energy_gradient_exp, 10.0, 1.0, 45000, accelerate_flip = false)
+# trans_vaild_output!(state, sa, nbatch)
+# track_temp = track_equilibration_fixedlayer_cpu!(HeatBath(), sa, state, 15000; accelerate_flip = false, fixedinput = false)
+track_temp = track_equilibration_fixedlayer_cpu!(HeatBath(), sa, state, 15000; accelerate_flip = false, fixedinput = true)
 
-# testplot(Vector(1:1000), Float64.(track_temp))
+# # testplot(Vector(1:1000), Float64.(track_temp))
 
-# @time track_equilibration_pulse_gpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 1000; accelerate_flip = true)
+# # @time track_equilibration_pulse_gpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 1000; accelerate_flip = true)
 cpu_state = Array(state)
 
-# state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
+# # state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
 state_energy = [calculate_energy(sa, cpu_state, fill(1.0, nbatch), i) for i in 1:nbatch]
 success = count(x -> x == 0, state_energy)
