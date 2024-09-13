@@ -169,28 +169,28 @@ end
 
 # evaluate_50percent_time_cpu(12, 8, 1.0, 1.5)
 
-width = ARGS[1]
-depth = ARGS[2]
-gauss_width = ARGS[3]
-λ = ARGS[4]
-device = ARGS[5]
+# width = ARGS[1]
+# depth = ARGS[2]
+# gauss_width = ARGS[3]
+# λ = ARGS[4]
+# device = ARGS[5]
 
-width = parse(Int, width)
-depth = parse(Int, depth)
-gauss_width = parse(Float64, gauss_width)
-λ = parse(Float64, λ)
-device = parse(Int, device)
+# width = parse(Int, width)
+# depth = parse(Int, depth)
+# gauss_width = parse(Float64, gauss_width)
+# λ = parse(Float64, λ)
+# device = parse(Int, device)
 
-# @info "this time try width = $width, depth = $depth, λ = $λ, gauss_width = $(gauss_width)"
-CUDA.device!(device)
-evaluate_time = evaluate_50percent_time_reverse_gpu(Exponentialtype(), width, depth, gauss_width, λ)
+# # @info "this time try width = $width, depth = $depth, λ = $λ, gauss_width = $(gauss_width)"
+# CUDA.device!(device)
+# evaluate_time = evaluate_50percent_time_reverse_gpu(Exponentialtype(), width, depth, gauss_width, λ)
 
-# # @info "width = $width, depth = $depth, λ = $λ, evaluate_time = $evaluate_time"
+# # # @info "width = $width, depth = $depth, λ = $λ, evaluate_time = $evaluate_time"
 
-filepath = joinpath(@__DIR__, "data_toymodel_reverse_pulse/W=$(width)_D=$(depth)_GW=$(gauss_width)_E=$(λ).txt")
-open(filepath,"w") do file
-    println(file, evaluate_time)
-end
+# filepath = joinpath(@__DIR__, "data_toymodel_reverse_pulse/W=$(width)_D=$(depth)_GW=$(gauss_width)_E=$(λ).txt")
+# open(filepath,"w") do file
+#     println(file, evaluate_time)
+# end
 
 # function testplot(xdata, ydata)
 #     fig = Figure()

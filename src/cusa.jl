@@ -378,30 +378,18 @@ function track_equilibration_pulse_reverse_gpu!(rule::TransitionRule,
                                         temprule::TempcomputeRule,
                                         sa::SimulatedAnnealingHamiltonian, 
                                         state::AbstractMatrix, 
-<<<<<<< HEAD
                                         pulse_gradient, 
-=======
-                                        energy_gradient, 
->>>>>>> 56316b4a233ec03743ab958dd023f919654cdd04
                                         pulse_amplitude,
                                         pulse_width,
                                         annealing_time; accelerate_flip = false
                                         )    
-<<<<<<< HEAD
     midposition = midposition_calculate(temprule, pulse_amplitude, pulse_width, pulse_gradient)
-=======
-    midposition = midposition_calculate(temprule, pulse_amplitude, pulse_width, energy_gradient)
->>>>>>> 56316b4a233ec03743ab958dd023f919654cdd04
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
     midposition = sa.m - 1.0 + 1.0 - midposition
     @info "each_movement = $each_movement"
 
     for t in 1:annealing_time
-<<<<<<< HEAD
         singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, pulse_gradient)
-=======
-        singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, energy_gradient)
->>>>>>> 56316b4a233ec03743ab958dd023f919654cdd04
         Temp = CuArray(fill(Float32.(singlebatch_temp), size(state, 2)))
         if accelerate_flip == false
             for thisatom in 1:natom(sa)
@@ -416,7 +404,6 @@ function track_equilibration_pulse_reverse_gpu!(rule::TransitionRule,
         midposition -= each_movement
     end
     return sa
-<<<<<<< HEAD
 end
 
 function track_equilibration_fixedlayer_cpu!(rule::TransitionRule,
@@ -477,6 +464,4 @@ function track_equilibration_fixedlayer_gpu!(rule::TransitionRule,
             end
         end
     end
-=======
->>>>>>> 56316b4a233ec03743ab958dd023f919654cdd04
 end
