@@ -250,9 +250,9 @@ state = random_state(sa, nbatch)
 # track_temp = track_equilibration_pulse_cpu!(HeatBath(), Exponentialtype(), sa, state, energy_gradient_exp, 10.0, 1.0, 2000, accelerate_flip = false)
 
 # track_temp = track_equilibration_pulse_reverse_cpu!(HeatBath(), Exponentialtype(), sa, state, energy_gradient_exp, 10.0, 1.0, 45000, accelerate_flip = false)
-# trans_vaild_output!(state, sa, nbatch)
-# track_temp = track_equilibration_fixedlayer_cpu!(HeatBath(), sa, state, 15000; accelerate_flip = false, fixedinput = false)
-track_temp = track_equilibration_fixedlayer_cpu!(HeatBath(), sa, state, 15000; accelerate_flip = false, fixedinput = true)
+trans_vaild_output!(state, sa, nbatch)
+track_temp = track_equilibration_fixedlayer_cpu!(HeatBath(), sa, state, 15000; accelerate_flip = false, fixedinput = false)
+# track_temp = track_equilibration_fixedlayer_cpu!(HeatBath(), sa, state, 15000; accelerate_flip = false, fixedinput = true)
 
 # # testplot(Vector(1:1000), Float64.(track_temp))
 
