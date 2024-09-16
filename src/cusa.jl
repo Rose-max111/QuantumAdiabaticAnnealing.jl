@@ -410,7 +410,7 @@ function track_equilibration_fixedlayer_cpu!(rule::TransitionRule,
                                         sa::SimulatedAnnealingHamiltonian, 
                                         state::AbstractMatrix,  
                                         annealing_time; accelerate_flip = false, fixedinput = false)
-    Temp_list = reverse(range(1e-5, 10, annealing_time))
+    Temp_list = reverse(range(1e-5, 10.0, annealing_time))
     for this_temp in Temp_list
         singlebatch_temp = fill(this_temp, sa.m-1)
         Temp = fill(singlebatch_temp, size(state, 2))
@@ -440,10 +440,12 @@ function track_equilibration_fixedlayer_gpu!(rule::TransitionRule,
                                         sa::SimulatedAnnealingHamiltonian, 
                                         state::AbstractMatrix,  
                                         annealing_time; accelerate_flip = false, fixedinput = false)
-    Temp_list = reverse(range(1e-5, 10, annealing_time))
+    Temp_list = reverse(range(1e-5, 10.0, annealing_time))
     for this_temp in Temp_list
-        singlebatch_temp = fill(Float32(this_temp), sa.m-1)
-        Temp = CuArray(fill(singlebatch_temp, size(state, 2)))
+        # @info "yes"
+        singlebatch_temp = Tuple(fill(Float32(this_temp), sa.m-1))
+        # @info "$(typeof(singlebatch_temp))"
+        Temp = CuArray((fill(singlebatch_temp, size(state, 2))))
         if accelerate_flip == false
             if fixedinput == false # this time fix output
                 for thisatom in 1:natom(sa)-sa.n
