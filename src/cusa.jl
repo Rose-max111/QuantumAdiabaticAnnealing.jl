@@ -2,6 +2,11 @@ struct SimulatedAnnealingHamiltonian
     n::Int # number of atoms per layer
     m::Int # number of full layers (count the last layer!)
 end
+
+abstract type TempcomputeRule end
+struct Gaussiantype <: TempcomputeRule end
+struct Exponentialtype <: TempcomputeRule end
+
 natom(sa::SimulatedAnnealingHamiltonian) = sa.n * sa.m
 atoms(sa::SimulatedAnnealingHamiltonian) = Base.OneTo(natom(sa))
 function random_state(sa::SimulatedAnnealingHamiltonian, nbatch::Integer)
@@ -13,8 +18,8 @@ hasparent(sa::SimulatedAnnealingHamiltonian, node::Integer) = node > sa.n
 function evaluate_parent(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, inode::Integer, ibatch::Integer)
     i, j = CartesianIndices((sa.n, sa.m))[inode].I
     idp = parent_nodes(sa, inode)
-    # trueoutput = @inbounds rule110(state[idp[1], ibatch], state[idp[2], ibatch], state[idp[3], ibatch])
-    trueoutput = @inbounds automatarule(state[idp[1], ibatch], state[idp[2], ibatch], state[idp[3], ibatch], 150)
+    trueoutput = @inbounds rule110(state[idp[1], ibatch], state[idp[2], ibatch], state[idp[3], ibatch])
+    # trueoutput = @inbounds rule150(state[idp[1], ibatch], state[idp[2], ibatch], state[idp[3], ibatch])
     return @inbounds (trueoutput ⊻ state[inode, ibatch]) * (energy_gradient[ibatch] ^ (sa.m - j))
 end
 function calculate_energy(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray, ibatch::Integer)
@@ -174,15 +179,26 @@ function track_equilibration!(rule::TransitionRule, sa::SimulatedAnnealingHamilt
     return sa
 end
 
-function toymodel_gausspulse(sa::SimulatedAnnealingHamiltonian,
-                            gausspulse_amplitude::Float64,
-                            gausspulse_width::Float64,
+function toymodel_pulse(rule::TempcomputeRule, sa::SimulatedAnnealingHamiltonian,
+                            pulse_amplitude::Float64,
+                            pulse_width::Float64,
                             middle_position::Float64,
                             gradient::Float64)
     # amplitude * e^(- (1 /width) * (x-middle_position)^2)
-    eachposition = Tuple([gausspulse_amplitude * gradient^(- (1.0/gausspulse_width) * abs(i-middle_position)) + 1e-5 for i in 1:sa.m-1])
+    # eachposition = Tuple([pulse_amplitude * gradient^(- (1.0/pulse_width) * abs(i-middle_position)) + 1e-5 for i in 1:sa.m-1])
+    eachposition = Tuple([temp_calculate(rule, pulse_amplitude, pulse_width, middle_position, gradient, i) for i in 1:sa.m-1])
     return eachposition
 end
+temp_calculate(::Gaussiantype, pulse_amplitude::Float64,
+                            pulse_width::Float64,
+                            middle_position::Float64,
+                            gradient::Float64,
+                            i) = pulse_amplitude * gradient^(- (1.0/pulse_width) * (i-middle_position)^2) + 1e-5
+temp_calculate(::Exponentialtype, pulse_amplitude::Float64,
+                            pulse_width::Float64,
+                            middle_position::Float64,
+                            gradient::Float64,
+                            i) = pulse_amplitude * gradient^(- (1.0/pulse_width) * abs(i-middle_position)) + 1e-5
 
 function get_parallel_flip_id(sa)
     ret = Vector{Vector{Int}}()
@@ -206,25 +222,32 @@ function get_parallel_flip_id(sa)
     return ret
 end
 
+midposition_calculate(::Exponentialtype, 
+                    pulse_amplitude::Float64,
+                    pulse_width::Float64,
+                    energy_gradient::Float64) = 1.0 - (-(pulse_width) * log(1e-5/pulse_amplitude) / log(energy_gradient))
+midposition_calculate(::Gaussiantype, 
+                    pulse_amplitude::Float64,
+                    pulse_width::Float64,
+                    energy_gradient::Float64) = 1.0 - sqrt(-(pulse_width) * log(1e-5/pulse_amplitude) /log(energy_gradient))
 
-function track_equilibration_gausspulse_cpu!(rule::TransitionRule,
+function track_equilibration_pulse_cpu!(rule::TransitionRule,
+                                        temprule::TempcomputeRule,
                                         sa::SimulatedAnnealingHamiltonian, 
                                         state::AbstractMatrix, 
-                                        energy_gradient, 
-                                        gausspulse_amplitude::Float64,
-                                        gausspulse_width::Float64,
+                                        pulse_gradient, 
+                                        pulse_amplitude::Float64,
+                                        pulse_width::Float64,
                                         annealing_time; accelerate_flip = false
                                         )
-    midposition = 1.0 - (-(gausspulse_width) * log(1e-5/gausspulse_amplitude) / log(energy_gradient))
+    midposition = midposition_calculate(temprule, pulse_amplitude, pulse_width, pulse_gradient)
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
-    # @info "midposition = $midposition"
-    # @info "each_movement = $each_movement"
+    @info "midposition = $midposition"
+    @info "each_movement = $each_movement"
 
-    # NOTE: do we really need niters? or just set it to 1?
     single_layer_temp = []
     for t in 1:annealing_time
-        # @info "midposition = $midposition"
-        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient)
+        singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, pulse_gradient)
         Temp = fill((singlebatch_temp), size(state, 2))
         if accelerate_flip == false
             for thisatom in 1:natom(sa)
@@ -237,26 +260,26 @@ function track_equilibration_gausspulse_cpu!(rule::TransitionRule,
             end
         end
         midposition += each_movement
-        # push!(single_layer_temp, singlebatch_temp[1])
+        push!(single_layer_temp, singlebatch_temp[1])
     end
-    # return single_layer_temp
+    return single_layer_temp
 end
 
-function track_equilibration_gausspulse_gpu!(rule::TransitionRule,
+function track_equilibration_pulse_gpu!(rule::TransitionRule,
+                                        temprule::TempcomputeRule,
                                         sa::SimulatedAnnealingHamiltonian, 
                                         state::AbstractMatrix, 
-                                        energy_gradient, 
-                                        gausspulse_amplitude,
-                                        gausspulse_width,
+                                        pulse_gradient, 
+                                        pulse_amplitude,
+                                        pulse_width,
                                         annealing_time; accelerate_flip = false
-                                        )
-    midposition = 1.0 - (-(gausspulse_width) * log(1e-5/gausspulse_amplitude) / log(energy_gradient))
+                                        )    
+    midposition = midposition_calculate(temprule, pulse_amplitude, pulse_width, pulse_gradient)
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
     @info "each_movement = $each_movement"
 
-    # NOTE: do we really need niters? or just set it to 1?
     for t in 1:annealing_time
-        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient)
+        singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, pulse_gradient)
         Temp = CuArray(fill(Float32.(singlebatch_temp), size(state, 2)))
         if accelerate_flip == false
             for thisatom in 1:natom(sa)
@@ -273,24 +296,67 @@ function track_equilibration_gausspulse_gpu!(rule::TransitionRule,
     return sa
 end
 
+function track_equilibration_collective_temperature_cpu!(rule::TransitionRule,
+                                        sa::SimulatedAnnealingHamiltonian, 
+                                        state::AbstractMatrix,
+                                        temperature,
+                                        annealing_time; accelerate_flip = false)
+    for t in 1:annealing_time
+        singlebatch_temp = fill(temperature, sa.m-1)
+        Temp = fill(singlebatch_temp, size(state, 2))
+        if accelerate_flip == false
+            for thisatom in 1:natom(sa)
+                step!(rule, sa, state, fill(1.0, size(state, 2)), Temp, thisatom)
+            end
+        else
+            flip_list = get_parallel_flip_id(sa)
+            for eachflip in flip_list
+                step_parallel!(rule, sa, state, fill(1.0, size(state, 2)), Temp, eachflip)
+            end
+        end
+    end
+end
 
-function track_equilibration_gausspulse_reverse_cpu!(rule::TransitionRule,
+function track_equilibration_collective_temperature_gpu!(rule::TransitionRule,
+                                        sa::SimulatedAnnealingHamiltonian, 
+                                        state::AbstractMatrix,
+                                        temperature,
+                                        annealing_time; accelerate_flip = false)
+    for t in 1:annealing_time
+        singlebatch_temp = fill(Float32(temperature), sa.m-1)
+        Temp = CuArray(fill(singlebatch_temp, size(state, 2)))
+        if accelerate_flip == false
+            for thisatom in 1:natom(sa)
+                step!(rule, sa, state, CuArray(fill(1.0f0, size(state, 2))), Temp, thisatom)
+            end
+        else
+            flip_list = get_parallel_flip_id(sa)
+            for eachflip in flip_list
+                step_parallel!(rule, sa, state, CuArray(fill(1.0f0, size(state, 2))), Temp, CuArray(eachflip))
+            end
+        end
+    end
+end
+
+
+function track_equilibration_pulse_reverse_cpu!(rule::TransitionRule,
+                                        temprule::TempcomputeRule,
                                         sa::SimulatedAnnealingHamiltonian, 
                                         state::AbstractMatrix, 
-                                        energy_gradient, 
-                                        gausspulse_amplitude::Float64,
-                                        gausspulse_width::Float64,
+                                        pulse_gradient, 
+                                        pulse_amplitude::Float64,
+                                        pulse_width::Float64,
                                         annealing_time;
                                         accelerate_flip = false
                                         )
-    midposition = 1.0 - (-(gausspulse_width) * log(1e-5/gausspulse_amplitude) / log(energy_gradient))
+    midposition = midposition_calculate(temprule, pulse_amplitude, pulse_width, pulse_gradient)
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
     midposition = sa.m - 1.0 + 1.0 - midposition
 
     single_layer_temp = []
     for t in 1:annealing_time
         @info "midposition = $midposition"
-        singlebatch_temp = toymodel_gausspulse(sa, gausspulse_amplitude, gausspulse_width, midposition, energy_gradient)
+        singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, pulse_gradient)
         Temp = fill(singlebatch_temp, size(state, 2))
         if accelerate_flip == false
             for thisatom in 1:natom(sa)
@@ -306,4 +372,98 @@ function track_equilibration_gausspulse_reverse_cpu!(rule::TransitionRule,
         # push!(single_layer_temp, singlebatch_temp[1])
     end
     # return single_layer_temp
+end
+
+function track_equilibration_pulse_reverse_gpu!(rule::TransitionRule,
+                                        temprule::TempcomputeRule,
+                                        sa::SimulatedAnnealingHamiltonian, 
+                                        state::AbstractMatrix, 
+                                        pulse_gradient, 
+                                        pulse_amplitude,
+                                        pulse_width,
+                                        annealing_time; accelerate_flip = false
+                                        )    
+    midposition = midposition_calculate(temprule, pulse_amplitude, pulse_width, pulse_gradient)
+    each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
+    midposition = sa.m - 1.0 + 1.0 - midposition
+    @info "each_movement = $each_movement"
+
+    for t in 1:annealing_time
+        singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, pulse_gradient)
+        Temp = CuArray(fill(Float32.(singlebatch_temp), size(state, 2)))
+        if accelerate_flip == false
+            for thisatom in 1:natom(sa)
+                step!(rule, sa, state, CuArray(fill(1.0, size(state, 2))), Temp, thisatom)
+            end
+        else
+            flip_list = get_parallel_flip_id(sa)
+            for eachflip in flip_list
+                step_parallel!(rule, sa, state, CuArray(fill(1.0, size(state, 2))), Temp, CuArray(eachflip))
+            end
+        end
+        midposition -= each_movement
+    end
+    return sa
+end
+
+function track_equilibration_fixedlayer_cpu!(rule::TransitionRule,
+                                        sa::SimulatedAnnealingHamiltonian, 
+                                        state::AbstractMatrix,  
+                                        annealing_time; accelerate_flip = false, fixedinput = false)
+    Temp_list = reverse(range(1e-5, 10.0, annealing_time))
+    for this_temp in Temp_list
+        singlebatch_temp = fill(this_temp, sa.m-1)
+        Temp = fill(singlebatch_temp, size(state, 2))
+        if accelerate_flip == false
+            if fixedinput == false # this time fix output
+                for thisatom in 1:natom(sa)-sa.n
+                    step!(rule, sa, state, fill(1.0, size(state, 2)), Temp, thisatom)
+                end
+            else # this time fix input
+                for thisatom in sa.n+1:natom(sa)
+                    step!(rule, sa, state, fill(1.0, size(state, 2)), Temp, thisatom)
+                end
+            end
+        else
+            flip_list = get_parallel_flip_id(SimulatedAnnealingHamiltonian(sa.n, sa.m-1)) # original fix output
+            if fixedinput == true # this time fix input
+                flip_list = [[x + sa.n for x in inner_vec] for inner_vec in flip_list]
+            end
+            for eachflip in flip_list
+                step_parallel!(rule, sa, state, fill(1.0, size(state, 2)), Temp, eachflip)
+            end
+        end
+    end
+end
+
+function track_equilibration_fixedlayer_gpu!(rule::TransitionRule,
+                                        sa::SimulatedAnnealingHamiltonian, 
+                                        state::AbstractMatrix,  
+                                        annealing_time; accelerate_flip = false, fixedinput = false)
+    Temp_list = reverse(range(1e-5, 10.0, annealing_time))
+    for this_temp in Temp_list
+        # @info "yes"
+        singlebatch_temp = Tuple(fill(Float32(this_temp), sa.m-1))
+        # @info "$(typeof(singlebatch_temp))"
+        Temp = CuArray((fill(singlebatch_temp, size(state, 2))))
+        if accelerate_flip == false
+            if fixedinput == false # this time fix output
+                for thisatom in 1:natom(sa)-sa.n
+                    step!(rule, sa, state, CuArray(fill(1.0f0, size(state, 2))), Temp, thisatom)
+                end
+            else # this time fix input
+                for thisatom in sa.n+1:natom(sa)
+                    step!(rule, sa, state, CuArray(fill(1.0f0, size(state, 2))), Temp, thisatom)
+                end
+            end
+        else
+            flip_list = get_parallel_flip_id(SimulatedAnnealingHamiltonian(sa.n, sa.m-1)) # original fix output
+            if fixedinput == true # this time fix input
+                flip_list = [[x + sa.n for x in inner_vec] for inner_vec in flip_list]
+            end
+            for eachflip in flip_list
+                step_parallel!(rule, sa, state, CuArray(fill(1.0f0, size(state, 2))), Temp, CuArray(eachflip))
+            end
+        end
+    end
 end

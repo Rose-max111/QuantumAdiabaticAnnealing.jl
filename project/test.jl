@@ -1,16 +1,31 @@
-using DormandPrince
+using CUDA
 
-function test(y)
-    return [0.85*y[1], 0.75*y[2]]
+function gpu_add!(y, x)
+    id = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    stride = blockDim().x * gridDim().x
+    
+    Nx, Ny = size(y)
+    cind = CartesianIndices((Nx, Ny))
+
+    # println(blockIdx().x, " ", threadIdx().x)
+    for k in id:stride:Nx*Ny
+        i = cind[k][1]
+        j = cind[k][2]
+        y[i,j] += x[i,j]
+    end
+    return nothing
 end
 
-function fcn(x, y, f)
-    f = test(y)
-    # f[1] = 0.85*y[1]
-    # f[2] = 0.75*y[2]
-end
+N = 2^14
+M = 2^14
+x_d = CUDA.fill(1.0f0, (N, M))
+y_d = CUDA.fill(2.0f0, (N, M))
 
-solver = DP5Solver(fcn, 0.0, [10.0, 20.0])
-integrate!(solver, 5.0)
+kernel = @cuda launch=false gpu_add!(y_d, x_d)
+config = launch_configuration(kernel.fun)
+threads = min(N*M, config.threads)
+blocks = cld(N*M, threads)
 
-get_current_state(solver)
+@time kernel(y_d, x_d; threads, blocks)
+
+@time y_d .+= x_d
