@@ -72,6 +72,7 @@ def draw1():
     # slope2, intercept2 = coefficients
     # y_fit_pulse = slope2 * xvalue_pulse + intercept2
 
+
     # fig = plt.figure(dpi=200, figsize=(20, 5.5))
     fig = plt.figure(dpi=200)
     plt.rcParams['mathtext.fontset'] = 'stix'
@@ -80,6 +81,7 @@ def draw1():
     ax1 = plt.subplot(1, 1, 1)
     ax1.scatter(xvalue_gradient, yvalue_gradient, marker='o', edgecolors='#9a031e',
                 facecolors='none', linewidth=3, s=60, label='Energy Gradient', zorder=5)
+    
     # ax1.plot(xvalue_pulse, y_fit_gradient, '--', c='#03045e',
     #          linewidth=2.5, zorder=5, label='Fit of Energy Gradient')
     ax1.scatter(xvalue_pulse, yvalue_pulse, marker='o', edgecolors='#fcbf49',
@@ -94,7 +96,7 @@ def draw1():
     ax.spines['top'].set_linewidth(mylinewidth)
     ax.spines['right'].set_linewidth(mylinewidth)
 
-    plt.xlim(left=0, right=34)
+    plt.xlim(left=0, right=34
     plt.ylim(bottom=0, top=65000)
 
     yticks_name = ['0'] + [f'{y}'+r'$\times 10^4$' for y in [
@@ -142,6 +144,7 @@ def draw2():
                 facecolors='none', linewidth=3, s=60, label='T=30')
     ax1.plot(xvalue_30, y_fit_30, '-', c='#0096c7',
              linewidth=2.5, zorder=3, label='Fit of T=30')
+
     ax = plt.gca()
     mylinewidth = 1.5
     ax.spines['bottom'].set_linewidth(mylinewidth)

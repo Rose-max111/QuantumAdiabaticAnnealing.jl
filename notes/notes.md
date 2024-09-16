@@ -170,10 +170,10 @@ Finally, we evaluate the error probability v.s. run time in a single layer 4-gad
 ![Alt text](<images/error vs runtime.png>)
 
 ## Estimation of the computing time
-Let the temperature of the $k$-th layer at time $t$ be $T(t, k) = T \lambda^{ct + k}$ (**NOTE: should be $T(t, k) = T\lambda^{ct-k}$? Otherwise temperature would decrease with increasing depth, and the deepest layer cools first**), where $T$ is the initial temperature, $c$ is a constant, and $\lambda < 1$ is a constant.
-At any given time $t$, we denote the subset of atoms at depth $-\frac{W}{2} < ct + k < \frac{W}{2}$ as the **active zone**, where $W$ is the width of the sliding window such that $e^{-\Delta E_{max} /\lambda^{W/2}} = \epsilon \ll 1$. The active zone is the region where non-trivial computation occurs. The atoms outside the active zone are either frozen or completely randomized. Clearly, $W$ asymptotically scales as $(1-\lambda)^{-1} \log(-\frac{1}{\log\epsilon})$ (NOTE:$W \sim \log_{\lambda}(-\frac{1}{\log{\epsilon}}) = \frac{\log(-\frac{1}{\log{\epsilon}})}{\log(\lambda)} \approx (1 - \lambda)^{-1}\log(-\frac{1}{\log \epsilon})$, the last term exists when $\lambda \lessapprox 1$).
+Let the temperature of the $k$-th layer at time $t$ be $T(t, k) = T \lambda^{ct - k}$, where $T$ is the initial temperature, $c$ is a constant, and $\lambda < 1$ is a constant.
+At any given time $t$, we denote the subset of atoms at depth $-\frac{W}{2} < ct - k < \frac{W}{2}$ as the **active zone**, where $W$ is the width of the sliding window such that $e^{-\Delta E_{max} /\lambda^{W/2}} = \epsilon \ll 1$. The active zone is the region where non-trivial computation occurs. The atoms outside the active zone are either frozen or completely randomized. Clearly, $W$ asymptotically scales as $(1-\lambda)^{-1} \log(-\frac{1}{\log\epsilon})$ (NOTE:$W \sim \log_{\lambda}(-\frac{1}{\log{\epsilon}}) = \frac{\log(-\frac{1}{\log{\epsilon}})}{\log(\lambda)} \approx (1 - \lambda)^{-1}\log(-\frac{1}{\log \epsilon})$, the last term exists when $\lambda \lessapprox 1$).
 
-We consider thermalizing the system in units of $W$(**NOTE: should be $\frac{m}{W}?$**) time steps. $\epsilon$ is the error probability of each unit of time, which should scale as $\epsilon \sim\left(\frac{m}{W}\right)^{-1}$, where $m$ is the total number of time steps.
+We consider thermalizing the system in units of $W$. $\epsilon$ is the error probability of each unit of time, which should scale as $\epsilon \sim\left(\frac{m}{W}\right)^{-1}$, where $m$ is the total number of time steps.
 
 The probability transition matrix of the active zone at any given time $t$ (except the starting and ending time) is the same, so we denote it as $P = P(t)$. The error tolerance requires the zone to be thermalized to certain extent, i.e. $\left(\frac{\lambda_2(P)}{\lambda_1(P)}\right)^{t_{\text{th}}} < \epsilon$, where $\lambda_1(P) \geq \lambda_2(P)$ are the two largest eigenvalues of $P$. We have $t_{\text{th}} \sim \left(1-\frac{\lambda_2(P)}{\lambda_1(P)}\right)^{-1}\log(\epsilon^{-1})$.
 
@@ -280,51 +280,48 @@ $$
 
 Here with a spin-glass consists $N$ atoms, we choose $n$ to be $\frac{N(N-1)}{2} + N$, which means each variable $x_i$ represents a correspond interaction energy $J_{u, v}$ or a correspond onsite energy $h_u$, we assigned aliases to these $x_i$ as $x_{u,v}$ or $x_{u}$.
 
-Then we assign a corresponding spin state to each input-output relationship. Let these states be $st[1...8]$ and the others be $st[9...2^N]$. We need to construct constraints that $E(st[1])=E(st[2])=...=E(st[8])$ and $E(st[1])<E(st[9]),E(st[10]), ..., E(st[2^N])$, where $E(st[i])$ represents the energy of state $st[i]$.
+Let the configuration space of the system be $S = \{\mathbf s_i\mid i=1,\ldots, 2^N\}$, each associated with a energy $H(\mathbf s_i)$. We denote the target states with minimum energy as $S_{\text{min}} \subset S$. We can express the linear programming problem as
+```math
+\begin{align*}
+&\min_{J \in \mathbb{R}^{N(N-1)/2}, h\in \mathbb{R}^N} 0\\
+&H(\mathbf s_i) < H(\mathbf s_j), \forall \mathbf s_i \in S_{\text{min}}, \mathbf s_j \in S \setminus S_{\text{min}}\\
+&H(\mathbf s_i) = H(\mathbf s_j), \forall \mathbf s_i, \mathbf s_j \in S_{\text{min}}
+\end{align*}
+```
 
-For $E(st[1])=E(st[2])$, we could add one constraint that 
+Note that $H$ is a linear function of $J$ and $h$, so the constraints are linear. The less constraints and equality constraints can be easily transformed into inequality constraints by adding ancilla variables.
 
-$$
-\sum_{u,v}x_{u, v} st[1,u]st[1,v] + \sum_{u}x_ust[1,u]\leq \sum_{u,v}x_{u, v} st[2,u]st[2,v] + \sum_{u}x_ust[2,u] \\
-\sum_{u,v}x_{u, v} st[2,u]st[2,v] + \sum_{u}x_ust[2,u]\leq \sum_{u,v}x_{u, v} st[1,u]st[1,v] + \sum_{u}x_ust[1,u] 
-$$
+There is no solution with 4-atoms spin-glass that can satisfy the constraints. The minimum number of atoms required to satisfy the constraints is 5. We set the target states to
 
-As for $E(st[1])< E(st[j>8])$, the constraint should be
+| input 1 | input 2 | input 3 | output | ancilla |
+| --- |:---:|:---:|:---:|:---:|
+| $\downarrow$ | $\downarrow$ | $\downarrow$ | $\downarrow$ | $?$ |
+| $\downarrow$ | $\downarrow$ | $\uparrow$ | $\uparrow$ | $?$ |
+| $\downarrow$ | $\uparrow$ | $\downarrow$ | $\uparrow$ | $?$ |
+| $\downarrow$ | $\uparrow$ | $\uparrow$ | $\uparrow$ | $?$ |
+| $\uparrow$ | $\downarrow$ | $\downarrow$ | $\downarrow$ | $?$ |
+| $\uparrow$ | $\downarrow$ | $\uparrow$ | $\uparrow$ | $?$ |
+| $\uparrow$ | $\uparrow$ | $\downarrow$ | $\uparrow$ | $?$ |
+| $\uparrow$ | $\uparrow$ | $\uparrow$ | $\downarrow$ | $?$ |
 
-$$
-\sum_{u,v}x_{u, v} st[1,u]st[1,v] + \sum_{u}x_ust[1,u]\leq \sum_{u,v}x_{u, v} st[j,u]st[j,v] + \sum_{u}x_ust[j,u] +\delta \\
-$$
+where the ancilla bit in each row can be either $\uparrow$ or $\downarrow$ (256 total possibilities). One of the solutions satisfying the constraints is
 
-These constraints can be easily change into standard form. Also, one should notice that we add a small term $\delta$ in the second type of constraints since LP can't handle inequalities without equality constraints. 
+```math
+J = \begin{pmatrix}
+\cdot & 1 & 1 & 2 & 3\\
+\cdot & \cdot & 2 & 2 & 5\\
+\cdot & \cdot & \cdot & 2 & 5\\
+\cdot & \cdot & \cdot & \cdot & 6\\
+\cdot & \cdot & \cdot & \cdot & \cdot\\
+\end{pmatrix}, h = \begin{pmatrix}
+1\\
+2\\
+2\\
+2\\
+5\\
+\end{pmatrix}
+```
 
-The result is that our toy model can be successfully mapped into a 5-atoms spin-glass model, one of which is ancilla (the last one). 
-
-<div align="center">
-
-|   | 1 | 2 | 3 | 4 | 5 |
-|---|---|---|---|---|---|
-| **1** | 1 | 1 | 1 | 2 | 3 |
-| **2** | 1 | 2 | 2 | 2 | 5 |
-| **3** | 1 | 2 | 2 | 2 | 5 |
-| **4** | 2 | 2 | 2 | 2 | 6 |
-| **5** | 3 | 5 | 5 | 6 | 5 |
-
-</div>
-
-Diagonal term represent onsite energy, and off-diagonal term represent interaction energy. We list the 8 input-output relationship correspondence as follows.
-
-<div align="center">
-
-| | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
-| --- |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| input-output | 0000 | 0011 | 0101 | 0111 | 1000 | 1011 | 1101 | 1110 |
-| spin-glass | 11110 | 11001 | 10101 | 10001 | 01110 | 01001 | 00101 | 00011 |
-
-</div>
-
-Where in the second line (spin-glass model), $1$ means $s_i=-1$, $0$ means $s_i=1$. Ground state energy is $-11$
-
-What's more, there is no solution with 4-atoms spin-glass mapping.
 ### Numerical result
 
 We firstly tried classical adiabatic annealing with the classical-spin mapping method[^Wang2013]. Here the quantum spin $s_i$ are replaced by a classical unit magnetic vector $\vec{M_i}$, with the equation of motion
