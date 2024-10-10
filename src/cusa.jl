@@ -201,12 +201,12 @@ temp_calculate(::Gaussiantype, pulse_amplitude::Float64,
                             pulse_width::Float64,
                             middle_position::Float64,
                             gradient::Float64,
-                            i) = ULogarithmic(pulse_amplitude * gradient^(- (1.0/pulse_width) * (i-middle_position)^2))
+                            i) = ULogarithmic(pulse_amplitude * gradient^(- (1.0/pulse_width) * (i-middle_position)^2) + 1e-5)
 temp_calculate(::Exponentialtype, pulse_amplitude::Float64,
                             pulse_width::Float64,
                             middle_position::Float64,
                             gradient::Float64,
-                            i) = ULogarithmic(pulse_amplitude * gradient^(- (1.0/pulse_width) * abs(i-middle_position)))
+                            i) = ULogarithmic(pulse_amplitude * gradient^(- (1.0/pulse_width) * abs(i-middle_position)) + 1e-5)
 
 function get_parallel_flip_id(sa)
     ret = Vector{Vector{Int}}()
