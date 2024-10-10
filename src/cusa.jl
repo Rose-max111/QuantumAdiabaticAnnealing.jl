@@ -115,13 +115,13 @@ end
     end
     flip_max_prob = 1
     if j == sa.m
-        flip_max_prob *= prob_accept(rule, Temp[ibatch][j-1], ΔE_with_previous_layer)
+        flip_max_prob = prob_accept(rule, ΔE_with_previous_layer / Temp[ibatch][j-1])
         # flip_max_prob = prob_accept(HeatBath(), Temp[ibatch][j-1], ΔE_with_previous_layer)
     elseif j == 1
-        flip_max_prob *= prob_accept(rule, Temp[ibatch][j], ΔE_with_next_layer)
+        flip_max_prob = prob_accept(rule, ΔE_with_next_layer / Temp[ibatch][j])
         # flip_max_prob *= prob_accept(HeatBath(), Temp[ibatch][j], ΔE_with_next_layer)
     else
-        flip_max_prob = 1.0 / (1.0 + exp(ΔE_with_previous_layer / Temp[ibatch][j-1] + ΔE_with_next_layer / Temp[ibatch][j]))
+        flip_max_prob = prob_accept(rule, ΔE_with_previous_layer / Temp[ibatch][j-1] + ΔE_with_next_layer / Temp[ibatch][j])
     end
     if rand() < flip_max_prob
         @inbounds state[node, ibatch] ⊻= true
@@ -130,8 +130,17 @@ end
         0
     end
 end
-prob_accept(::Metropolis, Temp, ΔE::T) where T<:Real = ΔE < 0 ? 1.0 : exp(- (ΔE) / Temp)
-prob_accept(::HeatBath, Temp, ΔE::Real) = inv(1 + exp(ΔE / Temp))
+# prob_accept(::Metropolis, Temp, ΔE::T) where T<:Real = ΔE < 0 ? 1.0 : exp(- (ΔE) / Temp)
+function prob_accept(::HeatBath, val) # val = ΔE / Temp
+    if abs(val) > 20
+        if val > 0
+            return 0
+        else
+            return 1
+        end
+    end
+    return inv(1 + exp(float(val)))
+end
 
 
 
@@ -183,9 +192,8 @@ function toymodel_pulse(rule::TempcomputeRule, sa::SimulatedAnnealingHamiltonian
                             pulse_amplitude::Float64,
                             pulse_width::Float64,
                             middle_position::Float64,
-                            gradient::Float64)
-    # amplitude * e^(- (1 /width) * (x-middle_position)^2)
-    # eachposition = Tuple([pulse_amplitude * gradient^(- (1.0/pulse_width) * abs(i-middle_position)) + 1e-5 for i in 1:sa.m-1])
+                            gradient::Float64) 
+    # we represent temperature as LogarithmicNumbers
     eachposition = Tuple([temp_calculate(rule, pulse_amplitude, pulse_width, middle_position, gradient, i) for i in 1:sa.m-1])
     return eachposition
 end
@@ -193,12 +201,12 @@ temp_calculate(::Gaussiantype, pulse_amplitude::Float64,
                             pulse_width::Float64,
                             middle_position::Float64,
                             gradient::Float64,
-                            i) = pulse_amplitude * gradient^(- (1.0/pulse_width) * (i-middle_position)^2) + 1e-5
+                            i) = ULogarithmic(pulse_amplitude * gradient^(- (1.0/pulse_width) * (i-middle_position)^2))
 temp_calculate(::Exponentialtype, pulse_amplitude::Float64,
                             pulse_width::Float64,
                             middle_position::Float64,
                             gradient::Float64,
-                            i) = pulse_amplitude * gradient^(- (1.0/pulse_width) * abs(i-middle_position)) + 1e-5
+                            i) = ULogarithmic(pulse_amplitude * gradient^(- (1.0/pulse_width) * abs(i-middle_position)))
 
 function get_parallel_flip_id(sa)
     ret = Vector{Vector{Int}}()
@@ -231,6 +239,17 @@ midposition_calculate(::Gaussiantype,
                     pulse_width::Float64,
                     energy_gradient::Float64) = 1.0 - sqrt(-(pulse_width) * log(1e-5/pulse_amplitude) /log(energy_gradient))
 
+
+function each_energy(sa::SimulatedAnnealingHamiltonian, state::AbstractMatrix, energy_gradient::AbstractArray)
+    ret = zeros(Bool, (sa.n * (sa.m-1), size(state, 2)))
+    for ibatch in 1:size(state, 2)
+        for i in 1:sa.n * (sa.m-1)
+            ret[i, ibatch] = evaluate_parent(sa, state, energy_gradient, i+sa.n, ibatch) > 0
+        end
+    end
+    return ret
+end
+
 function track_equilibration_pulse_cpu!(rule::TransitionRule,
                                         temprule::TempcomputeRule,
                                         sa::SimulatedAnnealingHamiltonian, 
@@ -240,12 +259,14 @@ function track_equilibration_pulse_cpu!(rule::TransitionRule,
                                         pulse_width::Float64,
                                         annealing_time; accelerate_flip = false
                                         )
+    # Random.seed!(12345)
     midposition = midposition_calculate(temprule, pulse_amplitude, pulse_width, pulse_gradient)
     each_movement = ((1.0 - midposition) * 2 + (sa.m - 2)) / (annealing_time - 1)
     @info "midposition = $midposition"
     @info "each_movement = $each_movement"
 
-    single_layer_temp = []
+    energy_each_step = []
+    configuration_each_step = []
     for t in 1:annealing_time
         singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, pulse_gradient)
         Temp = fill((singlebatch_temp), size(state, 2))
@@ -259,10 +280,14 @@ function track_equilibration_pulse_cpu!(rule::TransitionRule,
                 step_parallel!(rule, sa, state, fill(1.0, size(state, 2)), Temp, eachflip)
             end
         end
-        midposition += each_movement
-        push!(single_layer_temp, singlebatch_temp[1])
+        # if t <= annealing_time
+            midposition += each_movement
+        # end
+        @info "temp_end = $(singlebatch_temp[end])"
+        push!(energy_each_step, each_energy(sa, state, fill(1.0, size(state, 2))))
+        push!(configuration_each_step, copy(state))
     end
-    return single_layer_temp
+    return energy_each_step, configuration_each_step
 end
 
 function track_equilibration_pulse_gpu!(rule::TransitionRule,
@@ -280,7 +305,7 @@ function track_equilibration_pulse_gpu!(rule::TransitionRule,
 
     for t in 1:annealing_time
         singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, pulse_gradient)
-        Temp = CuArray(fill(Float32.(singlebatch_temp), size(state, 2)))
+        Temp = CuArray(fill((singlebatch_temp), size(state, 2)))
         if accelerate_flip == false
             for thisatom in 1:natom(sa)
                 step!(rule, sa, state, CuArray(fill(1.0, size(state, 2))), Temp, thisatom)
@@ -390,7 +415,7 @@ function track_equilibration_pulse_reverse_gpu!(rule::TransitionRule,
 
     for t in 1:annealing_time
         singlebatch_temp = toymodel_pulse(temprule, sa, pulse_amplitude, pulse_width, midposition, pulse_gradient)
-        Temp = CuArray(fill(Float32.(singlebatch_temp), size(state, 2)))
+        Temp = CuArray(fill((singlebatch_temp), size(state, 2)))
         if accelerate_flip == false
             for thisatom in 1:natom(sa)
                 step!(rule, sa, state, CuArray(fill(1.0, size(state, 2))), Temp, thisatom)

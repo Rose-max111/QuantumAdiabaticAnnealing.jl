@@ -1,31 +1,15 @@
-using CUDA
+using QuantumAdiabaticAnnealing
+using QuantumAdiabaticAnnealing:spectral
+using QuantumAdiabaticAnnealing:midposition_calculate
 
-function gpu_add!(y, x)
-    id = (blockIdx().x - 1) * blockDim().x + threadIdx().x
-    stride = blockDim().x * gridDim().x
-    
-    Nx, Ny = size(y)
-    cind = CartesianIndices((Nx, Ny))
+1.0 - midposition_calculate(Exponentialtype(), 10.0, 1.0, 1.5)
 
-    # println(blockIdx().x, " ", threadIdx().x)
-    for k in id:stride:Nx*Ny
-        i = cind[k][1]
-        j = cind[k][2]
-        y[i,j] += x[i,j]
-    end
-    return nothing
+ans = []
+for n in 3:5
+    Mat = toy_model_transition_matrix(CellularAutomata1D{110}(), HeatBath(), n, 4, 10; on_site_energy=nothing, period_condition=true, energy_gradient=1.0)
+    @info "finish calculating transition matrix"
+    eigvals, eigvecs = spectral(Mat, 2)
+    @info "n = $n, Δ = $(eigvals[1] - eigvals[2])"
+    push!(ans, eigvals[1] - eigvals[2])
 end
-
-N = 2^14
-M = 2^14
-x_d = CUDA.fill(1.0f0, (N, M))
-y_d = CUDA.fill(2.0f0, (N, M))
-
-kernel = @cuda launch=false gpu_add!(y_d, x_d)
-config = launch_configuration(kernel.fun)
-threads = min(N*M, config.threads)
-blocks = cld(N*M, threads)
-
-@time kernel(y_d, x_d; threads, blocks)
-
-@time y_d .+= x_d
+b = ans .* Vector(3:5)

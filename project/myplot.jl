@@ -39,9 +39,12 @@ function __main__(coef, graph_width, graph_depth, λ, GW)
         end
     end
     graph_depth = Float64.(graph_depth)
-    ydata = (evaluate_time)
-    xdata = [x * log(x) for x in graph_depth]
-    draw_timevsdepth(xdata, ydata)
+    # ydata = (evaluate_time)
+    # xdata = [x * log(x) for x in graph_depth]
+    xdata = graph_depth
+    ydata = 1.0 * (graph_depth .+ (34.07*2 -2)) ./ evaluate_time
+    scatter(xdata, ydata)
+    # draw_timevsdepth(xdata, ydata)
     # draw_timevsdepth(((graph_depth) .* log.(graph_depth) .* log.(graph_depth))[1:end], (evaluate_time[1:end]))
 
     # filepath = joinpath(@__DIR__, "test.txt")
@@ -57,16 +60,16 @@ end
 
 function __maingauss__(graph_width, graph_depth, λ, GW)
     evaluate_time = Vector{Float64}()
-    for d in graph_depth
-        filepath = joinpath(@__DIR__, "data_toymodel_gausspulse/W=$(graph_width)_D=$(d)_GW=$(GW)_E=$(λ).txt")
+    for d in graph_width
+        filepath = joinpath(@__DIR__, "data_toymodel_gausspulse/width/W=$(d)_D=$(graph_depth)_GW=$(GW)_E=$(λ).txt")
         # filepath = joinpath(@__DIR__, "data_toymodel_pulse/W=$(graph_width)_D=$(d)_E=$(λ).txt")
         open(filepath, "r") do file
             push!(evaluate_time, parse(Float64, readline(file)))
         end
     end
-    graph_depth = Float64.(graph_depth)
-    ydata = log.(evaluate_time ./ graph_depth)
-    xdata = log.(log.(graph_depth))
+    graph_width = Float64.(graph_width)
+    ydata = (evaluate_time)
+    xdata = graph_width
     draw_timevsdepth(xdata, ydata)
 
     # filepath = joinpath(@__DIR__, "test.txt")
@@ -80,16 +83,18 @@ function __maingauss__(graph_width, graph_depth, λ, GW)
     # end
 end
 
-val = 3
-__main__(1 + 1 / (log(1.5) * val), 12, [12, 15, 18, 22, 25, 28, 31, 34, 36, 39, 42, 45, 48, 50, 53, 56, 58, 61, 64, 67, 69, 72, 74, 77, 80, 82, 85, 88, 90, 92], 1.5, 1.0)
-__main__(1 + 1 / (log(1.3) * val), 15, [8, 10, 12, 15, 18, 20, 22, 25, 28, 30, 33, 35, 37], 1.3, 1.0)
-__main__(1 + 1 / (log(1.24) * val), 14, [10, 13, 16, 18, 21, 24, 27, 30, 32, 35, 38, 40], 1.24, 1.0)
-__main__(1 + 1 / (log(1.18) * val), 13, [10, 12, 15, 18, 20, 22, 25, 28, 30], 1.18, 1.0)
+# val = 3
+# __main__(1 + 1 / (log(1.5) * val), 12, [12, 15, 18, 22, 25, 28, 31, 34, 36, 39, 42, 45, 48, 50, 53, 56, 58, 61, 64, 67, 69, 72, 74, 77, 80, 82, 85, 88, 90, 92], 1.5, 1.0)
+# __main__(1 + 1 / (log(1.3) * val), 15, [8, 10, 12, 15, 18, 20, 22, 25, 28, 30, 33, 35, 37], 1.3, 1.0)
+# __main__(1 + 1 / (log(1.24) * val), 14, [10, 13, 16, 18, 21, 24, 27, 30, 32, 35, 38, 40], 1.24, 1.0)
+# __main__(1 + 1 / (log(1.18) * val), 13, [10, 12, 15, 18, 20, 22, 25, 28, 30], 1.18, 1.0)
 
 # __main__(12, [6, 8, 10, 12, 15, 18, 22, 25, 28, 31, 34, 36, 39, 42, 45, 48, 50, 53, 56, 58, 61, 64, 67, 69, 72, 74, 77, 80, 82, 85, 88, 90, 92], 1.5, 1.0)
 
 # __main__(15, [4, 6, 8, 10, 12, 15, 18, 20, 22, 25, 28, 30, 33, 35, 37], 1.3, 1.0)
 # __maingauss__(12, [25, 28, 34, 36, 39, 42, 45, 48, 50, 53, 56, 58, 61, 64, 67, 69, 72, 74, 77, 80, 82, 85, 88, 90, 92][10:end], 1.01, 1.0)
 # __maingauss__(12, [10, 12, 15, 18, 21, 24, 26, 29, 32, 35, 38, 41, 43, 46], 1.004, 1.0)
+
+__maingauss__([15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70], 20, 1.02, 1.0)
 
 # __main__(15, [4, 6, 8, 10, 12, 15, 18, 20, 22, 25, 28, 30, 33, 35, 37], 1.3, 1.0)

@@ -4,6 +4,7 @@ using QuantumAdiabaticAnnealing: track_equilibration_pulse_gpu!, track_equilibra
 using CUDA
 using QuantumAdiabaticAnnealing: get_parallel_flip_id
 using CairoMakie
+using GLMakie
 using QuantumAdiabaticAnnealing:temp_calculate
 
 function testplot(xdata, ydata)
@@ -59,7 +60,7 @@ function evaluate_50percent_time_cpu(temprule::TempcomputeRule, width::Integer, 
         state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
         success = count(x -> x == 0, state_energy)
         @info "Stage 1, now max_try = $max_try, success time = $success, anneal_time = $anneal_time"
-        if 1.0 * success / nbatch >= 0.49
+        if 1.0 * success / nbatch >= 0.80
             break
         else
             max_try *= 2
@@ -82,7 +83,7 @@ function evaluate_50percent_time_cpu(temprule::TempcomputeRule, width::Integer, 
         state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
         success = count(x -> x == 0, state_energy)
         # @info "Stage 2, now max_try = $max_try, success time = $success, anneal_time = $anneal_time"
-        if 1.0 * success / nbatch >= 0.49
+        if 1.0 * success / nbatch >= 0.80
             max_try /=2
             continue
         else
@@ -113,7 +114,7 @@ function evaluate_50percent_time_gpu(temprule::TempcomputeRule, width::Integer, 
         state_energy = [calculate_energy(sa, cpu_state, fill(1.0, nbatch), i) for i in 1:nbatch]
         success = count(x -> x == 0, state_energy)
         @info "Stage 1, now max_try = $max_try, success time = $success, anneal_time = $anneal_time"
-        if 1.0 * success / nbatch >= 0.49
+        if 1.0 * success / nbatch >= 0.80
             break
         else
             max_try *= 2
@@ -137,7 +138,7 @@ function evaluate_50percent_time_gpu(temprule::TempcomputeRule, width::Integer, 
         state_energy = [calculate_energy(sa, cpu_state, fill(1.0, nbatch), i) for i in 1:nbatch]
         success = count(x -> x == 0, state_energy)
         @info "Stage 2, now max_try = $max_try, success time = $success, anneal_time = $anneal_time"
-        if 1.0 * success / nbatch >= 0.49
+        if 1.0 * success / nbatch >= 0.80
             max_try /=2
             continue
         else
@@ -265,31 +266,29 @@ function evaluate_50percent_time_fixlayer_gpu(width::Integer, depth::Integer, fi
 end
 
 
-# evaluate_50percent_time_cpu(12, 8, 1.0, 1.5)
+# evaluate_50percent_time_cpu(Exponentialtype(),10, 8, 1.0, 1.5)
 
-width = ARGS[1]
-depth = ARGS[2]
-gauss_width = ARGS[3]
-λ = ARGS[4]
-device = ARGS[5]
+# width = ARGS[1]
+# depth = ARGS[2]
+# gauss_width = ARGS[3]
+# λ = ARGS[4]
+# device = ARGS[5]
 
-width = parse(Int, width)
-depth = parse(Int, depth)
-gauss_width = parse(Float64, gauss_width)
-λ = parse(Float64, λ)
-device = parse(Int, device)
+# width = parse(Int, width)
+# depth = parse(Int, depth)
+# gauss_width = parse(Float64, gauss_width)
+# λ = parse(Float64, λ)
+# device = parse(Int, device)
 
-# # @info "this time try width = $width, depth = $depth, λ = $λ, gauss_width = $(gauss_width)"
-CUDA.device!(device)
-# evaluate_time = evaluate_50percent_time_reverse_gpu(Exponentialtype(), width, depth, gauss_width, λ)
-evaluate_time = evaluate_50percent_time_fixlayer_gpu(width, depth, false)
+# # # @info "this time try width = $width, depth = $depth, λ = $λ, gauss_width = $(gauss_width)"
+# CUDA.device!(device)
+# # evaluate_time = evaluate_50percent_time_reverse_gpu(Exponentialtype(), width, depth, gauss_width, λ)
+# evaluate_time = evaluate_50percent_time_fixlayer_gpu(width, depth, false)
 
-# # # @info "width = $width, depth = $depth, λ = $λ, evaluate_time = $evaluate_time"
-
-filepath = joinpath(@__DIR__, "data_toymodel_fixoutput/W=$(width)_D=$(depth)_GW=$(gauss_width)_E=$(λ).txt")
-open(filepath,"w") do file
-    println(file, evaluate_time)
-end
+# filepath = joinpath(@__DIR__, "data_toymodel_fixoutput/W=$(width)_D=$(depth)_GW=$(gauss_width)_E=$(λ).txt")
+# open(filepath,"w") do file
+#     println(file, evaluate_time)
+# end
 
 # function testplot(xdata, ydata)
 #     fig = Figure()
@@ -304,15 +303,46 @@ end
 
 # pulse_plot(10.0, 1.0, 10.0, 1.5, 1.02, 0.0, 40.0)
 
-# sa = SimulatedAnnealingHamiltonian(10, 8)
-# nbatch = 100
-# energy_gradient_gauss = 1.01
+function visualize_energy_change(energy_each_step, sa::SimulatedAnnealingHamiltonian, ibatch)
+    f = Figure()
+    ttt = Observable(0)
+    ax = Axis(f[1, 1], title = @lift("Time = $($ttt)"))
+    xs = Vector(1:sa.m-1)
+    ys = Vector(1:sa.n)
+    zs = Observable([energy_each_step[1][(x-1)*sa.n+y, ibatch] for x in xs, y in ys])
+    heatmap!(ax, xs, ys, zs)
+    GLMakie.record(f, "energy_change.mp4", 1:size(energy_each_step, 1)) do val
+        @info "val = $val"
+        ttt[] = val
+        zs[] = [energy_each_step[val][(x-1)*sa.n+y, ibatch] for x in xs, y in ys]
+    end
+    # save("energy_change.png", f)
+end
+
+sa = SimulatedAnnealingHamiltonian(600, 40)
+nbatch = 10
+energy_gradient_gauss = 1.01
 # energy_gradient_exp = 1.5
 # state = CuArray(random_state(sa, nbatch))
-# state = random_state(sa, nbatch)
+state = random_state(sa, nbatch)
 # # state_energy = [calculate_energy(sa, state, energy_gradient_sa, i) for i in 1:nbatch]
 
-# # track_temp = track_equilibration_pulse_cpu!(HeatBath(), Gaussiantype(), sa, state, energy_gradient_gauss, 10.0, 1.0, 2000; accelerate_flip = false)
+energy_each_step, configuration_each_step = track_equilibration_pulse_cpu!(HeatBath(), Gaussiantype(), sa, state, energy_gradient_gauss, 10.0, 1.0, 500; accelerate_flip = true)
+visualize_energy_change(energy_each_step, sa, 10)
+# cc = argmax(energy_each_step[end][:, 10])
+# vaild = [cc-2:cc+2; cc+sa.n-2:cc+sa.n+2; cc+2*sa.n-2:cc+2*sa.n+2; cc-sa.n-2:cc-sa.n+2; cc-2*sa.n-2:cc-2*sa.n+2]
+# for x in 1:sa.m
+#     flag = false
+#     for y in 1:sa.n
+#         if ((x-1)*sa.n+y in vaild)
+#             print(configuration_each_step[end][(x-1)*sa.n+y, 10] ? "1" : "0")
+#             flag=true
+#         end
+#     end
+#     if flag == true
+#         println()
+#     end
+# end
 # track_temp = track_equilibration_pulse_cpu!(HeatBath(), Exponentialtype(), sa, state, energy_gradient_exp, 10.0, 1.0, 2000, accelerate_flip = false)
 
 # track_temp = track_equilibration_pulse_reverse_cpu!(HeatBath(), Exponentialtype(), sa, state, energy_gradient_exp, 10.0, 1.0, 45000, accelerate_flip = false)
@@ -322,11 +352,13 @@ end
 
 # track_temp = track_equilibration_fixedlayer_gpu!(HeatBath(), sa, state, 15000; accelerate_flip=true, fixedinput = true)
 
-# # testplot(Vector(1:1000), Float64.(track_temp))
+# testplot(Vector(1:length(track_temp)), Float64.(track_temp))
 
 # # @time track_equilibration_pulse_gpu!(HeatBath(), sa, state, energy_gradient, 10.0, 1.0, 1000; accelerate_flip = true)
 # cpu_state = Array(state)
 
-# # state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
+
+
+state_energy = [calculate_energy(sa, state, fill(1.0, nbatch), i) for i in 1:nbatch]
 # state_energy = [calculate_energy(sa, cpu_state, fill(1.0, nbatch), i) for i in 1:nbatch]
-# success = count(x -> x == 0, state_energy)
+success = count(x -> x == 0, state_energy)

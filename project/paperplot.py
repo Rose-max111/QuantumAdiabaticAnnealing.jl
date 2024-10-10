@@ -171,7 +171,7 @@ def draw2():
 
 
 def modify(xdata, ydata):
-    ydata = ydata / xdata
+    ydata = xdata / ydata
     xdata = np.log(xdata)
     return xdata, ydata
 

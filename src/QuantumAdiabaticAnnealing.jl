@@ -11,6 +11,7 @@ using KrylovKit
 using LinearAlgebra
 using Random
 using SparseArrays
+using LogarithmicNumbers
 
 export Point
 export generate_random_lattice
